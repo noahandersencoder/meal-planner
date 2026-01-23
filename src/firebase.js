@@ -228,4 +228,72 @@ export async function rejectUser(userId) {
   await set(pendingRef, null)
 }
 
+// Submit a recipe for approval
+export async function submitRecipe(userId, userEmail, recipe) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const recipeId = `user-${userId}-${Date.now()}`
+  const pendingRef = ref(database, `pendingRecipes/${recipeId}`)
+  await set(pendingRef, {
+    ...recipe,
+    id: recipeId,
+    submittedBy: userId,
+    submitterEmail: userEmail,
+    submittedAt: Date.now(),
+    status: 'pending'
+  })
+  return recipeId
+}
+
+// Get all pending recipes (admin only)
+export async function getPendingRecipes() {
+  if (!firebaseEnabled) return []
+  const pendingRef = ref(database, 'pendingRecipes')
+  const snapshot = await get(pendingRef)
+  if (!snapshot.exists()) return []
+
+  const recipes = []
+  snapshot.forEach((child) => {
+    recipes.push({ ...child.val(), id: child.key })
+  })
+  return recipes
+}
+
+// Approve a recipe (admin only)
+export async function approveRecipe(recipeId, recipe) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Add to approved recipes list
+  const approvedRef = ref(database, `approvedRecipes/${recipeId}`)
+  await set(approvedRef, {
+    ...recipe,
+    approvedAt: Date.now(),
+    status: 'approved'
+  })
+
+  // Remove from pending list
+  const pendingRef = ref(database, `pendingRecipes/${recipeId}`)
+  await set(pendingRef, null)
+}
+
+// Reject a recipe (admin only)
+export async function rejectRecipe(recipeId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const pendingRef = ref(database, `pendingRecipes/${recipeId}`)
+  await set(pendingRef, null)
+}
+
+// Get all approved user-submitted recipes
+export async function getApprovedRecipes() {
+  if (!firebaseEnabled) return []
+  const approvedRef = ref(database, 'approvedRecipes')
+  const snapshot = await get(approvedRef)
+  if (!snapshot.exists()) return []
+
+  const recipes = []
+  snapshot.forEach((child) => {
+    recipes.push({ ...child.val(), id: child.key })
+  })
+  return recipes
+}
+
 export { database, auth }

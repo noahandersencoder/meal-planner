@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import useStore from '../store/useStore'
+import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
+import { getApprovedRecipes, isFirebaseEnabled } from '../firebase'
 import RecipeCard from '../components/RecipeCard'
 import RecipeRow from '../components/RecipeRow'
 import FilterPanel from '../components/FilterPanel'
@@ -9,15 +11,29 @@ import FilterPanel from '../components/FilterPanel'
 function Browse() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { user, isApproved } = useAuth()
   const { preferences, addRecipeToDay, recipeViewMode, setRecipeViewMode } = useStore()
   const [filters, setFilters] = useState(preferences)
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [userRecipes, setUserRecipes] = useState([])
 
   const selectedDay = searchParams.get('day')
 
+  // Load user-submitted approved recipes
+  useEffect(() => {
+    if (isFirebaseEnabled()) {
+      getApprovedRecipes().then(setUserRecipes).catch(console.error)
+    }
+  }, [])
+
+  // Combine built-in recipes with user-submitted ones
+  const allRecipes = useMemo(() => {
+    return [...recipes, ...userRecipes.map(r => ({ ...r, isUserSubmitted: true }))]
+  }, [userRecipes])
+
   const filteredRecipes = useMemo(() => {
-    return recipes.filter((recipe) => {
+    return allRecipes.filter((recipe) => {
       const totalTime = recipe.prepTime + recipe.cookTime
       if (totalTime > filters.maxCookTime) return false
 
@@ -44,7 +60,7 @@ function Browse() {
 
       return true
     })
-  }, [filters, searchQuery])
+  }, [filters, searchQuery, allRecipes])
 
   const handleAddToMealPlan = (recipe) => {
     if (selectedDay !== null) {
@@ -63,9 +79,17 @@ function Browse() {
           <h2 className="text-2xl font-bold text-gray-900">Recipes</h2>
           <p className="text-gray-500 text-sm">
             {filteredRecipes.length} recipe{filteredRecipes.length !== 1 ? 's' : ''} found
+            {userRecipes.length > 0 && (
+              <span className="text-primary-600"> ({userRecipes.length} community)</span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {user && isApproved && (
+            <Link to="/submit-recipe" className="btn btn-primary text-sm">
+              + Add Recipe
+            </Link>
+          )}
           {/* View Toggle */}
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
