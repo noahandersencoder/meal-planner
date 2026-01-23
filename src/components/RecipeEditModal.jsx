@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import IngredientAutocomplete from './IngredientAutocomplete'
+import { getCostPerUnitConverted } from '../utils/unitConversions'
 
 const CATEGORIES = [
   { value: 'produce', label: 'Produce', icon: '🥬' },
@@ -53,12 +54,38 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
     // If amount changed and we have a costPerUnit, recalculate cost
     if (field === 'amount' && currentIng.costPerUnit) {
       const amount = parseFloat(value) || 0
-      newIngredients[index].cost = (amount * currentIng.costPerUnit).toFixed(2)
+      // Convert costPerUnit to current unit if different from base
+      let effectiveCostPerUnit = currentIng.costPerUnit
+      if (currentIng.baseUnit && currentIng.baseUnit !== currentIng.unit) {
+        const converted = getCostPerUnitConverted(
+          currentIng.costPerUnit,
+          currentIng.baseUnit,
+          currentIng.unit,
+          currentIng.name
+        )
+        if (converted !== null) effectiveCostPerUnit = converted
+      }
+      newIngredients[index].cost = (amount * effectiveCostPerUnit).toFixed(2)
+    }
+
+    // If unit changed and we have a costPerUnit, recalculate cost
+    if (field === 'unit' && currentIng.costPerUnit && currentIng.baseUnit) {
+      const newCostPerUnit = getCostPerUnitConverted(
+        currentIng.costPerUnit,
+        currentIng.baseUnit,
+        value,
+        currentIng.name
+      )
+      if (newCostPerUnit !== null) {
+        const amount = parseFloat(currentIng.amount) || 0
+        newIngredients[index].cost = (amount * newCostPerUnit).toFixed(2)
+      }
     }
 
     // If user manually changes cost, clear costPerUnit
     if (field === 'cost') {
       newIngredients[index].costPerUnit = null
+      newIngredients[index].baseUnit = null
     }
 
     updateField('ingredients', newIngredients)
@@ -72,6 +99,7 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
       name: ingredient.name,
       unit: ingredient.defaultUnit,
       costPerUnit: ingredient.avgCost,
+      baseUnit: ingredient.defaultUnit,
       cost: (currentAmount * ingredient.avgCost).toFixed(2),
       category: ingredient.category
     }
@@ -81,7 +109,7 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
   const addIngredient = () => {
     updateField('ingredients', [
       ...editedRecipe.ingredients,
-      { name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, category: 'produce' }
+      { name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, baseUnit: null, category: 'produce' }
     ])
   }
 
@@ -135,8 +163,8 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
           <h2 className="text-xl font-bold text-gray-900">Edit Recipe</h2>
           <button
             onClick={onClose}
@@ -146,7 +174,7 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Basic Info */}
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900">Basic Info</h3>
@@ -383,7 +411,7 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3">
+        <div className="flex-shrink-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 rounded-b-xl">
           <button
             onClick={onClose}
             className="btn btn-secondary flex-1"

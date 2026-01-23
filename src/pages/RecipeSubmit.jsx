@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { submitRecipe, isFirebaseEnabled } from '../firebase'
 import IngredientAutocomplete from '../components/IngredientAutocomplete'
+import { getCostPerUnitConverted } from '../utils/unitConversions'
 
 const CATEGORIES = [
   { value: 'produce', label: 'Produce', icon: '🥬' },
@@ -42,7 +43,7 @@ function RecipeSubmit() {
     difficulty: 'easy',
     costLevel: 2,
     tags: [],
-    ingredients: [{ name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, category: 'produce' }],
+    ingredients: [{ name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, baseUnit: null, category: 'produce' }],
     instructions: ['']
   })
 
@@ -103,7 +104,7 @@ function RecipeSubmit() {
                   difficulty: 'easy',
                   costLevel: 2,
                   tags: [],
-                  ingredients: [{ name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, category: 'produce' }],
+                  ingredients: [{ name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, baseUnit: null, category: 'produce' }],
                   instructions: ['']
                 })
               }}
@@ -137,12 +138,39 @@ function RecipeSubmit() {
     // If amount changed and we have a costPerUnit, recalculate cost
     if (field === 'amount' && currentIng.costPerUnit) {
       const amount = parseFloat(value) || 0
-      newIngredients[index].cost = (amount * currentIng.costPerUnit).toFixed(2)
+      // Convert costPerUnit to current unit if different from base
+      let effectiveCostPerUnit = currentIng.costPerUnit
+      if (currentIng.baseUnit && currentIng.baseUnit !== currentIng.unit) {
+        const converted = getCostPerUnitConverted(
+          currentIng.costPerUnit,
+          currentIng.baseUnit,
+          currentIng.unit,
+          currentIng.name
+        )
+        if (converted !== null) effectiveCostPerUnit = converted
+      }
+      newIngredients[index].cost = (amount * effectiveCostPerUnit).toFixed(2)
+    }
+
+    // If unit changed and we have a costPerUnit, recalculate cost
+    if (field === 'unit' && currentIng.costPerUnit && currentIng.baseUnit) {
+      const newCostPerUnit = getCostPerUnitConverted(
+        currentIng.costPerUnit,
+        currentIng.baseUnit,
+        value,
+        currentIng.name
+      )
+      if (newCostPerUnit !== null) {
+        const amount = parseFloat(currentIng.amount) || 0
+        newIngredients[index].cost = (amount * newCostPerUnit).toFixed(2)
+      }
+      // Note: we keep the original costPerUnit and baseUnit so conversions remain accurate
     }
 
     // If user manually changes cost, clear costPerUnit to stop auto-calculation
     if (field === 'cost') {
       newIngredients[index].costPerUnit = null
+      newIngredients[index].baseUnit = null
     }
 
     updateRecipe('ingredients', newIngredients)
@@ -157,6 +185,7 @@ function RecipeSubmit() {
       name: ingredient.name,
       unit: ingredient.defaultUnit,
       costPerUnit: ingredient.avgCost,
+      baseUnit: ingredient.defaultUnit, // Store the unit the cost is based on
       cost: (currentAmount * ingredient.avgCost).toFixed(2),
       category: ingredient.category
     }
@@ -166,7 +195,7 @@ function RecipeSubmit() {
   const addIngredient = () => {
     updateRecipe('ingredients', [
       ...recipe.ingredients,
-      { name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, category: 'produce' }
+      { name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, baseUnit: null, category: 'produce' }
     ])
   }
 
