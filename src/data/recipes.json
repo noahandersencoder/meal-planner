@@ -1,0 +1,1518 @@
+[
+  {
+    "id": "chicken-stir-fry",
+    "name": "Quick Chicken Stir Fry",
+    "description": "A fast and healthy weeknight dinner loaded with colorful vegetables",
+    "prepTime": 10,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy-free", "quick"],
+    "ingredients": [
+      { "name": "Chicken Breast", "amount": 1.5, "unit": "lb", "cost": 8.00, "category": "meat" },
+      { "name": "Broccoli", "amount": 2, "unit": "cups", "cost": 2.50, "category": "produce" },
+      { "name": "Bell Pepper", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Soy Sauce", "amount": 3, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.30, "category": "produce" },
+      { "name": "Ginger", "amount": 1, "unit": "tbsp", "cost": 0.40, "category": "produce" },
+      { "name": "Vegetable Oil", "amount": 2, "unit": "tbsp", "cost": 0.20, "category": "pantry" },
+      { "name": "Rice", "amount": 2, "unit": "cups", "cost": 1.50, "category": "pantry" }
+    ],
+    "instructions": [
+      "Cook rice according to package directions",
+      "Slice chicken into thin strips and season with salt and pepper",
+      "Heat oil in a large wok or skillet over high heat",
+      "Cook chicken until golden, about 5 minutes, then set aside",
+      "Stir fry vegetables for 3-4 minutes until crisp-tender",
+      "Return chicken to pan, add soy sauce, garlic, and ginger",
+      "Toss everything together and serve over rice"
+    ]
+  },
+  {
+    "id": "spaghetti-bolognese",
+    "name": "Classic Spaghetti Bolognese",
+    "description": "Rich and hearty Italian meat sauce over pasta",
+    "prepTime": 15,
+    "cookTime": 45,
+    "servings": 6,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["red-meat", "dairy"],
+    "ingredients": [
+      { "name": "Ground Beef", "amount": 1.5, "unit": "lb", "cost": 9.00, "category": "meat" },
+      { "name": "Spaghetti", "amount": 1, "unit": "lb", "cost": 2.00, "category": "pantry" },
+      { "name": "Crushed Tomatoes", "amount": 28, "unit": "oz", "cost": 2.50, "category": "pantry" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.30, "category": "produce" },
+      { "name": "Carrot", "amount": 2, "unit": "whole", "cost": 0.60, "category": "produce" },
+      { "name": "Celery", "amount": 2, "unit": "stalks", "cost": 0.40, "category": "produce" },
+      { "name": "Olive Oil", "amount": 2, "unit": "tbsp", "cost": 0.30, "category": "pantry" },
+      { "name": "Parmesan Cheese", "amount": 0.5, "unit": "cup", "cost": 3.00, "category": "dairy" }
+    ],
+    "instructions": [
+      "Finely dice onion, carrot, and celery",
+      "Heat olive oil and sauté vegetables until soft, about 8 minutes",
+      "Add ground beef and cook until browned",
+      "Add garlic and cook for 1 minute",
+      "Pour in crushed tomatoes and simmer for 30 minutes",
+      "Cook spaghetti according to package directions",
+      "Serve sauce over pasta with grated parmesan"
+    ]
+  },
+  {
+    "id": "vegetable-curry",
+    "name": "Creamy Vegetable Curry",
+    "description": "A fragrant and satisfying vegan curry with coconut milk",
+    "prepTime": 15,
+    "cookTime": 25,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegan", "vegetarian", "dairy-free"],
+    "ingredients": [
+      { "name": "Chickpeas", "amount": 2, "unit": "cans", "cost": 2.00, "category": "pantry" },
+      { "name": "Coconut Milk", "amount": 1, "unit": "can", "cost": 2.50, "category": "pantry" },
+      { "name": "Sweet Potato", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Spinach", "amount": 4, "unit": "cups", "cost": 3.00, "category": "produce" },
+      { "name": "Curry Powder", "amount": 2, "unit": "tbsp", "cost": 0.50, "category": "spices" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" },
+      { "name": "Ginger", "amount": 1, "unit": "tbsp", "cost": 0.40, "category": "produce" },
+      { "name": "Rice", "amount": 2, "unit": "cups", "cost": 1.50, "category": "pantry" }
+    ],
+    "instructions": [
+      "Dice sweet potatoes and onion",
+      "Sauté onion until translucent, add garlic and ginger",
+      "Add curry powder and cook for 1 minute",
+      "Add sweet potatoes and coconut milk, simmer 15 minutes",
+      "Add chickpeas and cook until sweet potatoes are tender",
+      "Stir in spinach until wilted",
+      "Serve over rice"
+    ]
+  },
+  {
+    "id": "grilled-salmon",
+    "name": "Lemon Herb Grilled Salmon",
+    "description": "Light and flavorful salmon with fresh herbs",
+    "prepTime": 10,
+    "cookTime": 12,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 3,
+    "tags": ["fish", "dairy-free", "quick", "healthy"],
+    "ingredients": [
+      { "name": "Salmon Fillets", "amount": 1.5, "unit": "lb", "cost": 15.00, "category": "seafood" },
+      { "name": "Lemon", "amount": 2, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Fresh Dill", "amount": 0.25, "unit": "cup", "cost": 2.00, "category": "produce" },
+      { "name": "Olive Oil", "amount": 2, "unit": "tbsp", "cost": 0.30, "category": "pantry" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" },
+      { "name": "Asparagus", "amount": 1, "unit": "bunch", "cost": 3.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Preheat grill to medium-high heat",
+      "Mix olive oil, lemon juice, garlic, and dill",
+      "Brush salmon with herb mixture",
+      "Grill salmon for 4-5 minutes per side",
+      "Grill asparagus alongside for 3-4 minutes",
+      "Serve with lemon wedges"
+    ]
+  },
+  {
+    "id": "beef-tacos",
+    "name": "Classic Beef Tacos",
+    "description": "Seasoned ground beef tacos with all the fixings",
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["red-meat", "dairy"],
+    "ingredients": [
+      { "name": "Ground Beef", "amount": 1, "unit": "lb", "cost": 6.00, "category": "meat" },
+      { "name": "Taco Shells", "amount": 12, "unit": "whole", "cost": 3.00, "category": "pantry" },
+      { "name": "Lettuce", "amount": 2, "unit": "cups", "cost": 1.50, "category": "produce" },
+      { "name": "Tomatoes", "amount": 2, "unit": "whole", "cost": 1.50, "category": "produce" },
+      { "name": "Cheddar Cheese", "amount": 1, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Sour Cream", "amount": 0.5, "unit": "cup", "cost": 1.50, "category": "dairy" },
+      { "name": "Taco Seasoning", "amount": 1, "unit": "packet", "cost": 1.00, "category": "spices" },
+      { "name": "Onion", "amount": 0.5, "unit": "whole", "cost": 0.25, "category": "produce" }
+    ],
+    "instructions": [
+      "Brown ground beef in a skillet, drain excess fat",
+      "Add taco seasoning and water as directed",
+      "Simmer for 5 minutes until thickened",
+      "Warm taco shells in oven",
+      "Dice tomatoes and shred lettuce",
+      "Assemble tacos with meat and toppings"
+    ]
+  },
+  {
+    "id": "mushroom-risotto",
+    "name": "Creamy Mushroom Risotto",
+    "description": "Rich and creamy Italian rice dish with earthy mushrooms",
+    "prepTime": 10,
+    "cookTime": 35,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["vegetarian", "dairy"],
+    "ingredients": [
+      { "name": "Arborio Rice", "amount": 1.5, "unit": "cups", "cost": 4.00, "category": "pantry" },
+      { "name": "Cremini Mushrooms", "amount": 8, "unit": "oz", "cost": 3.50, "category": "produce" },
+      { "name": "Vegetable Broth", "amount": 4, "unit": "cups", "cost": 2.00, "category": "pantry" },
+      { "name": "White Wine", "amount": 0.5, "unit": "cup", "cost": 2.00, "category": "pantry" },
+      { "name": "Parmesan Cheese", "amount": 0.75, "unit": "cup", "cost": 4.00, "category": "dairy" },
+      { "name": "Butter", "amount": 3, "unit": "tbsp", "cost": 0.75, "category": "dairy" },
+      { "name": "Shallot", "amount": 2, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Fresh Thyme", "amount": 1, "unit": "tbsp", "cost": 1.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Warm broth in a saucepan and keep hot",
+      "Sauté mushrooms in butter until golden, set aside",
+      "Cook shallots until soft, add rice and toast 2 minutes",
+      "Add wine and stir until absorbed",
+      "Add broth one ladle at a time, stirring constantly",
+      "When rice is creamy, stir in mushrooms, parmesan, and thyme",
+      "Season with salt and pepper and serve immediately"
+    ]
+  },
+  {
+    "id": "chicken-caesar-salad",
+    "name": "Grilled Chicken Caesar Salad",
+    "description": "Classic Caesar salad topped with juicy grilled chicken",
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy", "healthy"],
+    "ingredients": [
+      { "name": "Chicken Breast", "amount": 1.5, "unit": "lb", "cost": 8.00, "category": "meat" },
+      { "name": "Romaine Lettuce", "amount": 2, "unit": "heads", "cost": 3.00, "category": "produce" },
+      { "name": "Parmesan Cheese", "amount": 0.5, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Caesar Dressing", "amount": 0.5, "unit": "cup", "cost": 2.50, "category": "pantry" },
+      { "name": "Croutons", "amount": 1, "unit": "cup", "cost": 2.00, "category": "pantry" },
+      { "name": "Lemon", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Season chicken with salt, pepper, and olive oil",
+      "Grill chicken for 6-7 minutes per side until cooked through",
+      "Let chicken rest, then slice",
+      "Chop romaine and place in large bowl",
+      "Toss with dressing and croutons",
+      "Top with sliced chicken, parmesan, and lemon wedge"
+    ]
+  },
+  {
+    "id": "shrimp-scampi",
+    "name": "Garlic Butter Shrimp Scampi",
+    "description": "Succulent shrimp in a garlicky white wine butter sauce",
+    "prepTime": 10,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 3,
+    "tags": ["fish", "dairy", "quick"],
+    "ingredients": [
+      { "name": "Large Shrimp", "amount": 1.5, "unit": "lb", "cost": 12.00, "category": "seafood" },
+      { "name": "Linguine", "amount": 1, "unit": "lb", "cost": 2.00, "category": "pantry" },
+      { "name": "Butter", "amount": 4, "unit": "tbsp", "cost": 1.00, "category": "dairy" },
+      { "name": "Garlic", "amount": 6, "unit": "cloves", "cost": 0.50, "category": "produce" },
+      { "name": "White Wine", "amount": 0.5, "unit": "cup", "cost": 2.00, "category": "pantry" },
+      { "name": "Lemon", "amount": 2, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Fresh Parsley", "amount": 0.25, "unit": "cup", "cost": 1.50, "category": "produce" },
+      { "name": "Red Pepper Flakes", "amount": 0.5, "unit": "tsp", "cost": 0.10, "category": "spices" }
+    ],
+    "instructions": [
+      "Cook linguine according to package directions",
+      "Melt butter in large skillet over medium heat",
+      "Add garlic and red pepper flakes, cook 1 minute",
+      "Add shrimp and cook until pink, about 3 minutes",
+      "Add wine and lemon juice, simmer 2 minutes",
+      "Toss with pasta and parsley"
+    ]
+  },
+  {
+    "id": "black-bean-burgers",
+    "name": "Homemade Black Bean Burgers",
+    "description": "Hearty vegetarian burgers packed with flavor",
+    "prepTime": 20,
+    "cookTime": 10,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 1,
+    "tags": ["vegetarian", "dairy-free"],
+    "ingredients": [
+      { "name": "Black Beans", "amount": 2, "unit": "cans", "cost": 2.00, "category": "pantry" },
+      { "name": "Breadcrumbs", "amount": 0.5, "unit": "cup", "cost": 1.00, "category": "pantry" },
+      { "name": "Onion", "amount": 0.5, "unit": "whole", "cost": 0.25, "category": "produce" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" },
+      { "name": "Cumin", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" },
+      { "name": "Burger Buns", "amount": 4, "unit": "whole", "cost": 2.50, "category": "pantry" },
+      { "name": "Avocado", "amount": 1, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Lettuce", "amount": 1, "unit": "cup", "cost": 0.75, "category": "produce" },
+      { "name": "Tomato", "amount": 1, "unit": "whole", "cost": 0.75, "category": "produce" }
+    ],
+    "instructions": [
+      "Drain and rinse black beans",
+      "Mash beans in a bowl, leaving some chunks",
+      "Sauté onion and garlic until soft",
+      "Mix beans with breadcrumbs, onion mixture, and cumin",
+      "Form into 4 patties",
+      "Cook in oiled pan 4-5 minutes per side",
+      "Serve on buns with avocado, lettuce, and tomato"
+    ]
+  },
+  {
+    "id": "teriyaki-chicken-bowl",
+    "name": "Teriyaki Chicken Rice Bowl",
+    "description": "Sweet and savory chicken over rice with vegetables",
+    "prepTime": 15,
+    "cookTime": 20,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy-free"],
+    "ingredients": [
+      { "name": "Chicken Thighs", "amount": 1.5, "unit": "lb", "cost": 6.00, "category": "meat" },
+      { "name": "Rice", "amount": 2, "unit": "cups", "cost": 1.50, "category": "pantry" },
+      { "name": "Teriyaki Sauce", "amount": 0.5, "unit": "cup", "cost": 2.50, "category": "pantry" },
+      { "name": "Broccoli", "amount": 2, "unit": "cups", "cost": 2.50, "category": "produce" },
+      { "name": "Carrot", "amount": 2, "unit": "whole", "cost": 0.60, "category": "produce" },
+      { "name": "Sesame Seeds", "amount": 2, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Green Onions", "amount": 4, "unit": "whole", "cost": 0.75, "category": "produce" }
+    ],
+    "instructions": [
+      "Cook rice according to package directions",
+      "Cut chicken into bite-sized pieces",
+      "Cook chicken in skillet until golden",
+      "Add teriyaki sauce and simmer until chicken is glazed",
+      "Steam broccoli and slice carrots",
+      "Serve chicken over rice with vegetables",
+      "Top with sesame seeds and green onions"
+    ]
+  },
+  {
+    "id": "margherita-pizza",
+    "name": "Classic Margherita Pizza",
+    "description": "Simple Italian pizza with fresh mozzarella and basil",
+    "prepTime": 30,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["vegetarian", "dairy"],
+    "ingredients": [
+      { "name": "Pizza Dough", "amount": 1, "unit": "lb", "cost": 3.00, "category": "pantry" },
+      { "name": "Fresh Mozzarella", "amount": 8, "unit": "oz", "cost": 5.00, "category": "dairy" },
+      { "name": "San Marzano Tomatoes", "amount": 14, "unit": "oz", "cost": 3.50, "category": "pantry" },
+      { "name": "Fresh Basil", "amount": 0.25, "unit": "cup", "cost": 2.00, "category": "produce" },
+      { "name": "Olive Oil", "amount": 2, "unit": "tbsp", "cost": 0.30, "category": "pantry" },
+      { "name": "Garlic", "amount": 2, "unit": "cloves", "cost": 0.20, "category": "produce" }
+    ],
+    "instructions": [
+      "Preheat oven to 500°F with pizza stone if available",
+      "Stretch dough into 12-inch circle",
+      "Blend tomatoes with garlic for sauce",
+      "Spread thin layer of sauce on dough",
+      "Tear mozzarella and distribute over pizza",
+      "Bake 12-15 minutes until crust is golden",
+      "Top with fresh basil and drizzle of olive oil"
+    ]
+  },
+  {
+    "id": "thai-peanut-noodles",
+    "name": "Thai Peanut Noodles",
+    "description": "Creamy peanut sauce over noodles with crunchy vegetables",
+    "prepTime": 15,
+    "cookTime": 10,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegan", "vegetarian", "dairy-free"],
+    "ingredients": [
+      { "name": "Rice Noodles", "amount": 8, "unit": "oz", "cost": 3.00, "category": "pantry" },
+      { "name": "Peanut Butter", "amount": 0.5, "unit": "cup", "cost": 2.00, "category": "pantry" },
+      { "name": "Soy Sauce", "amount": 3, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Rice Vinegar", "amount": 2, "unit": "tbsp", "cost": 0.40, "category": "pantry" },
+      { "name": "Sesame Oil", "amount": 1, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Red Cabbage", "amount": 2, "unit": "cups", "cost": 1.50, "category": "produce" },
+      { "name": "Carrots", "amount": 2, "unit": "whole", "cost": 0.60, "category": "produce" },
+      { "name": "Green Onions", "amount": 4, "unit": "whole", "cost": 0.75, "category": "produce" },
+      { "name": "Peanuts", "amount": 0.25, "unit": "cup", "cost": 1.00, "category": "pantry" }
+    ],
+    "instructions": [
+      "Cook rice noodles according to package, rinse with cold water",
+      "Whisk peanut butter, soy sauce, rice vinegar, sesame oil, and warm water",
+      "Shred cabbage and julienne carrots",
+      "Toss noodles with peanut sauce",
+      "Top with vegetables and chopped peanuts",
+      "Garnish with green onions"
+    ]
+  },
+  {
+    "id": "beef-stew",
+    "name": "Hearty Beef Stew",
+    "description": "Comforting slow-cooked beef with tender vegetables",
+    "prepTime": 20,
+    "cookTime": 120,
+    "servings": 6,
+    "difficulty": "medium",
+    "costLevel": 3,
+    "tags": ["red-meat", "dairy-free"],
+    "ingredients": [
+      { "name": "Beef Chuck", "amount": 2, "unit": "lb", "cost": 14.00, "category": "meat" },
+      { "name": "Potatoes", "amount": 1.5, "unit": "lb", "cost": 2.00, "category": "produce" },
+      { "name": "Carrots", "amount": 4, "unit": "whole", "cost": 1.20, "category": "produce" },
+      { "name": "Celery", "amount": 4, "unit": "stalks", "cost": 0.80, "category": "produce" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Beef Broth", "amount": 4, "unit": "cups", "cost": 3.00, "category": "pantry" },
+      { "name": "Tomato Paste", "amount": 2, "unit": "tbsp", "cost": 0.75, "category": "pantry" },
+      { "name": "Fresh Thyme", "amount": 4, "unit": "sprigs", "cost": 1.50, "category": "produce" },
+      { "name": "Flour", "amount": 0.25, "unit": "cup", "cost": 0.25, "category": "pantry" }
+    ],
+    "instructions": [
+      "Cut beef into 2-inch cubes, season and coat with flour",
+      "Brown beef in batches in a Dutch oven",
+      "Sauté onion, then add tomato paste",
+      "Return beef, add broth and thyme",
+      "Simmer covered for 1 hour",
+      "Add potatoes, carrots, and celery",
+      "Continue cooking until vegetables are tender, about 45 minutes"
+    ]
+  },
+  {
+    "id": "caprese-salad",
+    "name": "Fresh Caprese Salad",
+    "description": "Simple Italian salad with tomatoes, mozzarella, and basil",
+    "prepTime": 10,
+    "cookTime": 0,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["vegetarian", "dairy", "quick", "no-cook"],
+    "ingredients": [
+      { "name": "Heirloom Tomatoes", "amount": 4, "unit": "whole", "cost": 4.00, "category": "produce" },
+      { "name": "Fresh Mozzarella", "amount": 8, "unit": "oz", "cost": 5.00, "category": "dairy" },
+      { "name": "Fresh Basil", "amount": 0.5, "unit": "cup", "cost": 2.50, "category": "produce" },
+      { "name": "Balsamic Glaze", "amount": 2, "unit": "tbsp", "cost": 1.50, "category": "pantry" },
+      { "name": "Olive Oil", "amount": 2, "unit": "tbsp", "cost": 0.30, "category": "pantry" }
+    ],
+    "instructions": [
+      "Slice tomatoes and mozzarella into 1/4-inch rounds",
+      "Arrange alternating slices on a platter",
+      "Tuck basil leaves between slices",
+      "Drizzle with olive oil and balsamic glaze",
+      "Season with salt and pepper"
+    ]
+  },
+  {
+    "id": "honey-garlic-chicken",
+    "name": "Honey Garlic Chicken",
+    "description": "Sweet and savory glazed chicken thighs",
+    "prepTime": 10,
+    "cookTime": 25,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy-free"],
+    "ingredients": [
+      { "name": "Chicken Thighs", "amount": 2, "unit": "lb", "cost": 8.00, "category": "meat" },
+      { "name": "Honey", "amount": 0.25, "unit": "cup", "cost": 2.00, "category": "pantry" },
+      { "name": "Soy Sauce", "amount": 3, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Garlic", "amount": 6, "unit": "cloves", "cost": 0.50, "category": "produce" },
+      { "name": "Butter", "amount": 2, "unit": "tbsp", "cost": 0.50, "category": "dairy" },
+      { "name": "Green Beans", "amount": 1, "unit": "lb", "cost": 3.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Season chicken thighs with salt and pepper",
+      "Sear chicken skin-side down until golden, about 8 minutes",
+      "Flip and cook another 5 minutes",
+      "Mix honey, soy sauce, and minced garlic",
+      "Add sauce to pan and simmer until chicken is glazed",
+      "Steam green beans and serve alongside"
+    ]
+  },
+  {
+    "id": "fish-tacos",
+    "name": "Baja Fish Tacos",
+    "description": "Crispy fish tacos with creamy slaw and lime",
+    "prepTime": 20,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["fish", "dairy"],
+    "ingredients": [
+      { "name": "White Fish Fillets", "amount": 1, "unit": "lb", "cost": 8.00, "category": "seafood" },
+      { "name": "Corn Tortillas", "amount": 12, "unit": "whole", "cost": 2.50, "category": "pantry" },
+      { "name": "Cabbage", "amount": 2, "unit": "cups", "cost": 1.50, "category": "produce" },
+      { "name": "Sour Cream", "amount": 0.5, "unit": "cup", "cost": 1.50, "category": "dairy" },
+      { "name": "Lime", "amount": 3, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Cilantro", "amount": 0.5, "unit": "cup", "cost": 1.00, "category": "produce" },
+      { "name": "Flour", "amount": 0.5, "unit": "cup", "cost": 0.25, "category": "pantry" },
+      { "name": "Cumin", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" }
+    ],
+    "instructions": [
+      "Mix flour with cumin and salt",
+      "Coat fish pieces in flour mixture",
+      "Fry fish until golden and crispy",
+      "Make slaw with cabbage, lime juice, and cilantro",
+      "Mix sour cream with lime zest for crema",
+      "Warm tortillas and assemble tacos"
+    ]
+  },
+  {
+    "id": "vegetable-fried-rice",
+    "name": "Quick Vegetable Fried Rice",
+    "description": "Restaurant-style fried rice made at home",
+    "prepTime": 10,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegan", "vegetarian", "dairy-free", "quick"],
+    "ingredients": [
+      { "name": "Rice", "amount": 4, "unit": "cups", "cost": 2.00, "category": "pantry" },
+      { "name": "Eggs", "amount": 3, "unit": "whole", "cost": 1.00, "category": "dairy" },
+      { "name": "Peas", "amount": 1, "unit": "cup", "cost": 1.50, "category": "frozen" },
+      { "name": "Carrots", "amount": 2, "unit": "whole", "cost": 0.60, "category": "produce" },
+      { "name": "Soy Sauce", "amount": 3, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Sesame Oil", "amount": 1, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Green Onions", "amount": 4, "unit": "whole", "cost": 0.75, "category": "produce" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" }
+    ],
+    "instructions": [
+      "Use day-old cold rice for best results",
+      "Scramble eggs in hot wok, set aside",
+      "Stir-fry diced carrots and peas until tender",
+      "Add rice and toss on high heat",
+      "Add soy sauce and sesame oil",
+      "Mix in eggs and green onions"
+    ]
+  },
+  {
+    "id": "greek-salad",
+    "name": "Traditional Greek Salad",
+    "description": "Refreshing Mediterranean salad with feta and olives",
+    "prepTime": 15,
+    "cookTime": 0,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["vegetarian", "dairy", "quick", "no-cook", "healthy"],
+    "ingredients": [
+      { "name": "Cucumber", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Tomatoes", "amount": 4, "unit": "whole", "cost": 3.00, "category": "produce" },
+      { "name": "Red Onion", "amount": 1, "unit": "whole", "cost": 0.75, "category": "produce" },
+      { "name": "Feta Cheese", "amount": 6, "unit": "oz", "cost": 4.50, "category": "dairy" },
+      { "name": "Kalamata Olives", "amount": 0.5, "unit": "cup", "cost": 3.00, "category": "pantry" },
+      { "name": "Olive Oil", "amount": 3, "unit": "tbsp", "cost": 0.45, "category": "pantry" },
+      { "name": "Red Wine Vinegar", "amount": 2, "unit": "tbsp", "cost": 0.30, "category": "pantry" },
+      { "name": "Dried Oregano", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" }
+    ],
+    "instructions": [
+      "Cut cucumber and tomatoes into chunks",
+      "Thinly slice red onion",
+      "Combine vegetables in a large bowl",
+      "Add olives and crumbled feta",
+      "Whisk olive oil, vinegar, and oregano",
+      "Drizzle dressing over salad and toss gently"
+    ]
+  },
+  {
+    "id": "pork-chops",
+    "name": "Pan-Seared Pork Chops",
+    "description": "Juicy pork chops with a herb butter finish",
+    "prepTime": 5,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["red-meat", "dairy", "quick"],
+    "ingredients": [
+      { "name": "Pork Chops", "amount": 4, "unit": "whole", "cost": 10.00, "category": "meat" },
+      { "name": "Butter", "amount": 3, "unit": "tbsp", "cost": 0.75, "category": "dairy" },
+      { "name": "Fresh Rosemary", "amount": 2, "unit": "sprigs", "cost": 1.50, "category": "produce" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.35, "category": "produce" },
+      { "name": "Olive Oil", "amount": 2, "unit": "tbsp", "cost": 0.30, "category": "pantry" },
+      { "name": "Mashed Potatoes", "amount": 4, "unit": "servings", "cost": 3.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Let pork chops come to room temperature",
+      "Season generously with salt and pepper",
+      "Heat oil in a cast iron skillet over high heat",
+      "Sear chops 4-5 minutes per side",
+      "Add butter, rosemary, and garlic to pan",
+      "Baste chops with herb butter",
+      "Rest 5 minutes before serving with mashed potatoes"
+    ]
+  },
+  {
+    "id": "minestrone-soup",
+    "name": "Classic Minestrone Soup",
+    "description": "Hearty Italian vegetable soup with pasta and beans",
+    "prepTime": 20,
+    "cookTime": 40,
+    "servings": 6,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegan", "vegetarian", "dairy-free", "healthy"],
+    "ingredients": [
+      { "name": "Cannellini Beans", "amount": 1, "unit": "can", "cost": 1.25, "category": "pantry" },
+      { "name": "Diced Tomatoes", "amount": 14, "unit": "oz", "cost": 1.50, "category": "pantry" },
+      { "name": "Vegetable Broth", "amount": 6, "unit": "cups", "cost": 2.50, "category": "pantry" },
+      { "name": "Pasta", "amount": 1, "unit": "cup", "cost": 1.00, "category": "pantry" },
+      { "name": "Zucchini", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Carrot", "amount": 2, "unit": "whole", "cost": 0.60, "category": "produce" },
+      { "name": "Celery", "amount": 2, "unit": "stalks", "cost": 0.40, "category": "produce" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" },
+      { "name": "Fresh Basil", "amount": 0.25, "unit": "cup", "cost": 1.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Dice onion, carrot, celery, and zucchini",
+      "Sauté onion until soft, add garlic",
+      "Add remaining vegetables and cook 5 minutes",
+      "Pour in broth and tomatoes, bring to boil",
+      "Simmer 20 minutes",
+      "Add pasta and beans, cook until pasta is tender",
+      "Serve topped with fresh basil"
+    ]
+  },
+  {
+    "id": "bbq-pulled-pork",
+    "name": "Slow Cooker BBQ Pulled Pork",
+    "description": "Tender, smoky pulled pork perfect for sandwiches",
+    "prepTime": 15,
+    "cookTime": 480,
+    "servings": 8,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["red-meat", "dairy-free"],
+    "ingredients": [
+      { "name": "Pork Shoulder", "amount": 4, "unit": "lb", "cost": 16.00, "category": "meat" },
+      { "name": "BBQ Sauce", "amount": 2, "unit": "cups", "cost": 4.00, "category": "pantry" },
+      { "name": "Apple Cider Vinegar", "amount": 0.25, "unit": "cup", "cost": 0.50, "category": "pantry" },
+      { "name": "Brown Sugar", "amount": 0.25, "unit": "cup", "cost": 0.50, "category": "pantry" },
+      { "name": "Paprika", "amount": 1, "unit": "tbsp", "cost": 0.25, "category": "spices" },
+      { "name": "Garlic Powder", "amount": 1, "unit": "tbsp", "cost": 0.25, "category": "spices" },
+      { "name": "Brioche Buns", "amount": 8, "unit": "whole", "cost": 4.00, "category": "pantry" },
+      { "name": "Coleslaw Mix", "amount": 14, "unit": "oz", "cost": 2.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Mix paprika, garlic powder, brown sugar, salt, and pepper",
+      "Rub spice mixture all over pork shoulder",
+      "Place in slow cooker with vinegar",
+      "Cook on low for 8 hours",
+      "Shred pork with two forks",
+      "Mix with BBQ sauce",
+      "Serve on buns topped with coleslaw"
+    ]
+  },
+  {
+    "id": "lemon-chicken-pasta",
+    "name": "Creamy Lemon Chicken Pasta",
+    "description": "Light and zesty pasta with tender chicken",
+    "prepTime": 15,
+    "cookTime": 25,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy"],
+    "ingredients": [
+      { "name": "Chicken Breast", "amount": 1.5, "unit": "lb", "cost": 8.00, "category": "meat" },
+      { "name": "Penne Pasta", "amount": 1, "unit": "lb", "cost": 2.00, "category": "pantry" },
+      { "name": "Heavy Cream", "amount": 1, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Parmesan Cheese", "amount": 0.5, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Lemon", "amount": 2, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.35, "category": "produce" },
+      { "name": "Fresh Parsley", "amount": 0.25, "unit": "cup", "cost": 1.50, "category": "produce" },
+      { "name": "Butter", "amount": 2, "unit": "tbsp", "cost": 0.50, "category": "dairy" }
+    ],
+    "instructions": [
+      "Cook pasta according to package, reserve pasta water",
+      "Season and cook chicken, then slice",
+      "Melt butter, sauté garlic until fragrant",
+      "Add cream and simmer 3 minutes",
+      "Stir in parmesan and lemon juice",
+      "Toss pasta with sauce, adding pasta water as needed",
+      "Top with chicken and parsley"
+    ]
+  },
+  {
+    "id": "shakshuka",
+    "name": "Shakshuka",
+    "description": "Eggs poached in spiced tomato sauce",
+    "prepTime": 10,
+    "cookTime": 25,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegetarian", "dairy-free", "healthy"],
+    "ingredients": [
+      { "name": "Eggs", "amount": 6, "unit": "whole", "cost": 2.00, "category": "dairy" },
+      { "name": "Crushed Tomatoes", "amount": 28, "unit": "oz", "cost": 2.50, "category": "pantry" },
+      { "name": "Bell Pepper", "amount": 1, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.35, "category": "produce" },
+      { "name": "Cumin", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" },
+      { "name": "Paprika", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" },
+      { "name": "Crusty Bread", "amount": 1, "unit": "loaf", "cost": 3.50, "category": "pantry" },
+      { "name": "Fresh Cilantro", "amount": 0.25, "unit": "cup", "cost": 1.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Sauté onion and bell pepper until soft",
+      "Add garlic, cumin, and paprika",
+      "Pour in tomatoes and simmer 10 minutes",
+      "Create wells and crack eggs into sauce",
+      "Cover and cook until eggs are set, about 8 minutes",
+      "Garnish with cilantro and serve with bread"
+    ]
+  },
+  {
+    "id": "baked-ziti",
+    "name": "Baked Ziti",
+    "description": "Cheesy baked pasta with ricotta and marinara",
+    "prepTime": 20,
+    "cookTime": 45,
+    "servings": 8,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["vegetarian", "dairy"],
+    "ingredients": [
+      { "name": "Ziti Pasta", "amount": 1, "unit": "lb", "cost": 2.00, "category": "pantry" },
+      { "name": "Ricotta Cheese", "amount": 15, "unit": "oz", "cost": 4.00, "category": "dairy" },
+      { "name": "Mozzarella Cheese", "amount": 2, "unit": "cups", "cost": 4.00, "category": "dairy" },
+      { "name": "Parmesan Cheese", "amount": 0.5, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Marinara Sauce", "amount": 24, "unit": "oz", "cost": 3.50, "category": "pantry" },
+      { "name": "Egg", "amount": 1, "unit": "whole", "cost": 0.35, "category": "dairy" },
+      { "name": "Fresh Basil", "amount": 0.25, "unit": "cup", "cost": 1.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Preheat oven to 375°F",
+      "Cook ziti until just al dente",
+      "Mix ricotta with egg, half the mozzarella, and parmesan",
+      "Layer pasta, ricotta mixture, and marinara in baking dish",
+      "Top with remaining mozzarella",
+      "Bake covered 25 minutes, then uncovered 15 minutes",
+      "Let rest 10 minutes before serving with basil"
+    ]
+  },
+  {
+    "id": "burrito-bowl",
+    "name": "Chicken Burrito Bowl",
+    "description": "Customizable Tex-Mex bowl with all your favorite toppings",
+    "prepTime": 20,
+    "cookTime": 20,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy"],
+    "ingredients": [
+      { "name": "Chicken Breast", "amount": 1.5, "unit": "lb", "cost": 8.00, "category": "meat" },
+      { "name": "Rice", "amount": 2, "unit": "cups", "cost": 1.50, "category": "pantry" },
+      { "name": "Black Beans", "amount": 1, "unit": "can", "cost": 1.00, "category": "pantry" },
+      { "name": "Corn", "amount": 1, "unit": "cup", "cost": 1.00, "category": "frozen" },
+      { "name": "Avocado", "amount": 2, "unit": "whole", "cost": 4.00, "category": "produce" },
+      { "name": "Tomatoes", "amount": 2, "unit": "whole", "cost": 1.50, "category": "produce" },
+      { "name": "Cheddar Cheese", "amount": 1, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Lime", "amount": 2, "unit": "whole", "cost": 0.70, "category": "produce" },
+      { "name": "Cilantro", "amount": 0.5, "unit": "cup", "cost": 1.00, "category": "produce" },
+      { "name": "Cumin", "amount": 1, "unit": "tbsp", "cost": 0.25, "category": "spices" }
+    ],
+    "instructions": [
+      "Season chicken with cumin, salt, and pepper",
+      "Grill or pan-sear chicken, then slice",
+      "Cook rice with lime juice and cilantro",
+      "Heat black beans and corn",
+      "Dice tomatoes and slice avocado",
+      "Assemble bowls with rice, chicken, and toppings",
+      "Garnish with cheese and extra lime"
+    ]
+  },
+  {
+    "id": "tom-yum-soup",
+    "name": "Tom Yum Soup",
+    "description": "Spicy and sour Thai soup with shrimp",
+    "prepTime": 15,
+    "cookTime": 20,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["fish", "dairy-free", "healthy"],
+    "ingredients": [
+      { "name": "Shrimp", "amount": 1, "unit": "lb", "cost": 10.00, "category": "seafood" },
+      { "name": "Mushrooms", "amount": 8, "unit": "oz", "cost": 3.00, "category": "produce" },
+      { "name": "Chicken Broth", "amount": 6, "unit": "cups", "cost": 2.50, "category": "pantry" },
+      { "name": "Lemongrass", "amount": 2, "unit": "stalks", "cost": 2.00, "category": "produce" },
+      { "name": "Lime", "amount": 3, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Fish Sauce", "amount": 3, "unit": "tbsp", "cost": 0.75, "category": "pantry" },
+      { "name": "Thai Chili", "amount": 3, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Cilantro", "amount": 0.25, "unit": "cup", "cost": 1.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Bring broth to boil with smashed lemongrass",
+      "Add sliced mushrooms and chilies",
+      "Simmer 10 minutes to infuse flavors",
+      "Add shrimp and cook until pink",
+      "Remove from heat, add fish sauce and lime juice",
+      "Adjust seasoning and garnish with cilantro"
+    ]
+  },
+  {
+    "id": "stuffed-peppers",
+    "name": "Stuffed Bell Peppers",
+    "description": "Bell peppers filled with seasoned beef and rice",
+    "prepTime": 20,
+    "cookTime": 45,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["red-meat", "dairy"],
+    "ingredients": [
+      { "name": "Bell Peppers", "amount": 4, "unit": "whole", "cost": 4.00, "category": "produce" },
+      { "name": "Ground Beef", "amount": 1, "unit": "lb", "cost": 6.00, "category": "meat" },
+      { "name": "Rice", "amount": 1, "unit": "cup", "cost": 0.75, "category": "pantry" },
+      { "name": "Diced Tomatoes", "amount": 14, "unit": "oz", "cost": 1.50, "category": "pantry" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Cheddar Cheese", "amount": 1, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" },
+      { "name": "Italian Seasoning", "amount": 1, "unit": "tbsp", "cost": 0.25, "category": "spices" }
+    ],
+    "instructions": [
+      "Preheat oven to 375°F",
+      "Cut tops off peppers and remove seeds",
+      "Cook rice according to package",
+      "Brown beef with onion and garlic",
+      "Mix beef, rice, half the tomatoes, and seasonings",
+      "Fill peppers and place in baking dish",
+      "Pour remaining tomatoes around peppers",
+      "Bake 40 minutes, top with cheese, bake 5 more minutes"
+    ]
+  },
+  {
+    "id": "pad-thai",
+    "name": "Classic Pad Thai",
+    "description": "Sweet, sour, and savory Thai noodle dish",
+    "prepTime": 20,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["fish", "dairy-free"],
+    "ingredients": [
+      { "name": "Rice Noodles", "amount": 8, "unit": "oz", "cost": 3.00, "category": "pantry" },
+      { "name": "Shrimp", "amount": 0.5, "unit": "lb", "cost": 6.00, "category": "seafood" },
+      { "name": "Eggs", "amount": 2, "unit": "whole", "cost": 0.70, "category": "dairy" },
+      { "name": "Bean Sprouts", "amount": 2, "unit": "cups", "cost": 1.50, "category": "produce" },
+      { "name": "Green Onions", "amount": 4, "unit": "whole", "cost": 0.75, "category": "produce" },
+      { "name": "Peanuts", "amount": 0.25, "unit": "cup", "cost": 1.00, "category": "pantry" },
+      { "name": "Fish Sauce", "amount": 3, "unit": "tbsp", "cost": 0.75, "category": "pantry" },
+      { "name": "Tamarind Paste", "amount": 2, "unit": "tbsp", "cost": 1.00, "category": "pantry" },
+      { "name": "Brown Sugar", "amount": 2, "unit": "tbsp", "cost": 0.25, "category": "pantry" },
+      { "name": "Lime", "amount": 2, "unit": "whole", "cost": 0.70, "category": "produce" }
+    ],
+    "instructions": [
+      "Soak noodles in warm water until pliable",
+      "Mix fish sauce, tamarind, and sugar for sauce",
+      "Cook shrimp in hot wok, set aside",
+      "Scramble eggs, set aside",
+      "Stir-fry drained noodles with sauce",
+      "Add shrimp, eggs, and bean sprouts",
+      "Serve with peanuts, green onions, and lime"
+    ]
+  },
+  {
+    "id": "chicken-tikka-masala",
+    "name": "Chicken Tikka Masala",
+    "description": "Creamy tomato-based curry with tender chicken",
+    "prepTime": 30,
+    "cookTime": 30,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy"],
+    "ingredients": [
+      { "name": "Chicken Breast", "amount": 1.5, "unit": "lb", "cost": 8.00, "category": "meat" },
+      { "name": "Yogurt", "amount": 1, "unit": "cup", "cost": 2.00, "category": "dairy" },
+      { "name": "Heavy Cream", "amount": 1, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Crushed Tomatoes", "amount": 14, "unit": "oz", "cost": 1.75, "category": "pantry" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Garlic", "amount": 5, "unit": "cloves", "cost": 0.40, "category": "produce" },
+      { "name": "Ginger", "amount": 2, "unit": "tbsp", "cost": 0.60, "category": "produce" },
+      { "name": "Garam Masala", "amount": 2, "unit": "tbsp", "cost": 0.75, "category": "spices" },
+      { "name": "Rice", "amount": 2, "unit": "cups", "cost": 1.50, "category": "pantry" },
+      { "name": "Naan Bread", "amount": 4, "unit": "pieces", "cost": 3.50, "category": "pantry" }
+    ],
+    "instructions": [
+      "Marinate chicken in yogurt and spices for 30 minutes",
+      "Grill or broil chicken until charred",
+      "Sauté onion, garlic, and ginger until soft",
+      "Add tomatoes and garam masala, simmer 10 minutes",
+      "Stir in cream and add chicken",
+      "Simmer until sauce thickens",
+      "Serve with rice and naan"
+    ]
+  },
+  {
+    "id": "eggplant-parmesan",
+    "name": "Eggplant Parmesan",
+    "description": "Crispy breaded eggplant layered with cheese and marinara",
+    "prepTime": 30,
+    "cookTime": 45,
+    "servings": 6,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["vegetarian", "dairy"],
+    "ingredients": [
+      { "name": "Eggplant", "amount": 2, "unit": "whole", "cost": 4.00, "category": "produce" },
+      { "name": "Marinara Sauce", "amount": 24, "unit": "oz", "cost": 3.50, "category": "pantry" },
+      { "name": "Mozzarella Cheese", "amount": 2, "unit": "cups", "cost": 4.00, "category": "dairy" },
+      { "name": "Parmesan Cheese", "amount": 0.5, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Breadcrumbs", "amount": 1.5, "unit": "cups", "cost": 1.50, "category": "pantry" },
+      { "name": "Eggs", "amount": 3, "unit": "whole", "cost": 1.00, "category": "dairy" },
+      { "name": "Flour", "amount": 0.5, "unit": "cup", "cost": 0.25, "category": "pantry" },
+      { "name": "Fresh Basil", "amount": 0.25, "unit": "cup", "cost": 1.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Slice eggplant and salt to draw out moisture",
+      "Set up breading station: flour, beaten eggs, breadcrumbs",
+      "Bread eggplant slices and bake at 400°F until golden",
+      "Layer in baking dish: sauce, eggplant, cheese",
+      "Repeat layers and top with cheese",
+      "Bake at 375°F until bubbly",
+      "Top with fresh basil before serving"
+    ]
+  },
+  {
+    "id": "asian-lettuce-wraps",
+    "name": "Asian Chicken Lettuce Wraps",
+    "description": "Savory chicken in crisp lettuce cups",
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy-free", "quick", "healthy"],
+    "ingredients": [
+      { "name": "Ground Chicken", "amount": 1, "unit": "lb", "cost": 5.50, "category": "meat" },
+      { "name": "Butter Lettuce", "amount": 1, "unit": "head", "cost": 2.50, "category": "produce" },
+      { "name": "Water Chestnuts", "amount": 1, "unit": "can", "cost": 2.00, "category": "pantry" },
+      { "name": "Soy Sauce", "amount": 3, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Hoisin Sauce", "amount": 2, "unit": "tbsp", "cost": 0.75, "category": "pantry" },
+      { "name": "Rice Vinegar", "amount": 1, "unit": "tbsp", "cost": 0.25, "category": "pantry" },
+      { "name": "Ginger", "amount": 1, "unit": "tbsp", "cost": 0.40, "category": "produce" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" },
+      { "name": "Green Onions", "amount": 4, "unit": "whole", "cost": 0.75, "category": "produce" }
+    ],
+    "instructions": [
+      "Cook ground chicken until no longer pink",
+      "Add garlic and ginger, cook 1 minute",
+      "Stir in diced water chestnuts",
+      "Add soy sauce, hoisin, and rice vinegar",
+      "Cook until sauce thickens",
+      "Separate lettuce leaves into cups",
+      "Fill cups with chicken mixture and top with green onions"
+    ]
+  },
+  {
+    "id": "roasted-vegetable-bowl",
+    "name": "Mediterranean Roasted Vegetable Bowl",
+    "description": "Colorful roasted vegetables with quinoa and tahini",
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["vegan", "vegetarian", "dairy-free", "healthy"],
+    "ingredients": [
+      { "name": "Quinoa", "amount": 1.5, "unit": "cups", "cost": 3.00, "category": "pantry" },
+      { "name": "Sweet Potato", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Chickpeas", "amount": 1, "unit": "can", "cost": 1.00, "category": "pantry" },
+      { "name": "Zucchini", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Red Onion", "amount": 1, "unit": "whole", "cost": 0.75, "category": "produce" },
+      { "name": "Cherry Tomatoes", "amount": 1, "unit": "pint", "cost": 3.00, "category": "produce" },
+      { "name": "Tahini", "amount": 0.25, "unit": "cup", "cost": 2.00, "category": "pantry" },
+      { "name": "Lemon", "amount": 2, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Olive Oil", "amount": 3, "unit": "tbsp", "cost": 0.45, "category": "pantry" }
+    ],
+    "instructions": [
+      "Cook quinoa according to package",
+      "Cut vegetables into bite-sized pieces",
+      "Toss with olive oil and roast at 425°F for 30 minutes",
+      "Mix tahini with lemon juice and water for dressing",
+      "Assemble bowls with quinoa and roasted vegetables",
+      "Drizzle with tahini dressing"
+    ]
+  },
+  {
+    "id": "coconut-curry-shrimp",
+    "name": "Coconut Curry Shrimp",
+    "description": "Creamy Thai-style curry with plump shrimp",
+    "prepTime": 15,
+    "cookTime": 20,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 3,
+    "tags": ["fish", "dairy-free"],
+    "ingredients": [
+      { "name": "Large Shrimp", "amount": 1.5, "unit": "lb", "cost": 12.00, "category": "seafood" },
+      { "name": "Coconut Milk", "amount": 1, "unit": "can", "cost": 2.50, "category": "pantry" },
+      { "name": "Red Curry Paste", "amount": 2, "unit": "tbsp", "cost": 1.50, "category": "pantry" },
+      { "name": "Bell Pepper", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Snap Peas", "amount": 1, "unit": "cup", "cost": 2.50, "category": "produce" },
+      { "name": "Fish Sauce", "amount": 1, "unit": "tbsp", "cost": 0.25, "category": "pantry" },
+      { "name": "Brown Sugar", "amount": 1, "unit": "tbsp", "cost": 0.15, "category": "pantry" },
+      { "name": "Rice", "amount": 2, "unit": "cups", "cost": 1.50, "category": "pantry" },
+      { "name": "Fresh Basil", "amount": 0.25, "unit": "cup", "cost": 1.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Cook rice according to package",
+      "Sauté curry paste for 1 minute until fragrant",
+      "Add coconut milk, fish sauce, and sugar",
+      "Add vegetables and simmer 5 minutes",
+      "Add shrimp and cook until pink",
+      "Serve over rice with fresh basil"
+    ]
+  },
+  {
+    "id": "spinach-feta-omelette",
+    "name": "Spinach and Feta Omelette",
+    "description": "Fluffy eggs filled with spinach and tangy feta",
+    "prepTime": 5,
+    "cookTime": 10,
+    "servings": 2,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegetarian", "dairy", "quick", "healthy"],
+    "ingredients": [
+      { "name": "Eggs", "amount": 4, "unit": "whole", "cost": 1.35, "category": "dairy" },
+      { "name": "Spinach", "amount": 2, "unit": "cups", "cost": 1.50, "category": "produce" },
+      { "name": "Feta Cheese", "amount": 2, "unit": "oz", "cost": 1.50, "category": "dairy" },
+      { "name": "Butter", "amount": 2, "unit": "tbsp", "cost": 0.50, "category": "dairy" },
+      { "name": "Cherry Tomatoes", "amount": 0.5, "unit": "cup", "cost": 1.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Whisk eggs with salt and pepper",
+      "Melt butter in nonstick pan over medium heat",
+      "Pour in eggs and cook until edges set",
+      "Add spinach and feta to one half",
+      "Fold omelette and cook 1 more minute",
+      "Serve with halved cherry tomatoes"
+    ]
+  },
+  {
+    "id": "beef-broccoli",
+    "name": "Beef and Broccoli",
+    "description": "Chinese takeout favorite made at home",
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["red-meat", "dairy-free", "quick"],
+    "ingredients": [
+      { "name": "Flank Steak", "amount": 1.5, "unit": "lb", "cost": 12.00, "category": "meat" },
+      { "name": "Broccoli", "amount": 4, "unit": "cups", "cost": 3.50, "category": "produce" },
+      { "name": "Soy Sauce", "amount": 0.25, "unit": "cup", "cost": 0.75, "category": "pantry" },
+      { "name": "Oyster Sauce", "amount": 2, "unit": "tbsp", "cost": 0.75, "category": "pantry" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.35, "category": "produce" },
+      { "name": "Ginger", "amount": 1, "unit": "tbsp", "cost": 0.40, "category": "produce" },
+      { "name": "Cornstarch", "amount": 2, "unit": "tbsp", "cost": 0.20, "category": "pantry" },
+      { "name": "Rice", "amount": 2, "unit": "cups", "cost": 1.50, "category": "pantry" }
+    ],
+    "instructions": [
+      "Slice beef thinly against the grain",
+      "Marinate with soy sauce and cornstarch",
+      "Cook rice according to package",
+      "Stir-fry beef in hot wok until browned, set aside",
+      "Stir-fry broccoli with garlic and ginger",
+      "Add oyster sauce and beef back to wok",
+      "Serve over rice"
+    ]
+  },
+  {
+    "id": "butternut-squash-soup",
+    "name": "Creamy Butternut Squash Soup",
+    "description": "Velvety smooth soup with warming spices",
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": 6,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegan", "vegetarian", "dairy-free", "healthy"],
+    "ingredients": [
+      { "name": "Butternut Squash", "amount": 2, "unit": "lb", "cost": 3.50, "category": "produce" },
+      { "name": "Vegetable Broth", "amount": 4, "unit": "cups", "cost": 2.00, "category": "pantry" },
+      { "name": "Coconut Milk", "amount": 0.5, "unit": "cup", "cost": 1.25, "category": "pantry" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" },
+      { "name": "Maple Syrup", "amount": 1, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Nutmeg", "amount": 0.25, "unit": "tsp", "cost": 0.10, "category": "spices" },
+      { "name": "Crusty Bread", "amount": 1, "unit": "loaf", "cost": 3.50, "category": "pantry" }
+    ],
+    "instructions": [
+      "Peel and cube butternut squash",
+      "Sauté onion until soft, add garlic",
+      "Add squash and broth, bring to boil",
+      "Simmer until squash is tender, about 25 minutes",
+      "Blend until smooth",
+      "Stir in coconut milk, maple syrup, and nutmeg",
+      "Serve with crusty bread"
+    ]
+  },
+  {
+    "id": "meatball-subs",
+    "name": "Italian Meatball Subs",
+    "description": "Tender meatballs in marinara on crusty rolls",
+    "prepTime": 25,
+    "cookTime": 25,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["red-meat", "dairy"],
+    "ingredients": [
+      { "name": "Ground Beef", "amount": 1, "unit": "lb", "cost": 6.00, "category": "meat" },
+      { "name": "Italian Sausage", "amount": 0.5, "unit": "lb", "cost": 4.00, "category": "meat" },
+      { "name": "Breadcrumbs", "amount": 0.5, "unit": "cup", "cost": 0.50, "category": "pantry" },
+      { "name": "Egg", "amount": 1, "unit": "whole", "cost": 0.35, "category": "dairy" },
+      { "name": "Marinara Sauce", "amount": 24, "unit": "oz", "cost": 3.50, "category": "pantry" },
+      { "name": "Mozzarella Cheese", "amount": 1.5, "unit": "cups", "cost": 3.50, "category": "dairy" },
+      { "name": "Hoagie Rolls", "amount": 4, "unit": "whole", "cost": 3.00, "category": "pantry" },
+      { "name": "Parmesan Cheese", "amount": 0.25, "unit": "cup", "cost": 1.50, "category": "dairy" }
+    ],
+    "instructions": [
+      "Mix beef and sausage with breadcrumbs, egg, and parmesan",
+      "Form into 16 meatballs",
+      "Bake at 400°F for 20 minutes",
+      "Simmer meatballs in marinara sauce",
+      "Toast hoagie rolls",
+      "Fill with meatballs and sauce",
+      "Top with mozzarella and broil until melted"
+    ]
+  },
+  {
+    "id": "salmon-fried-rice",
+    "name": "Salmon Fried Rice",
+    "description": "Flaky salmon tossed with vegetables and rice",
+    "prepTime": 15,
+    "cookTime": 20,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 3,
+    "tags": ["fish", "dairy-free"],
+    "ingredients": [
+      { "name": "Salmon Fillet", "amount": 1, "unit": "lb", "cost": 12.00, "category": "seafood" },
+      { "name": "Rice", "amount": 4, "unit": "cups", "cost": 2.00, "category": "pantry" },
+      { "name": "Eggs", "amount": 3, "unit": "whole", "cost": 1.00, "category": "dairy" },
+      { "name": "Peas", "amount": 1, "unit": "cup", "cost": 1.50, "category": "frozen" },
+      { "name": "Carrots", "amount": 2, "unit": "whole", "cost": 0.60, "category": "produce" },
+      { "name": "Soy Sauce", "amount": 3, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Sesame Oil", "amount": 1, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Green Onions", "amount": 4, "unit": "whole", "cost": 0.75, "category": "produce" }
+    ],
+    "instructions": [
+      "Season and bake salmon at 400°F for 12 minutes",
+      "Flake salmon with fork",
+      "Use day-old rice for best results",
+      "Scramble eggs in hot wok, set aside",
+      "Stir-fry diced carrots and peas",
+      "Add rice and soy sauce",
+      "Fold in salmon and eggs, drizzle with sesame oil"
+    ]
+  },
+  {
+    "id": "falafel-pita",
+    "name": "Homemade Falafel Pita",
+    "description": "Crispy falafel in warm pita with fresh veggies",
+    "prepTime": 45,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 1,
+    "tags": ["vegan", "vegetarian", "dairy-free"],
+    "ingredients": [
+      { "name": "Chickpeas", "amount": 2, "unit": "cans", "cost": 2.00, "category": "pantry" },
+      { "name": "Pita Bread", "amount": 4, "unit": "whole", "cost": 2.50, "category": "pantry" },
+      { "name": "Tahini", "amount": 0.25, "unit": "cup", "cost": 2.00, "category": "pantry" },
+      { "name": "Cucumber", "amount": 1, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Tomatoes", "amount": 2, "unit": "whole", "cost": 1.50, "category": "produce" },
+      { "name": "Red Onion", "amount": 0.5, "unit": "whole", "cost": 0.40, "category": "produce" },
+      { "name": "Fresh Parsley", "amount": 0.5, "unit": "cup", "cost": 1.00, "category": "produce" },
+      { "name": "Cumin", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.35, "category": "produce" },
+      { "name": "Lemon", "amount": 2, "unit": "whole", "cost": 1.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Blend chickpeas with parsley, garlic, and cumin",
+      "Form mixture into small patties",
+      "Pan-fry falafel until golden on both sides",
+      "Make tahini sauce with lemon juice and water",
+      "Dice cucumber, tomatoes, and onion",
+      "Warm pita bread",
+      "Fill pita with falafel, veggies, and tahini sauce"
+    ]
+  },
+  {
+    "id": "chicken-pot-pie",
+    "name": "Chicken Pot Pie",
+    "description": "Comfort food classic with flaky crust",
+    "prepTime": 30,
+    "cookTime": 45,
+    "servings": 6,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy"],
+    "ingredients": [
+      { "name": "Chicken Breast", "amount": 1.5, "unit": "lb", "cost": 8.00, "category": "meat" },
+      { "name": "Pie Crust", "amount": 2, "unit": "sheets", "cost": 4.00, "category": "frozen" },
+      { "name": "Frozen Mixed Vegetables", "amount": 2, "unit": "cups", "cost": 2.00, "category": "frozen" },
+      { "name": "Chicken Broth", "amount": 1.5, "unit": "cups", "cost": 1.25, "category": "pantry" },
+      { "name": "Heavy Cream", "amount": 0.5, "unit": "cup", "cost": 1.50, "category": "dairy" },
+      { "name": "Butter", "amount": 4, "unit": "tbsp", "cost": 1.00, "category": "dairy" },
+      { "name": "Flour", "amount": 0.25, "unit": "cup", "cost": 0.25, "category": "pantry" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Fresh Thyme", "amount": 1, "unit": "tbsp", "cost": 1.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Poach chicken in broth, then shred",
+      "Sauté onion in butter until soft",
+      "Add flour and cook 1 minute",
+      "Slowly add broth and cream, stirring constantly",
+      "Add chicken, vegetables, and thyme",
+      "Line pie dish with crust, add filling",
+      "Top with second crust, crimp edges",
+      "Bake at 400°F for 35-40 minutes until golden"
+    ]
+  },
+  {
+    "id": "tuna-poke-bowl",
+    "name": "Ahi Tuna Poke Bowl",
+    "description": "Hawaiian-inspired bowl with fresh tuna",
+    "prepTime": 20,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 3,
+    "tags": ["fish", "dairy-free", "healthy"],
+    "ingredients": [
+      { "name": "Sushi-Grade Tuna", "amount": 1, "unit": "lb", "cost": 16.00, "category": "seafood" },
+      { "name": "Sushi Rice", "amount": 2, "unit": "cups", "cost": 3.00, "category": "pantry" },
+      { "name": "Soy Sauce", "amount": 3, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Sesame Oil", "amount": 1, "unit": "tbsp", "cost": 0.50, "category": "pantry" },
+      { "name": "Avocado", "amount": 2, "unit": "whole", "cost": 4.00, "category": "produce" },
+      { "name": "Cucumber", "amount": 1, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Edamame", "amount": 1, "unit": "cup", "cost": 2.00, "category": "frozen" },
+      { "name": "Green Onions", "amount": 4, "unit": "whole", "cost": 0.75, "category": "produce" },
+      { "name": "Sesame Seeds", "amount": 2, "unit": "tbsp", "cost": 0.50, "category": "pantry" }
+    ],
+    "instructions": [
+      "Cook sushi rice with rice vinegar",
+      "Cube tuna and toss with soy sauce and sesame oil",
+      "Slice cucumber and avocado",
+      "Cook edamame according to package",
+      "Assemble bowls with rice as base",
+      "Arrange tuna and toppings",
+      "Garnish with green onions and sesame seeds"
+    ]
+  },
+  {
+    "id": "lamb-gyros",
+    "name": "Greek Lamb Gyros",
+    "description": "Spiced lamb in warm pita with tzatziki",
+    "prepTime": 20,
+    "cookTime": 25,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 3,
+    "tags": ["red-meat", "dairy"],
+    "ingredients": [
+      { "name": "Ground Lamb", "amount": 1.5, "unit": "lb", "cost": 12.00, "category": "meat" },
+      { "name": "Greek Yogurt", "amount": 1, "unit": "cup", "cost": 2.50, "category": "dairy" },
+      { "name": "Cucumber", "amount": 1, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Pita Bread", "amount": 4, "unit": "whole", "cost": 2.50, "category": "pantry" },
+      { "name": "Red Onion", "amount": 1, "unit": "whole", "cost": 0.75, "category": "produce" },
+      { "name": "Tomatoes", "amount": 2, "unit": "whole", "cost": 1.50, "category": "produce" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.35, "category": "produce" },
+      { "name": "Dried Oregano", "amount": 1, "unit": "tbsp", "cost": 0.25, "category": "spices" },
+      { "name": "Cumin", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" },
+      { "name": "Fresh Dill", "amount": 2, "unit": "tbsp", "cost": 1.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Mix lamb with oregano, cumin, and garlic",
+      "Form into small patties or a large loaf",
+      "Bake at 350°F for 25 minutes",
+      "Make tzatziki: grate cucumber, mix with yogurt, garlic, dill",
+      "Slice tomatoes and onion",
+      "Warm pita and slice lamb",
+      "Assemble gyros with tzatziki and vegetables"
+    ]
+  },
+  {
+    "id": "cauliflower-mac-cheese",
+    "name": "Cauliflower Mac and Cheese",
+    "description": "Healthier twist on the classic comfort food",
+    "prepTime": 15,
+    "cookTime": 25,
+    "servings": 6,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["vegetarian", "dairy", "healthy"],
+    "ingredients": [
+      { "name": "Cauliflower", "amount": 1, "unit": "head", "cost": 3.00, "category": "produce" },
+      { "name": "Elbow Pasta", "amount": 0.5, "unit": "lb", "cost": 1.50, "category": "pantry" },
+      { "name": "Cheddar Cheese", "amount": 2, "unit": "cups", "cost": 5.00, "category": "dairy" },
+      { "name": "Milk", "amount": 1, "unit": "cup", "cost": 0.75, "category": "dairy" },
+      { "name": "Cream Cheese", "amount": 4, "unit": "oz", "cost": 2.00, "category": "dairy" },
+      { "name": "Garlic Powder", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" },
+      { "name": "Panko Breadcrumbs", "amount": 0.5, "unit": "cup", "cost": 1.00, "category": "pantry" },
+      { "name": "Butter", "amount": 2, "unit": "tbsp", "cost": 0.50, "category": "dairy" }
+    ],
+    "instructions": [
+      "Cut cauliflower into florets and steam until tender",
+      "Cook pasta according to package",
+      "Make cheese sauce with milk, cream cheese, and cheddar",
+      "Combine pasta and cauliflower with sauce",
+      "Pour into baking dish",
+      "Top with breadcrumbs and butter",
+      "Bake at 375°F until golden and bubbly"
+    ]
+  },
+  {
+    "id": "korean-bibimbap",
+    "name": "Korean Bibimbap",
+    "description": "Colorful rice bowl with vegetables and egg",
+    "prepTime": 30,
+    "cookTime": 20,
+    "servings": 4,
+    "difficulty": "medium",
+    "costLevel": 2,
+    "tags": ["red-meat", "dairy-free"],
+    "ingredients": [
+      { "name": "Ground Beef", "amount": 1, "unit": "lb", "cost": 6.00, "category": "meat" },
+      { "name": "Rice", "amount": 2, "unit": "cups", "cost": 1.50, "category": "pantry" },
+      { "name": "Eggs", "amount": 4, "unit": "whole", "cost": 1.35, "category": "dairy" },
+      { "name": "Spinach", "amount": 4, "unit": "cups", "cost": 3.00, "category": "produce" },
+      { "name": "Carrots", "amount": 2, "unit": "whole", "cost": 0.60, "category": "produce" },
+      { "name": "Zucchini", "amount": 1, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Bean Sprouts", "amount": 1, "unit": "cup", "cost": 0.75, "category": "produce" },
+      { "name": "Gochujang", "amount": 3, "unit": "tbsp", "cost": 2.00, "category": "pantry" },
+      { "name": "Sesame Oil", "amount": 2, "unit": "tbsp", "cost": 1.00, "category": "pantry" },
+      { "name": "Soy Sauce", "amount": 3, "unit": "tbsp", "cost": 0.50, "category": "pantry" }
+    ],
+    "instructions": [
+      "Cook rice and keep warm",
+      "Season beef with soy sauce and cook",
+      "Sauté each vegetable separately with sesame oil",
+      "Blanch spinach and bean sprouts",
+      "Fry eggs sunny-side up",
+      "Arrange rice in bowls, top with vegetables and beef",
+      "Add egg and serve with gochujang"
+    ]
+  },
+  {
+    "id": "shrimp-tacos",
+    "name": "Grilled Shrimp Tacos",
+    "description": "Zesty grilled shrimp with mango salsa",
+    "prepTime": 20,
+    "cookTime": 10,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 3,
+    "tags": ["fish", "dairy-free", "quick"],
+    "ingredients": [
+      { "name": "Large Shrimp", "amount": 1.5, "unit": "lb", "cost": 12.00, "category": "seafood" },
+      { "name": "Corn Tortillas", "amount": 12, "unit": "whole", "cost": 2.50, "category": "pantry" },
+      { "name": "Mango", "amount": 1, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Red Onion", "amount": 0.5, "unit": "whole", "cost": 0.40, "category": "produce" },
+      { "name": "Jalapeño", "amount": 1, "unit": "whole", "cost": 0.25, "category": "produce" },
+      { "name": "Cilantro", "amount": 0.5, "unit": "cup", "cost": 1.00, "category": "produce" },
+      { "name": "Lime", "amount": 3, "unit": "whole", "cost": 1.00, "category": "produce" },
+      { "name": "Cumin", "amount": 1, "unit": "tsp", "cost": 0.15, "category": "spices" },
+      { "name": "Cabbage", "amount": 2, "unit": "cups", "cost": 1.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Marinate shrimp with lime juice and cumin",
+      "Make mango salsa: dice mango, onion, jalapeño, cilantro, lime",
+      "Grill shrimp until pink, about 2 minutes per side",
+      "Warm tortillas on grill",
+      "Shred cabbage for slaw",
+      "Assemble tacos with shrimp, slaw, and salsa"
+    ]
+  },
+  {
+    "id": "veggie-quesadillas",
+    "name": "Loaded Veggie Quesadillas",
+    "description": "Crispy tortillas stuffed with vegetables and cheese",
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegetarian", "dairy", "quick"],
+    "ingredients": [
+      { "name": "Flour Tortillas", "amount": 8, "unit": "whole", "cost": 3.00, "category": "pantry" },
+      { "name": "Cheddar Cheese", "amount": 2, "unit": "cups", "cost": 5.00, "category": "dairy" },
+      { "name": "Bell Peppers", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Onion", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" },
+      { "name": "Mushrooms", "amount": 8, "unit": "oz", "cost": 3.00, "category": "produce" },
+      { "name": "Black Beans", "amount": 1, "unit": "can", "cost": 1.00, "category": "pantry" },
+      { "name": "Salsa", "amount": 1, "unit": "cup", "cost": 2.50, "category": "pantry" },
+      { "name": "Sour Cream", "amount": 0.5, "unit": "cup", "cost": 1.50, "category": "dairy" }
+    ],
+    "instructions": [
+      "Slice peppers, onion, and mushrooms",
+      "Sauté vegetables until tender",
+      "Drain and rinse black beans",
+      "Layer cheese, vegetables, and beans on tortilla",
+      "Top with another tortilla",
+      "Cook in skillet until golden on both sides",
+      "Cut into wedges and serve with salsa and sour cream"
+    ]
+  },
+  {
+    "id": "honey-glazed-ham",
+    "name": "Honey Glazed Ham",
+    "description": "Sweet and savory baked ham for special occasions",
+    "prepTime": 15,
+    "cookTime": 120,
+    "servings": 12,
+    "difficulty": "easy",
+    "costLevel": 3,
+    "tags": ["red-meat", "dairy-free"],
+    "ingredients": [
+      { "name": "Bone-In Ham", "amount": 8, "unit": "lb", "cost": 32.00, "category": "meat" },
+      { "name": "Honey", "amount": 1, "unit": "cup", "cost": 6.00, "category": "pantry" },
+      { "name": "Brown Sugar", "amount": 0.5, "unit": "cup", "cost": 0.75, "category": "pantry" },
+      { "name": "Dijon Mustard", "amount": 2, "unit": "tbsp", "cost": 0.75, "category": "pantry" },
+      { "name": "Apple Cider Vinegar", "amount": 2, "unit": "tbsp", "cost": 0.25, "category": "pantry" },
+      { "name": "Whole Cloves", "amount": 20, "unit": "whole", "cost": 0.50, "category": "spices" }
+    ],
+    "instructions": [
+      "Preheat oven to 325°F",
+      "Score ham in diamond pattern",
+      "Insert cloves at intersections",
+      "Mix honey, brown sugar, mustard, and vinegar",
+      "Brush glaze over ham",
+      "Bake for 2 hours, glazing every 30 minutes",
+      "Rest 15 minutes before slicing"
+    ]
+  },
+  {
+    "id": "pasta-primavera",
+    "name": "Pasta Primavera",
+    "description": "Light pasta with fresh spring vegetables in garlic olive oil",
+    "prepTime": 15,
+    "cookTime": 20,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegetarian", "dairy"],
+    "ingredients": [
+      { "name": "Penne Pasta", "amount": 1, "unit": "lb", "cost": 2.00, "category": "pantry" },
+      { "name": "Zucchini", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Yellow Squash", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Cherry Tomatoes", "amount": 1, "unit": "pint", "cost": 3.00, "category": "produce" },
+      { "name": "Garlic", "amount": 4, "unit": "cloves", "cost": 0.35, "category": "produce" },
+      { "name": "Olive Oil", "amount": 3, "unit": "tbsp", "cost": 0.45, "category": "pantry" },
+      { "name": "Parmesan Cheese", "amount": 0.5, "unit": "cup", "cost": 3.00, "category": "dairy" },
+      { "name": "Fresh Basil", "amount": 0.25, "unit": "cup", "cost": 1.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Cook pasta according to package, reserve pasta water",
+      "Slice zucchini and squash into half moons",
+      "Sauté vegetables in olive oil until tender",
+      "Add garlic and halved cherry tomatoes",
+      "Toss with pasta and pasta water",
+      "Top with parmesan and fresh basil"
+    ]
+  },
+  {
+    "id": "turkey-meatballs",
+    "name": "Turkey Meatballs in Marinara",
+    "description": "Lean turkey meatballs simmered in tomato sauce",
+    "prepTime": 20,
+    "cookTime": 25,
+    "servings": 4,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["poultry", "dairy-free"],
+    "ingredients": [
+      { "name": "Ground Turkey", "amount": 1.5, "unit": "lb", "cost": 7.00, "category": "meat" },
+      { "name": "Breadcrumbs", "amount": 0.5, "unit": "cup", "cost": 0.50, "category": "pantry" },
+      { "name": "Egg", "amount": 1, "unit": "whole", "cost": 0.35, "category": "dairy" },
+      { "name": "Marinara Sauce", "amount": 24, "unit": "oz", "cost": 3.50, "category": "pantry" },
+      { "name": "Garlic", "amount": 3, "unit": "cloves", "cost": 0.25, "category": "produce" },
+      { "name": "Italian Seasoning", "amount": 1, "unit": "tbsp", "cost": 0.25, "category": "spices" },
+      { "name": "Spaghetti", "amount": 1, "unit": "lb", "cost": 2.00, "category": "pantry" }
+    ],
+    "instructions": [
+      "Mix turkey with breadcrumbs, egg, garlic, and seasoning",
+      "Form into 20 meatballs",
+      "Brown meatballs in skillet",
+      "Add marinara and simmer 15 minutes",
+      "Cook spaghetti according to package",
+      "Serve meatballs and sauce over pasta"
+    ]
+  },
+  {
+    "id": "avocado-toast",
+    "name": "Loaded Avocado Toast",
+    "description": "Trendy breakfast toast with eggs and toppings",
+    "prepTime": 10,
+    "cookTime": 5,
+    "servings": 2,
+    "difficulty": "easy",
+    "costLevel": 2,
+    "tags": ["vegetarian", "dairy-free", "quick", "healthy"],
+    "ingredients": [
+      { "name": "Sourdough Bread", "amount": 4, "unit": "slices", "cost": 2.50, "category": "pantry" },
+      { "name": "Avocado", "amount": 2, "unit": "whole", "cost": 4.00, "category": "produce" },
+      { "name": "Eggs", "amount": 2, "unit": "whole", "cost": 0.70, "category": "dairy" },
+      { "name": "Cherry Tomatoes", "amount": 0.5, "unit": "cup", "cost": 1.50, "category": "produce" },
+      { "name": "Red Pepper Flakes", "amount": 0.5, "unit": "tsp", "cost": 0.10, "category": "spices" },
+      { "name": "Lemon", "amount": 1, "unit": "whole", "cost": 0.50, "category": "produce" }
+    ],
+    "instructions": [
+      "Toast sourdough bread until golden",
+      "Mash avocado with lemon juice, salt, and pepper",
+      "Spread avocado on toast",
+      "Poach or fry eggs to desired doneness",
+      "Top toast with eggs and halved tomatoes",
+      "Sprinkle with red pepper flakes"
+    ]
+  },
+  {
+    "id": "moroccan-chickpea-stew",
+    "name": "Moroccan Chickpea Stew",
+    "description": "Aromatic stew with warming spices and dried fruit",
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": 6,
+    "difficulty": "easy",
+    "costLevel": 1,
+    "tags": ["vegan", "vegetarian", "dairy-free", "healthy"],
+    "ingredients": [
+      { "name": "Chickpeas", "amount": 2, "unit": "cans", "cost": 2.00, "category": "pantry" },
+      { "name": "Diced Tomatoes", "amount": 14, "unit": "oz", "cost": 1.50, "category": "pantry" },
+      { "name": "Vegetable Broth", "amount": 2, "unit": "cups", "cost": 1.00, "category": "pantry" },
+      { "name": "Sweet Potato", "amount": 2, "unit": "whole", "cost": 2.00, "category": "produce" },
+      { "name": "Dried Apricots", "amount": 0.5, "unit": "cup", "cost": 3.00, "category": "pantry" },
+      { "name": "Cumin", "amount": 2, "unit": "tsp", "cost": 0.30, "category": "spices" },
+      { "name": "Cinnamon", "amount": 1, "unit": "tsp", "cost": 0.20, "category": "spices" },
+      { "name": "Couscous", "amount": 1.5, "unit": "cups", "cost": 2.50, "category": "pantry" },
+      { "name": "Fresh Cilantro", "amount": 0.25, "unit": "cup", "cost": 1.00, "category": "produce" }
+    ],
+    "instructions": [
+      "Dice sweet potatoes and chop apricots",
+      "Sauté onion, add cumin and cinnamon",
+      "Add sweet potatoes, tomatoes, and broth",
+      "Simmer 20 minutes until potatoes are tender",
+      "Add chickpeas and apricots, cook 10 more minutes",
+      "Prepare couscous according to package",
+      "Serve stew over couscous with cilantro"
+    ]
+  }
+]

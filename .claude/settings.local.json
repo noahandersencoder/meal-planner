@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 5 npm run dev:*)",
+      "Bash(ls:*)",
+      "Bash(node -e:*)",
+      "Bash(vercel:*)"
+    ]
+  }
+}
