@@ -221,6 +221,36 @@ export async function approveUser(userId, email) {
   await set(pendingRef, null)
 }
 
+// Manually approve a user by email (for legacy accounts)
+export async function manuallyApproveByEmail(email) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Create a deterministic ID from the email for legacy users
+  const oderId = 'legacy-' + email.replace(/[^a-zA-Z0-9]/g, '-')
+  const approvedRef = ref(database, `approvedUsers/${oderId}`)
+  await set(approvedRef, {
+    email: email,
+    approvedAt: Date.now(),
+    manuallyApproved: true
+  })
+}
+
+// Check if user is approved (updated to check by email too for legacy users)
+export async function checkUserApprovedByEmail(email) {
+  if (!firebaseEnabled) return false
+  const approvedRef = ref(database, 'approvedUsers')
+  const snapshot = await get(approvedRef)
+  if (!snapshot.exists()) return false
+
+  let found = false
+  snapshot.forEach((child) => {
+    if (child.val().email === email) {
+      found = true
+    }
+  })
+  return found
+}
+
 // Reject/remove a user (admin only)
 export async function rejectUser(userId) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')

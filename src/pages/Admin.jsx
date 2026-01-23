@@ -8,6 +8,7 @@ import {
   getPendingRecipes,
   approveRecipe,
   rejectRecipe,
+  manuallyApproveByEmail,
   isFirebaseEnabled
 } from '../firebase'
 
@@ -19,6 +20,8 @@ function Admin() {
   const [loadingData, setLoadingData] = useState(true)
   const [actionLoading, setActionLoading] = useState({})
   const [expandedRecipe, setExpandedRecipe] = useState(null)
+  const [manualEmail, setManualEmail] = useState('')
+  const [manualApproveStatus, setManualApproveStatus] = useState(null)
 
   useEffect(() => {
     if (loading) return
@@ -89,6 +92,22 @@ function Admin() {
       console.error('Error rejecting recipe:', err)
     }
     setActionLoading(prev => ({ ...prev, [`recipe-${recipe.id}`]: null }))
+  }
+
+  const handleManualApprove = async (e) => {
+    e.preventDefault()
+    if (!manualEmail.trim()) return
+
+    setManualApproveStatus('loading')
+    try {
+      await manuallyApproveByEmail(manualEmail.trim())
+      setManualApproveStatus('success')
+      setManualEmail('')
+      setTimeout(() => setManualApproveStatus(null), 3000)
+    } catch (err) {
+      console.error('Error manually approving:', err)
+      setManualApproveStatus('error')
+    }
   }
 
   if (!isFirebaseEnabled()) {
@@ -302,6 +321,39 @@ function Admin() {
               </div>
             ))}
           </div>
+        )}
+      </div>
+
+      {/* Manual User Approval */}
+      <div className="card p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <span>✉️</span> Manual User Approval
+        </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Approve a user by email (for accounts created before the approval system).
+        </p>
+        <form onSubmit={handleManualApprove} className="flex gap-2">
+          <input
+            type="email"
+            value={manualEmail}
+            onChange={(e) => setManualEmail(e.target.value)}
+            placeholder="user@example.com"
+            className="input flex-1"
+            required
+          />
+          <button
+            type="submit"
+            disabled={manualApproveStatus === 'loading'}
+            className="btn btn-primary"
+          >
+            {manualApproveStatus === 'loading' ? '...' : 'Approve'}
+          </button>
+        </form>
+        {manualApproveStatus === 'success' && (
+          <p className="text-green-600 text-sm mt-2">User approved successfully!</p>
+        )}
+        {manualApproveStatus === 'error' && (
+          <p className="text-red-600 text-sm mt-2">Error approving user. Try again.</p>
         )}
       </div>
 

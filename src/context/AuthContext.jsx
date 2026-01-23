@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { onAuthChange, isFirebaseEnabled, checkUserApproved, isAdmin, ADMIN_EMAIL } from '../firebase'
+import { onAuthChange, isFirebaseEnabled, checkUserApproved, checkUserApprovedByEmail, isAdmin, ADMIN_EMAIL } from '../firebase'
 
 const AuthContext = createContext(null)
 
@@ -28,10 +28,14 @@ export function AuthProvider({ children }) {
           return
         }
 
-        // Check if user is approved
+        // Check if user is approved (by uid or by email for legacy users)
         setCheckingApproval(true)
         try {
-          const approved = await checkUserApproved(user.uid)
+          let approved = await checkUserApproved(user.uid)
+          if (!approved) {
+            // Check by email for legacy users
+            approved = await checkUserApprovedByEmail(user.email)
+          }
           setIsApproved(approved)
         } catch (err) {
           console.error('Error checking approval:', err)
