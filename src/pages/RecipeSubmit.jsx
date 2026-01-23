@@ -12,6 +12,7 @@ const CATEGORIES = [
   { value: 'dairy', label: 'Dairy', icon: '🧀' },
   { value: 'pantry', label: 'Pantry', icon: '🥫' },
   { value: 'spices', label: 'Spices', icon: '🧂' },
+  { value: 'baking', label: 'Baking', icon: '🧁' },
   { value: 'frozen', label: 'Frozen', icon: '🧊' },
   { value: 'other', label: 'Other', icon: '📦' },
 ]
