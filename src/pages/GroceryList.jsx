@@ -1,8 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
+import { useAuth } from '../context/AuthContext'
 import GroceryItem from '../components/GroceryItem'
-import { generateListId, saveGroceryList, loadGroceryList, subscribeToList, isFirebaseEnabled } from '../firebase'
+import {
+  saveUserGroceryList,
+  loadUserGroceryList,
+  subscribeToUserList,
+  isFirebaseEnabled
+} from '../firebase'
 
 const categoryLabels = {
   produce: { label: 'Produce', icon: '🥬' },
@@ -19,16 +25,14 @@ const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices'
 
 function GroceryList() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const [shareUrl, setShareUrl] = useState('')
-  const [showShareModal, setShowShareModal] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const { user, loading: authLoading } = useAuth()
+  const [isLoading, setIsLoading] = useState(true)
   const [firebaseError, setFirebaseError] = useState(false)
 
   // Track if update came from Firebase to prevent sync loops
   const isFromFirebase = useRef(false)
   const saveTimeout = useRef(null)
+  const initialLoadDone = useRef(false)
 
   const {
     groceryList,
@@ -39,8 +43,6 @@ function GroceryList() {
     getGroceryListTotal,
     generateGroceryList,
     getAllMealPlanRecipes,
-    sharedListId,
-    setSharedListId,
     setGroceryListFromCloud,
   } = useStore()
 
@@ -49,61 +51,58 @@ function GroceryList() {
   const totalCount = groceryList.length
   const allChecked = totalCount > 0 && checkedCount === totalCount
 
-  // Check for shared list in URL on mount
+  // Load user's grocery list on login
   useEffect(() => {
-    if (!isFirebaseEnabled()) return
-    const listId = searchParams.get('list')
-    if (listId && listId !== sharedListId) {
-      setIsLoading(true)
-      isFromFirebase.current = true
-      loadGroceryList(listId)
-        .then((data) => {
-          if (data) {
-            setGroceryListFromCloud(data.groceryList || [], data.checkedItems || {})
-            setSharedListId(listId)
-          }
-          setIsLoading(false)
-          setTimeout(() => { isFromFirebase.current = false }, 100)
-        })
-        .catch((err) => {
-          console.error('Failed to load list:', err)
-          setFirebaseError(true)
-          setIsLoading(false)
-          isFromFirebase.current = false
-        })
+    if (authLoading) return
+    if (!isFirebaseEnabled() || !user) {
+      setIsLoading(false)
+      return
     }
-  }, [searchParams])
 
-  // Subscribe to real-time updates if we have a shared list
-  useEffect(() => {
-    if (!isFirebaseEnabled()) return
-    if (sharedListId && !firebaseError) {
-      try {
-        const unsubscribe = subscribeToList(sharedListId, (data) => {
-          if (data) {
-            isFromFirebase.current = true
-            setGroceryListFromCloud(data.groceryList || [], data.checkedItems || {})
-            setTimeout(() => { isFromFirebase.current = false }, 100)
-          }
-        })
-        return () => unsubscribe()
-      } catch (err) {
-        console.error('Subscribe error:', err)
+    setIsLoading(true)
+    isFromFirebase.current = true
+
+    loadUserGroceryList(user.uid)
+      .then((data) => {
+        if (data && data.groceryList) {
+          setGroceryListFromCloud(data.groceryList, data.checkedItems || {})
+        }
+        setIsLoading(false)
+        initialLoadDone.current = true
+        setTimeout(() => { isFromFirebase.current = false }, 100)
+      })
+      .catch((err) => {
+        console.error('Failed to load list:', err)
         setFirebaseError(true)
-      }
-    }
-  }, [sharedListId, firebaseError])
+        setIsLoading(false)
+        isFromFirebase.current = false
+      })
+  }, [user, authLoading])
 
-  // Sync changes to cloud when list changes (debounced, skip if from Firebase)
+  // Subscribe to real-time updates
   useEffect(() => {
-    if (!isFirebaseEnabled()) return
-    if (!sharedListId || groceryList.length === 0 || firebaseError) return
+    if (!isFirebaseEnabled() || !user || firebaseError) return
+
+    const unsubscribe = subscribeToUserList(user.uid, (data) => {
+      if (data && initialLoadDone.current) {
+        isFromFirebase.current = true
+        setGroceryListFromCloud(data.groceryList || [], data.checkedItems || {})
+        setTimeout(() => { isFromFirebase.current = false }, 100)
+      }
+    })
+
+    return () => unsubscribe()
+  }, [user, firebaseError])
+
+  // Sync changes to cloud when list changes (debounced)
+  useEffect(() => {
+    if (!isFirebaseEnabled() || !user || firebaseError) return
+    if (!initialLoadDone.current) return
     if (isFromFirebase.current) return
 
-    // Debounce saves to prevent rapid updates
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
     saveTimeout.current = setTimeout(() => {
-      saveGroceryList(sharedListId, { groceryList, checkedItems })
+      saveUserGroceryList(user.uid, { groceryList, checkedItems })
         .catch((err) => {
           console.error('Sync error:', err)
           setFirebaseError(true)
@@ -113,7 +112,7 @@ function GroceryList() {
     return () => {
       if (saveTimeout.current) clearTimeout(saveTimeout.current)
     }
-  }, [groceryList, checkedItems, sharedListId, firebaseError])
+  }, [groceryList, checkedItems, user, firebaseError])
 
   const groupedItems = groceryList.reduce((acc, item) => {
     const category = item.category || 'other'
@@ -128,61 +127,73 @@ function GroceryList() {
     generateGroceryList()
   }
 
-  const handleShare = async () => {
-    let listId = sharedListId
-    if (!listId) {
-      listId = generateListId()
-      setSharedListId(listId)
-    }
-
-    try {
-      await saveGroceryList(listId, { groceryList, checkedItems })
-      const url = `${window.location.origin}/grocery-list?list=${listId}`
-      setShareUrl(url)
-      setShowShareModal(true)
-    } catch (err) {
-      console.error('Share error:', err)
-      setFirebaseError(true)
-      alert('Unable to share. Please set up Firebase first (see console for details).')
-    }
-  }
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      // Fallback for older browsers
-      const input = document.createElement('input')
-      input.value = shareUrl
-      document.body.appendChild(input)
-      input.select()
-      document.execCommand('copy')
-      document.body.removeChild(input)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
-
-  if (isLoading) {
+  // Show loading state
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading shared list...</p>
+          <p className="text-gray-500">Loading your grocery list...</p>
         </div>
       </div>
     )
   }
 
+  // Prompt to log in if not authenticated
+  if (isFirebaseEnabled() && !user) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
+        <div className="card p-8 text-center">
+          <div className="text-5xl mb-4">🔐</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Log in to save your list
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Your grocery list will sync across all your devices automatically.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="btn btn-primary"
+          >
+            Log In or Sign Up
+          </button>
+        </div>
+
+        {/* Still allow using the app without login */}
+        {groceryList.length > 0 && (
+          <div className="mt-8">
+            <p className="text-sm text-gray-500 mb-4 text-center">
+              Or continue with your current list (won't sync):
+            </p>
+            <LocalGroceryList
+              groceryList={groceryList}
+              checkedItems={checkedItems}
+              toggleGroceryItem={toggleGroceryItem}
+              clearCheckedItems={clearCheckedItems}
+              clearGroceryList={clearGroceryList}
+              totalCost={totalCost}
+              checkedCount={checkedCount}
+              totalCount={totalCount}
+              allChecked={allChecked}
+              groupedItems={groupedItems}
+              sortedCategories={sortedCategories}
+              handleRefresh={handleRefresh}
+              navigate={navigate}
+            />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Empty state
   if (groceryList.length === 0) {
     const hasRecipes = getAllMealPlanRecipes().length > 0
 
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
-
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🛒</div>
           <p className="text-gray-500 mb-4">
@@ -205,33 +216,59 @@ function GroceryList() {
   }
 
   return (
+    <LocalGroceryList
+      groceryList={groceryList}
+      checkedItems={checkedItems}
+      toggleGroceryItem={toggleGroceryItem}
+      clearCheckedItems={clearCheckedItems}
+      clearGroceryList={clearGroceryList}
+      totalCost={totalCost}
+      checkedCount={checkedCount}
+      totalCount={totalCount}
+      allChecked={allChecked}
+      groupedItems={groupedItems}
+      sortedCategories={sortedCategories}
+      handleRefresh={handleRefresh}
+      navigate={navigate}
+      user={user}
+    />
+  )
+}
+
+// Extracted list component to avoid duplication
+function LocalGroceryList({
+  groceryList,
+  checkedItems,
+  toggleGroceryItem,
+  clearCheckedItems,
+  clearGroceryList,
+  totalCost,
+  checkedCount,
+  totalCount,
+  allChecked,
+  groupedItems,
+  sortedCategories,
+  handleRefresh,
+  navigate,
+  user,
+}) {
+  return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
           <p className="text-gray-500 text-sm">
             {checkedCount} of {totalCount} items checked
-            {sharedListId && <span className="ml-2 text-green-600">Cloud sync on</span>}
+            {user && <span className="ml-2 text-green-600">Synced</span>}
           </p>
         </div>
-        <div className="flex gap-2">
-          {isFirebaseEnabled() && (
-            <button
-              onClick={handleShare}
-              className="btn btn-primary text-sm"
-              title="Share this list"
-            >
-              Share
-            </button>
-          )}
-          <button
-            onClick={handleRefresh}
-            className="btn btn-secondary text-sm"
-            title="Regenerate from meal plan"
-          >
-            Refresh
-          </button>
-        </div>
+        <button
+          onClick={handleRefresh}
+          className="btn btn-secondary text-sm"
+          title="Regenerate from meal plan"
+        >
+          Refresh
+        </button>
       </div>
 
       <div className="card p-4 bg-primary-50 flex items-center justify-between">
@@ -285,7 +322,6 @@ function GroceryList() {
         <button
           onClick={() => {
             clearGroceryList()
-            setSharedListId(null)
             navigate('/meal-plan')
           }}
           className="btn btn-outline flex-1 text-red-600 border-red-300 hover:bg-red-50"
@@ -293,38 +329,6 @@ function GroceryList() {
           Clear List
         </button>
       </div>
-
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Share Your List</h3>
-            <p className="text-gray-600 mb-4">
-              Anyone with this link can view and check off items. Changes sync in real-time!
-            </p>
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={shareUrl}
-                readOnly
-                className="input flex-1 text-sm"
-              />
-              <button
-                onClick={handleCopyLink}
-                className="btn btn-primary whitespace-nowrap"
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="btn btn-secondary w-full"
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
