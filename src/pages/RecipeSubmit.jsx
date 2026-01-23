@@ -42,7 +42,7 @@ function RecipeSubmit() {
     difficulty: 'easy',
     costLevel: 2,
     tags: [],
-    ingredients: [{ name: '', amount: '', unit: 'cups', cost: '', category: 'produce' }],
+    ingredients: [{ name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, category: 'produce' }],
     instructions: ['']
   })
 
@@ -103,7 +103,7 @@ function RecipeSubmit() {
                   difficulty: 'easy',
                   costLevel: 2,
                   tags: [],
-                  ingredients: [{ name: '', amount: '', unit: 'cups', cost: '', category: 'produce' }],
+                  ingredients: [{ name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, category: 'produce' }],
                   instructions: ['']
                 })
               }}
@@ -129,18 +129,35 @@ function RecipeSubmit() {
 
   const updateIngredient = (index, field, value) => {
     const newIngredients = [...recipe.ingredients]
-    newIngredients[index] = { ...newIngredients[index], [field]: value }
+    const currentIng = newIngredients[index]
+
+    // Update the field
+    newIngredients[index] = { ...currentIng, [field]: value }
+
+    // If amount changed and we have a costPerUnit, recalculate cost
+    if (field === 'amount' && currentIng.costPerUnit) {
+      const amount = parseFloat(value) || 0
+      newIngredients[index].cost = (amount * currentIng.costPerUnit).toFixed(2)
+    }
+
+    // If user manually changes cost, clear costPerUnit to stop auto-calculation
+    if (field === 'cost') {
+      newIngredients[index].costPerUnit = null
+    }
+
     updateRecipe('ingredients', newIngredients)
   }
 
   // Handle ingredient selection from autocomplete
   const selectIngredient = (index, ingredient) => {
     const newIngredients = [...recipe.ingredients]
+    const currentAmount = parseFloat(newIngredients[index].amount) || 1
     newIngredients[index] = {
       ...newIngredients[index],
       name: ingredient.name,
       unit: ingredient.defaultUnit,
-      cost: ingredient.avgCost,
+      costPerUnit: ingredient.avgCost,
+      cost: (currentAmount * ingredient.avgCost).toFixed(2),
       category: ingredient.category
     }
     updateRecipe('ingredients', newIngredients)
@@ -149,7 +166,7 @@ function RecipeSubmit() {
   const addIngredient = () => {
     updateRecipe('ingredients', [
       ...recipe.ingredients,
-      { name: '', amount: '', unit: 'cups', cost: '', category: 'produce' }
+      { name: '', amount: 1, unit: 'cups', cost: '', costPerUnit: null, category: 'produce' }
     ])
   }
 

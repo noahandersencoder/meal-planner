@@ -326,4 +326,32 @@ export async function getApprovedRecipes() {
   return recipes
 }
 
+// Update a pending recipe (admin only)
+export async function updatePendingRecipe(recipeId, updates) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const recipeRef = ref(database, `pendingRecipes/${recipeId}`)
+  const snapshot = await get(recipeRef)
+  if (!snapshot.exists()) throw new Error('Recipe not found')
+
+  await set(recipeRef, {
+    ...snapshot.val(),
+    ...updates,
+    updatedAt: Date.now()
+  })
+}
+
+// Update an approved recipe (admin only)
+export async function updateApprovedRecipe(recipeId, updates) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const recipeRef = ref(database, `approvedRecipes/${recipeId}`)
+  const snapshot = await get(recipeRef)
+  if (!snapshot.exists()) throw new Error('Recipe not found')
+
+  await set(recipeRef, {
+    ...snapshot.val(),
+    ...updates,
+    updatedAt: Date.now()
+  })
+}
+
 export { database, auth }

@@ -9,19 +9,28 @@ import {
   approveRecipe,
   rejectRecipe,
   manuallyApproveByEmail,
-  isFirebaseEnabled
+  isFirebaseEnabled,
+  getApprovedRecipes,
+  updatePendingRecipe,
+  updateApprovedRecipe
 } from '../firebase'
+import RecipeEditModal from '../components/RecipeEditModal'
 
 function Admin() {
   const navigate = useNavigate()
   const { user, loading, isAdmin } = useAuth()
   const [pendingUsers, setPendingUsers] = useState([])
   const [pendingRecipes, setPendingRecipes] = useState([])
+  const [approvedRecipes, setApprovedRecipes] = useState([])
   const [loadingData, setLoadingData] = useState(true)
   const [actionLoading, setActionLoading] = useState({})
   const [expandedRecipe, setExpandedRecipe] = useState(null)
   const [manualEmail, setManualEmail] = useState('')
   const [manualApproveStatus, setManualApproveStatus] = useState(null)
+  const [editingRecipe, setEditingRecipe] = useState(null)
+  const [editingType, setEditingType] = useState(null) // 'pending' or 'approved'
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [activeTab, setActiveTab] = useState('pending') // 'pending' or 'approved'
 
   useEffect(() => {
     if (loading) return
@@ -36,14 +45,16 @@ function Admin() {
   const loadAllPending = async () => {
     setLoadingData(true)
     try {
-      const [users, recipes] = await Promise.all([
+      const [users, pending, approved] = await Promise.all([
         getPendingUsers(),
-        getPendingRecipes()
+        getPendingRecipes(),
+        getApprovedRecipes()
       ])
       setPendingUsers(users)
-      setPendingRecipes(recipes)
+      setPendingRecipes(pending)
+      setApprovedRecipes(approved)
     } catch (err) {
-      console.error('Error loading pending data:', err)
+      console.error('Error loading data:', err)
     }
     setLoadingData(false)
   }
@@ -108,6 +119,34 @@ function Admin() {
       console.error('Error manually approving:', err)
       setManualApproveStatus('error')
     }
+  }
+
+  const handleEditRecipe = (recipe, type) => {
+    setEditingRecipe(recipe)
+    setEditingType(type)
+  }
+
+  const handleSaveEdit = async (updatedRecipe) => {
+    setSavingEdit(true)
+    try {
+      if (editingType === 'pending') {
+        await updatePendingRecipe(updatedRecipe.id, updatedRecipe)
+        setPendingRecipes(prev =>
+          prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r)
+        )
+      } else {
+        await updateApprovedRecipe(updatedRecipe.id, updatedRecipe)
+        setApprovedRecipes(prev =>
+          prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r)
+        )
+      }
+      setEditingRecipe(null)
+      setEditingType(null)
+    } catch (err) {
+      console.error('Error saving recipe:', err)
+      alert('Failed to save recipe. Please try again.')
+    }
+    setSavingEdit(false)
   }
 
   if (!isFirebaseEnabled()) {
@@ -302,11 +341,17 @@ function Admin() {
 
                     <div className="flex gap-2 pt-2">
                       <button
+                        onClick={() => handleEditRecipe(recipe, 'pending')}
+                        className="btn btn-secondary flex-1"
+                      >
+                        Edit
+                      </button>
+                      <button
                         onClick={() => handleApproveRecipe(recipe)}
                         disabled={actionLoading[`recipe-${recipe.id}`]}
                         className="btn btn-primary flex-1"
                       >
-                        {actionLoading[`recipe-${recipe.id}`] === 'approve' ? 'Approving...' : 'Approve Recipe'}
+                        {actionLoading[`recipe-${recipe.id}`] === 'approve' ? 'Approving...' : 'Approve'}
                       </button>
                       <button
                         onClick={() => handleRejectRecipe(recipe)}
@@ -318,6 +363,54 @@ function Admin() {
                     </div>
                   </div>
                 )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Approved Recipes (for editing) */}
+      <div className="card p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <span>✅</span> Approved User Recipes
+          {approvedRecipes.length > 0 && (
+            <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {approvedRecipes.length}
+            </span>
+          )}
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Edit approved recipes to standardize ingredients and costs.
+        </p>
+
+        {loadingData ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="text-gray-500 mt-2">Loading...</p>
+          </div>
+        ) : approvedRecipes.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-gray-500">No approved user recipes yet</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {approvedRecipes.map((recipe) => (
+              <div
+                key={recipe.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
+                <div>
+                  <p className="font-medium text-gray-900">{recipe.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {recipe.ingredients?.length || 0} ingredients • Approved {recipe.approvedAt ? new Date(recipe.approvedAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleEditRecipe(recipe, 'approved')}
+                  className="btn btn-secondary text-sm"
+                >
+                  Edit
+                </button>
               </div>
             ))}
           </div>
@@ -364,6 +457,19 @@ function Admin() {
           will appear here for approval.
         </p>
       </div>
+
+      {/* Edit Modal */}
+      {editingRecipe && (
+        <RecipeEditModal
+          recipe={editingRecipe}
+          onSave={handleSaveEdit}
+          onClose={() => {
+            setEditingRecipe(null)
+            setEditingType(null)
+          }}
+          saving={savingEdit}
+        />
+      )}
     </div>
   )
 }
