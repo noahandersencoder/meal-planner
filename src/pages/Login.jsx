@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signUp, logIn, isFirebaseEnabled } from '../firebase'
+import { signUp, logIn, isFirebaseEnabled, registerPendingUser, ADMIN_EMAIL } from '../firebase'
 
 function Login() {
   const navigate = useNavigate()
@@ -36,7 +36,8 @@ function Login() {
     setLoading(true)
     try {
       if (isSignUp) {
-        await signUp(email, password)
+        const user = await signUp(email, password)
+        await registerPendingUser(user)
       } else {
         await logIn(email, password)
       }
@@ -67,7 +68,7 @@ function Login() {
         </h2>
         <p className="text-gray-600 mt-2">
           {isSignUp
-            ? 'Sign up to save your grocery lists'
+            ? 'Sign up to request access (requires admin approval)'
             : 'Log in to access your grocery lists'}
         </p>
       </div>

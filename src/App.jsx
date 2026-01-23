@@ -8,6 +8,7 @@ import MealPlan from './pages/MealPlan'
 import GroceryList from './pages/GroceryList'
 import RecipeDetail from './pages/RecipeDetail'
 import Login from './pages/Login'
+import Admin from './pages/Admin'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/meal-plan" element={<MealPlan />} />
           <Route path="/grocery-list" element={<GroceryList />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </Layout>
     </AuthProvider>

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { logOut, isFirebaseEnabled } from '../firebase'
 
 function Layout({ children }) {
-  const { user, loading } = useAuth()
+  const { user, loading, isAdmin } = useAuth()
 
   const handleLogout = async () => {
     try {
@@ -25,6 +25,14 @@ function Layout({ children }) {
             <div className="flex items-center gap-3">
               {user ? (
                 <>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Admin
+                    </Link>
+                  )}
                   <span className="text-sm text-gray-600 hidden sm:block">
                     {user.email}
                   </span>

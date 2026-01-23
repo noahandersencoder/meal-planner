@@ -154,4 +154,78 @@ export function subscribeToList(listId, callback) {
   })
 }
 
+// Admin email - only this user can approve others
+export const ADMIN_EMAIL = 'noah.andersen95@gmail.com'
+
+// Check if user is admin
+export function isAdmin(user) {
+  return user?.email === ADMIN_EMAIL
+}
+
+// Save user to pending list on signup
+export async function registerPendingUser(user) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Admin is auto-approved
+  if (user.email === ADMIN_EMAIL) {
+    const approvedRef = ref(database, `approvedUsers/${user.uid}`)
+    await set(approvedRef, {
+      email: user.email,
+      approvedAt: Date.now()
+    })
+    return
+  }
+
+  const pendingRef = ref(database, `pendingUsers/${user.uid}`)
+  await set(pendingRef, {
+    email: user.email,
+    requestedAt: Date.now()
+  })
+}
+
+// Check if user is approved
+export async function checkUserApproved(userId) {
+  if (!firebaseEnabled) return false
+  const approvedRef = ref(database, `approvedUsers/${userId}`)
+  const snapshot = await get(approvedRef)
+  return snapshot.exists()
+}
+
+// Get all pending users (admin only)
+export async function getPendingUsers() {
+  if (!firebaseEnabled) return []
+  const pendingRef = ref(database, 'pendingUsers')
+  const snapshot = await get(pendingRef)
+  if (!snapshot.exists()) return []
+
+  const users = []
+  snapshot.forEach((child) => {
+    users.push({ uid: child.key, ...child.val() })
+  })
+  return users
+}
+
+// Approve a user (admin only)
+export async function approveUser(userId, email) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Add to approved list
+  const approvedRef = ref(database, `approvedUsers/${userId}`)
+  await set(approvedRef, {
+    email: email,
+    approvedAt: Date.now()
+  })
+
+  // Remove from pending list
+  const pendingRef = ref(database, `pendingUsers/${userId}`)
+  await set(pendingRef, null)
+}
+
+// Reject/remove a user (admin only)
+export async function rejectUser(userId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const pendingRef = ref(database, `pendingUsers/${userId}`)
+  await set(pendingRef, null)
+}
+
 export { database, auth }
