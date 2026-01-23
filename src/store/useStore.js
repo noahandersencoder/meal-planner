@@ -12,6 +12,10 @@ const useStore = create(
         servings: 4,
       },
 
+      // View preferences
+      recipeViewMode: 'grid', // 'grid' or 'list'
+      setRecipeViewMode: (mode) => set({ recipeViewMode: mode }),
+
       setPreferences: (newPrefs) =>
         set((state) => ({
           preferences: { ...state.preferences, ...newPrefs },
@@ -125,6 +129,14 @@ const useStore = create(
         const { groceryList } = get()
         return groceryList.reduce((sum, item) => sum + item.cost, 0)
       },
+
+      // Shared list functionality
+      sharedListId: null,
+      setSharedListId: (id) => set({ sharedListId: id }),
+
+      // Set grocery list from cloud
+      setGroceryListFromCloud: (groceryList, checkedItems) =>
+        set({ groceryList, checkedItems: checkedItems || {} }),
     }),
     {
       name: 'meal-planner-storage',
@@ -133,6 +145,8 @@ const useStore = create(
         mealPlan: state.mealPlan,
         groceryList: state.groceryList,
         checkedItems: state.checkedItems,
+        sharedListId: state.sharedListId,
+        recipeViewMode: state.recipeViewMode,
       }),
     }
   )

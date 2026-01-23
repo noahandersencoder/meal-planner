@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import useStore from '../store/useStore'
 import recipes from '../data/recipes.json'
 import RecipeCard from '../components/RecipeCard'
+import RecipeRow from '../components/RecipeRow'
 import FilterPanel from '../components/FilterPanel'
 
 function Browse() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { preferences, addRecipeToDay } = useStore()
+  const { preferences, addRecipeToDay, recipeViewMode, setRecipeViewMode } = useStore()
   const [filters, setFilters] = useState(preferences)
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -64,12 +65,43 @@ function Browse() {
             {filteredRecipes.length} recipe{filteredRecipes.length !== 1 ? 's' : ''} found
           </p>
         </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="btn btn-secondary"
-        >
-          {showFilters ? 'Hide Filters' : 'Filters'}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setRecipeViewMode('grid')}
+              className={`p-2 rounded transition-colors ${
+                recipeViewMode === 'grid'
+                  ? 'bg-white shadow text-primary-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="Grid view"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setRecipeViewMode('list')}
+              className={`p-2 rounded transition-colors ${
+                recipeViewMode === 'list'
+                  ? 'bg-white shadow text-primary-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="List view"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="btn btn-secondary"
+          >
+            {showFilters ? 'Hide Filters' : 'Filters'}
+          </button>
+        </div>
       </div>
 
       <div className="relative">
@@ -107,16 +139,28 @@ function Browse() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredRecipes.map((recipe) => (
-          <RecipeCard
-            key={recipe.id}
-            recipe={recipe}
-            showAddButton
-            onAddToMealPlan={handleAddToMealPlan}
-          />
-        ))}
-      </div>
+      {recipeViewMode === 'grid' ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredRecipes.map((recipe) => (
+            <RecipeCard
+              key={recipe.id}
+              recipe={recipe}
+              showAddButton
+              onAddToMealPlan={handleAddToMealPlan}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredRecipes.map((recipe) => (
+            <RecipeRow
+              key={recipe.id}
+              recipe={recipe}
+              onAddToMealPlan={handleAddToMealPlan}
+            />
+          ))}
+        </div>
+      )}
 
       {filteredRecipes.length === 0 && (
         <div className="text-center py-12">

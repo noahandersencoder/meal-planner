@@ -7,7 +7,17 @@
       "Bash(timeout 5 npm run dev:*)",
       "Bash(ls:*)",
       "Bash(node -e:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(gh repo create:*)",
+      "Bash(brew install:*)",
+      "Bash(gh:*)",
+      "Bash(/usr/local/bin/gh --version)",
+      "Bash(/opt/homebrew/bin/gh --version)",
+      "Bash(/usr/local/bin/gh auth status)",
+      "Bash(/usr/local/bin/gh repo create meal-planner --public --source=. --push)",
+      "Bash(/usr/local/bin/gh repo view:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
