@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import useStore from '../store/useStore'
 import GroceryItem from '../components/GroceryItem'
-import { generateListId, saveGroceryList, loadGroceryList, subscribeToList } from '../firebase'
+import { generateListId, saveGroceryList, loadGroceryList, subscribeToList, isFirebaseEnabled } from '../firebase'
 
 const categoryLabels = {
   produce: { label: 'Produce', icon: '🥬' },
@@ -48,6 +48,7 @@ function GroceryList() {
 
   // Check for shared list in URL on mount
   useEffect(() => {
+    if (!isFirebaseEnabled()) return
     const listId = searchParams.get('list')
     if (listId && listId !== sharedListId) {
       setIsLoading(true)
@@ -69,6 +70,7 @@ function GroceryList() {
 
   // Subscribe to real-time updates if we have a shared list
   useEffect(() => {
+    if (!isFirebaseEnabled()) return
     if (sharedListId && !firebaseError) {
       try {
         const unsubscribe = subscribeToList(sharedListId, (data) => {
@@ -86,6 +88,7 @@ function GroceryList() {
 
   // Sync changes to cloud when list changes
   useEffect(() => {
+    if (!isFirebaseEnabled()) return
     if (sharedListId && groceryList.length > 0 && !firebaseError) {
       setIsSyncing(true)
       saveGroceryList(sharedListId, { groceryList, checkedItems })
@@ -199,13 +202,15 @@ function GroceryList() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={handleShare}
-            className="btn btn-primary text-sm"
-            title="Share this list"
-          >
-            Share
-          </button>
+          {isFirebaseEnabled() && (
+            <button
+              onClick={handleShare}
+              className="btn btn-primary text-sm"
+              title="Share this list"
+            >
+              Share
+            </button>
+          )}
           <button
             onClick={handleRefresh}
             className="btn btn-secondary text-sm"

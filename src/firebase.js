@@ -1,7 +1,10 @@
 import { initializeApp } from 'firebase/app'
 import { getDatabase, ref, set, get, onValue } from 'firebase/database'
 
-// You'll replace these with your Firebase config
+let database = null
+let firebaseEnabled = false
+
+// Check if Firebase config is available
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -12,8 +15,24 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 }
 
-const app = initializeApp(firebaseConfig)
-const database = getDatabase(app)
+// Only initialize Firebase if config is present
+if (firebaseConfig.apiKey && firebaseConfig.databaseURL) {
+  try {
+    const app = initializeApp(firebaseConfig)
+    database = getDatabase(app)
+    firebaseEnabled = true
+    console.log('Firebase initialized successfully')
+  } catch (error) {
+    console.warn('Firebase initialization failed:', error)
+  }
+} else {
+  console.log('Firebase not configured - sharing features disabled')
+}
+
+// Check if Firebase is available
+export function isFirebaseEnabled() {
+  return firebaseEnabled
+}
 
 // Generate a random list ID
 export function generateListId() {
@@ -27,6 +46,9 @@ export function generateListId() {
 
 // Save a grocery list to Firebase
 export async function saveGroceryList(listId, data) {
+  if (!firebaseEnabled) {
+    throw new Error('Firebase not configured')
+  }
   const listRef = ref(database, `lists/${listId}`)
   await set(listRef, {
     ...data,
@@ -36,6 +58,9 @@ export async function saveGroceryList(listId, data) {
 
 // Load a grocery list from Firebase
 export async function loadGroceryList(listId) {
+  if (!firebaseEnabled) {
+    throw new Error('Firebase not configured')
+  }
   const listRef = ref(database, `lists/${listId}`)
   const snapshot = await get(listRef)
   if (snapshot.exists()) {
@@ -46,6 +71,9 @@ export async function loadGroceryList(listId) {
 
 // Subscribe to real-time updates
 export function subscribeToList(listId, callback) {
+  if (!firebaseEnabled) {
+    return () => {} // Return empty unsubscribe function
+  }
   const listRef = ref(database, `lists/${listId}`)
   return onValue(listRef, (snapshot) => {
     if (snapshot.exists()) {
