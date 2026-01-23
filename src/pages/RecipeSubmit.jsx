@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { submitRecipe, isFirebaseEnabled } from '../firebase'
+import IngredientAutocomplete from '../components/IngredientAutocomplete'
 
 const CATEGORIES = [
   { value: 'produce', label: 'Produce', icon: '🥬' },
@@ -129,6 +130,19 @@ function RecipeSubmit() {
   const updateIngredient = (index, field, value) => {
     const newIngredients = [...recipe.ingredients]
     newIngredients[index] = { ...newIngredients[index], [field]: value }
+    updateRecipe('ingredients', newIngredients)
+  }
+
+  // Handle ingredient selection from autocomplete
+  const selectIngredient = (index, ingredient) => {
+    const newIngredients = [...recipe.ingredients]
+    newIngredients[index] = {
+      ...newIngredients[index],
+      name: ingredient.name,
+      unit: ingredient.defaultUnit,
+      cost: ingredient.avgCost,
+      category: ingredient.category
+    }
     updateRecipe('ingredients', newIngredients)
   }
 
@@ -381,12 +395,11 @@ function RecipeSubmit() {
                   )}
                 </div>
 
-                <input
-                  type="text"
+                <IngredientAutocomplete
                   value={ingredient.name}
-                  onChange={(e) => updateIngredient(index, 'name', e.target.value)}
-                  className="input"
-                  placeholder="Ingredient name (e.g., chicken breast)"
+                  onChange={(value) => updateIngredient(index, 'name', value)}
+                  onSelect={(ing) => selectIngredient(index, ing)}
+                  placeholder="Start typing ingredient name..."
                 />
 
                 <div className="grid grid-cols-3 gap-2">
@@ -403,6 +416,8 @@ function RecipeSubmit() {
                     onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
                     className="input"
                   >
+                    <option value="whole">whole</option>
+                    <option value="cup">cup</option>
                     <option value="cups">cups</option>
                     <option value="tbsp">tbsp</option>
                     <option value="tsp">tsp</option>
@@ -410,9 +425,15 @@ function RecipeSubmit() {
                     <option value="lb">lb</option>
                     <option value="g">g</option>
                     <option value="ml">ml</option>
-                    <option value="pieces">pieces</option>
+                    <option value="can">can</option>
+                    <option value="bunch">bunch</option>
+                    <option value="head">head</option>
                     <option value="cloves">cloves</option>
-                    <option value="whole">whole</option>
+                    <option value="stalks">stalks</option>
+                    <option value="sprigs">sprigs</option>
+                    <option value="slices">slices</option>
+                    <option value="pint">pint</option>
+                    <option value="packet">packet</option>
                   </select>
                   <input
                     type="number"
