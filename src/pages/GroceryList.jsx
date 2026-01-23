@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import useStore from '../store/useStore'
 import GroceryItem from '../components/GroceryItem'
@@ -23,9 +23,12 @@ function GroceryList() {
   const [shareUrl, setShareUrl] = useState('')
   const [showShareModal, setShowShareModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isSyncing, setIsSyncing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [firebaseError, setFirebaseError] = useState(false)
+
+  // Track if update came from Firebase to prevent sync loops
+  const isFromFirebase = useRef(false)
+  const saveTimeout = useRef(null)
 
   const {
     groceryList,
@@ -52,6 +55,7 @@ function GroceryList() {
     const listId = searchParams.get('list')
     if (listId && listId !== sharedListId) {
       setIsLoading(true)
+      isFromFirebase.current = true
       loadGroceryList(listId)
         .then((data) => {
           if (data) {
@@ -59,11 +63,13 @@ function GroceryList() {
             setSharedListId(listId)
           }
           setIsLoading(false)
+          setTimeout(() => { isFromFirebase.current = false }, 100)
         })
         .catch((err) => {
           console.error('Failed to load list:', err)
           setFirebaseError(true)
           setIsLoading(false)
+          isFromFirebase.current = false
         })
     }
   }, [searchParams])
@@ -75,7 +81,9 @@ function GroceryList() {
       try {
         const unsubscribe = subscribeToList(sharedListId, (data) => {
           if (data) {
+            isFromFirebase.current = true
             setGroceryListFromCloud(data.groceryList || [], data.checkedItems || {})
+            setTimeout(() => { isFromFirebase.current = false }, 100)
           }
         })
         return () => unsubscribe()
@@ -86,18 +94,24 @@ function GroceryList() {
     }
   }, [sharedListId, firebaseError])
 
-  // Sync changes to cloud when list changes
+  // Sync changes to cloud when list changes (debounced, skip if from Firebase)
   useEffect(() => {
     if (!isFirebaseEnabled()) return
-    if (sharedListId && groceryList.length > 0 && !firebaseError) {
-      setIsSyncing(true)
+    if (!sharedListId || groceryList.length === 0 || firebaseError) return
+    if (isFromFirebase.current) return
+
+    // Debounce saves to prevent rapid updates
+    if (saveTimeout.current) clearTimeout(saveTimeout.current)
+    saveTimeout.current = setTimeout(() => {
       saveGroceryList(sharedListId, { groceryList, checkedItems })
-        .then(() => setIsSyncing(false))
         .catch((err) => {
           console.error('Sync error:', err)
           setFirebaseError(true)
-          setIsSyncing(false)
         })
+    }, 500)
+
+    return () => {
+      if (saveTimeout.current) clearTimeout(saveTimeout.current)
     }
   }, [groceryList, checkedItems, sharedListId, firebaseError])
 
@@ -197,8 +211,7 @@ function GroceryList() {
           <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
           <p className="text-gray-500 text-sm">
             {checkedCount} of {totalCount} items checked
-            {isSyncing && <span className="ml-2 text-primary-600">Syncing...</span>}
-            {sharedListId && !isSyncing && <span className="ml-2 text-green-600">Synced</span>}
+            {sharedListId && <span className="ml-2 text-green-600">Cloud sync on</span>}
           </p>
         </div>
         <div className="flex gap-2">
