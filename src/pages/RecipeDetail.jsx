@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import recipes from '../data/recipes.json'
+import { getApprovedRecipes, isFirebaseEnabled } from '../firebase'
 
 const categoryLabels = {
   produce: 'Produce',
@@ -17,8 +19,44 @@ function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { addRecipeToDay, preferences } = useStore()
+  const [recipe, setRecipe] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const recipe = recipes.find((r) => r.id === id)
+  useEffect(() => {
+    // First check static recipes
+    const staticRecipe = recipes.find((r) => r.id === id)
+    if (staticRecipe) {
+      setRecipe(staticRecipe)
+      setLoading(false)
+      return
+    }
+
+    // If not found and Firebase is enabled, check user-submitted recipes
+    if (isFirebaseEnabled()) {
+      getApprovedRecipes()
+        .then((userRecipes) => {
+          const userRecipe = userRecipes.find((r) => r.id === id)
+          if (userRecipe) {
+            setRecipe({ ...userRecipe, isUserSubmitted: true })
+          }
+          setLoading(false)
+        })
+        .catch((err) => {
+          console.error('Error fetching user recipes:', err)
+          setLoading(false)
+        })
+    } else {
+      setLoading(false)
+    }
+  }, [id])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
 
   if (!recipe) {
     return (
@@ -63,11 +101,11 @@ function RecipeDetail() {
       <div className="card overflow-hidden">
         <div className="aspect-video bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
           <span className="text-8xl opacity-50">
-            {recipe.tags.includes('vegan') || recipe.tags.includes('vegetarian')
+            {(recipe.tags || []).includes('vegan') || (recipe.tags || []).includes('vegetarian')
               ? '🥗'
-              : recipe.tags.includes('fish')
+              : (recipe.tags || []).includes('fish')
               ? '🐟'
-              : recipe.tags.includes('poultry')
+              : (recipe.tags || []).includes('poultry')
               ? '🍗'
               : '🍖'}
           </span>
@@ -77,16 +115,18 @@ function RecipeDetail() {
           <h1 className="text-2xl font-bold text-gray-900">{recipe.name}</h1>
           <p className="text-gray-600 mt-2">{recipe.description}</p>
 
-          <div className="flex flex-wrap gap-2 mt-4">
-            {recipe.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          {recipe.tags && recipe.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {recipe.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
             <div className="text-center p-3 bg-gray-50 rounded-lg">
@@ -123,7 +163,7 @@ function RecipeDetail() {
                     <span className="text-gray-800">
                       {ing.amount} {ing.unit} {ing.name}
                     </span>
-                    <span className="text-gray-500">${ing.cost.toFixed(2)}</span>
+                    <span className="text-gray-500">${(ing.cost || 0).toFixed(2)}</span>
                   </li>
                 ))}
               </ul>
