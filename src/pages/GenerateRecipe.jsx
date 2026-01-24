@@ -25,7 +25,7 @@ const API_URL = import.meta.env.VITE_RECIPE_AI_API_URL || 'http://localhost:3000
 
 function GenerateRecipe() {
   const navigate = useNavigate()
-  const { user, isAdmin } = useAuth()
+  const { user, isApproved } = useAuth()
 
   const [ingredientInput, setIngredientInput] = useState('')
   const [ingredients, setIngredients] = useState([])
@@ -39,18 +39,20 @@ function GenerateRecipe() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  // Admin-only check
-  if (!isAdmin) {
+  // Approved users only
+  if (!user || !isApproved) {
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900">AI Recipe Generator</h2>
         <div className="card p-8 text-center">
           <div className="text-5xl mb-4">🔐</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Admin Access Required
+            {!user ? 'Login Required' : 'Approval Required'}
           </h3>
           <p className="text-gray-600">
-            This feature is currently only available to administrators.
+            {!user
+              ? 'Please log in to use the AI recipe generator.'
+              : 'Your account is pending approval. Once approved, you can use this feature.'}
           </p>
         </div>
       </div>
