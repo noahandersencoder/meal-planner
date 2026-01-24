@@ -156,15 +156,6 @@ const useStore = create(
         return groceryLists[id] || { items: [], checkedItems: {} }
       },
 
-      // Legacy compatibility getters
-      get groceryList() {
-        return get().getActiveList().items || []
-      },
-
-      get checkedItems() {
-        return get().getActiveList().checkedItems || {}
-      },
-
       generateGroceryList: () => {
         const { getAllMealPlanRecipes, groceryLists, ensureActiveList } = get()
         const listId = ensureActiveList()
