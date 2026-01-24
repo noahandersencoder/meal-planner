@@ -4,6 +4,7 @@ import useStore from '../store/useStore'
 import recipes from '../data/recipes.json'
 import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail } from '../firebase'
 import RecipeComments from '../components/RecipeComments'
+import IngredientWithUnitSelect from '../components/IngredientWithUnitSelect'
 
 const categoryLabels = {
   produce: 'Produce',
@@ -185,21 +186,19 @@ function RecipeDetail() {
       </div>
 
       <div className="card p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Ingredients</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Ingredients</h2>
+          <span className="text-xs text-gray-400">Click units to convert</span>
+        </div>
         <div className="space-y-4">
           {Object.entries(groupedIngredients).map(([category, ingredients]) => (
             <div key={category}>
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                {categoryLabels[category]}
+                {categoryLabels[category] || category}
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 {ingredients.map((ing, idx) => (
-                  <li key={idx} className="flex justify-between">
-                    <span className="text-gray-800">
-                      {ing.amount} {ing.unit} {ing.name}
-                    </span>
-                    <span className="text-gray-500">${(ing.cost || 0).toFixed(2)}</span>
-                  </li>
+                  <IngredientWithUnitSelect key={idx} ingredient={ing} />
                 ))}
               </ul>
             </div>
