@@ -576,6 +576,14 @@ function GroceryList() {
   )
 }
 
+const SORT_OPTIONS = [
+  { value: 'aisle', label: 'By Aisle (Store Layout)' },
+  { value: 'alphabetical', label: 'Alphabetical (A-Z)' },
+  { value: 'unchecked', label: 'Unchecked First' },
+  { value: 'cost-high', label: 'Cost (Highest First)' },
+  { value: 'cost-low', label: 'Cost (Lowest First)' },
+]
+
 // Extracted list component to avoid duplication
 function LocalGroceryList({
   groceryList,
@@ -598,6 +606,7 @@ function LocalGroceryList({
   sourceRecipes = [],
 }) {
   const [showAddItem, setShowAddItem] = useState(false)
+  const [sortBy, setSortBy] = useState('aisle')
   const [newItemName, setNewItemName] = useState('')
   const [newItemAmount, setNewItemAmount] = useState(1)
   const [newItemUnit, setNewItemUnit] = useState('whole')
@@ -654,10 +663,23 @@ function LocalGroceryList({
           </button>
         </div>
       </div>
-      <p className="text-gray-500 text-sm -mt-4">
-        {checkedCount} of {totalCount} items checked
-        {user && <span className="ml-2 text-green-600">Synced</span>}
-      </p>
+      <div className="flex items-center justify-between flex-wrap gap-2 -mt-4">
+        <p className="text-gray-500 text-sm">
+          {checkedCount} of {totalCount} items checked
+          {user && <span className="ml-2 text-green-600">Synced</span>}
+        </p>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="input py-1.5 text-sm w-auto"
+        >
+          {SORT_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Source Recipes */}
       {sourceRecipes.length > 0 && (
@@ -759,30 +781,66 @@ function LocalGroceryList({
       )}
 
       <div className="space-y-6">
-        {sortedCategories.map((category) => (
-          <div key={category}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xl">{categoryLabels[category]?.icon || '📦'}</span>
-              <h3 className="font-semibold text-gray-900">
-                {categoryLabels[category]?.label || category}
-              </h3>
-              <span className="text-sm text-gray-400">
-                ({groupedItems[category].length})
-              </span>
+        {sortBy === 'aisle' ? (
+          // Group by category/aisle
+          sortedCategories.map((category) => (
+            <div key={category}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">{categoryLabels[category]?.icon || '📦'}</span>
+                <h3 className="font-semibold text-gray-900">
+                  {categoryLabels[category]?.label || category}
+                </h3>
+                <span className="text-sm text-gray-400">
+                  ({groupedItems[category].length})
+                </span>
+              </div>
+              <div className="space-y-2">
+                {groupedItems[category].map((item) => (
+                  <GroceryItem
+                    key={item.id}
+                    item={item}
+                    checked={checkedItems[item.id] || false}
+                    onToggle={() => toggleGroceryItem(item.id)}
+                    onRemove={removeItemFromGroceryList ? () => removeItemFromGroceryList(item.id) : null}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="space-y-2">
-              {groupedItems[category].map((item) => (
+          ))
+        ) : (
+          // Flat list with custom sorting
+          <div className="space-y-2">
+            {[...groceryList]
+              .sort((a, b) => {
+                switch (sortBy) {
+                  case 'alphabetical':
+                    return a.name.localeCompare(b.name)
+                  case 'unchecked':
+                    // Unchecked items first, then alphabetical
+                    const aChecked = checkedItems[a.id] ? 1 : 0
+                    const bChecked = checkedItems[b.id] ? 1 : 0
+                    if (aChecked !== bChecked) return aChecked - bChecked
+                    return a.name.localeCompare(b.name)
+                  case 'cost-high':
+                    return (b.cost || 0) - (a.cost || 0)
+                  case 'cost-low':
+                    return (a.cost || 0) - (b.cost || 0)
+                  default:
+                    return 0
+                }
+              })
+              .map((item) => (
                 <GroceryItem
                   key={item.id}
                   item={item}
                   checked={checkedItems[item.id] || false}
                   onToggle={() => toggleGroceryItem(item.id)}
                   onRemove={removeItemFromGroceryList ? () => removeItemFromGroceryList(item.id) : null}
+                  showCategory={true}
                 />
               ))}
-            </div>
           </div>
-        ))}
+        )}
       </div>
 
       <div className="flex gap-2">

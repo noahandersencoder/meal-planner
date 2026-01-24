@@ -1,4 +1,19 @@
-function GroceryItem({ item, checked, onToggle, onRemove }) {
+const categoryIcons = {
+  produce: '🥬',
+  meat: '🥩',
+  seafood: '🐟',
+  dairy: '🧀',
+  pantry: '🥫',
+  spices: '🧂',
+  baking: '🧁',
+  frozen: '🧊',
+  snacks: '🍿',
+  breakfast: '🥣',
+  drinks: '🥤',
+  other: '📦',
+}
+
+function GroceryItem({ item, checked, onToggle, onRemove, showCategory = false }) {
   const handleRemove = (e) => {
     e.stopPropagation()
     onRemove?.()
@@ -26,6 +41,12 @@ function GroceryItem({ item, checked, onToggle, onRemove }) {
           </svg>
         )}
       </div>
+
+      {showCategory && (
+        <span className="mr-2 text-lg" title={item.category}>
+          {categoryIcons[item.category] || '📦'}
+        </span>
+      )}
 
       <div className="flex-1">
         <span className={`font-medium ${checked ? 'line-through text-gray-400' : 'text-gray-800'}`}>

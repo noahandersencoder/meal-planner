@@ -15,8 +15,28 @@ function RecipeRow({ recipe, onAddToMealPlan, author }) {
     }
   }, [recipe.id])
 
+  const getEmoji = () => {
+    if (recipe.tags.includes('vegan') || recipe.tags.includes('vegetarian')) return '🥗'
+    if (recipe.tags.includes('fish')) return '🐟'
+    if (recipe.tags.includes('poultry')) return '🍗'
+    return '🍖'
+  }
+
   return (
     <div className="card p-4 flex items-center gap-4">
+      {/* Thumbnail */}
+      <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+        {recipe.photoURL ? (
+          <img
+            src={recipe.photoURL}
+            alt={recipe.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-2xl opacity-50">{getEmoji()}</span>
+        )}
+      </div>
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <Link to={`/recipe/${recipe.id}`} className="hover:text-primary-600 transition-colors">

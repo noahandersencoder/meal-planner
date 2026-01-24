@@ -25,18 +25,25 @@ function RecipeCard({ recipe, onAddToMealPlan, showAddButton = false, author }) 
   const totalTime = recipe.prepTime + recipe.cookTime
   const totalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
 
+  const getEmoji = () => {
+    if (recipe.tags.includes('vegan') || recipe.tags.includes('vegetarian')) return '🥗'
+    if (recipe.tags.includes('fish')) return '🐟'
+    if (recipe.tags.includes('poultry')) return '🍗'
+    return '🍖'
+  }
+
   return (
     <div className="card hover:shadow-md transition-shadow">
-      <div className="aspect-video bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-        <span className="text-6xl opacity-50">
-          {recipe.tags.includes('vegan') || recipe.tags.includes('vegetarian')
-            ? '🥗'
-            : recipe.tags.includes('fish')
-            ? '🐟'
-            : recipe.tags.includes('poultry')
-            ? '🍗'
-            : '🍖'}
-        </span>
+      <div className="aspect-video bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center overflow-hidden">
+        {recipe.photoURL ? (
+          <img
+            src={recipe.photoURL}
+            alt={recipe.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-6xl opacity-50">{getEmoji()}</span>
+        )}
       </div>
       <div className="p-4">
         <Link to={`/recipe/${recipe.id}`}>

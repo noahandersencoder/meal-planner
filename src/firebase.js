@@ -605,4 +605,35 @@ export async function deleteReview(recipeId, oderId) {
   await set(ratingRef, null)
 }
 
+// Update recipe photo (admin only)
+export async function updateRecipePhoto(recipeId, photoURL) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Check if it's an approved recipe
+  const approvedRef = ref(database, `approvedRecipes/${recipeId}`)
+  const approvedSnapshot = await get(approvedRef)
+  if (approvedSnapshot.exists()) {
+    await set(approvedRef, {
+      ...approvedSnapshot.val(),
+      photoURL,
+      updatedAt: Date.now()
+    })
+    return
+  }
+
+  // Check pending recipes
+  const pendingRef = ref(database, `pendingRecipes/${recipeId}`)
+  const pendingSnapshot = await get(pendingRef)
+  if (pendingSnapshot.exists()) {
+    await set(pendingRef, {
+      ...pendingSnapshot.val(),
+      photoURL,
+      updatedAt: Date.now()
+    })
+    return
+  }
+
+  throw new Error('Recipe not found')
+}
+
 export { database, auth }

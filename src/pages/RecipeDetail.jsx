@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
+import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail } from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto } from '../firebase'
 import RecipeComments from '../components/RecipeComments'
 import IngredientWithUnitSelect from '../components/IngredientWithUnitSelect'
 
@@ -24,10 +25,13 @@ const categoryLabels = {
 function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
   const { addRecipeToDay, preferences } = useStore()
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(true)
   const [creatorProfile, setCreatorProfile] = useState(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const photoInputRef = useRef(null)
 
   useEffect(() => {
     // First check static recipes
@@ -91,6 +95,55 @@ function RecipeDetail() {
     navigate('/meal-plan')
   }
 
+  const compressImage = (file, maxWidth = 800, quality = 0.7) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          const ratio = Math.min(maxWidth / img.width, 1)
+          canvas.width = img.width * ratio
+          canvas.height = img.height * ratio
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+          resolve(canvas.toDataURL('image/jpeg', quality))
+        }
+        img.src = e.target.result
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !recipe.isUserSubmitted) return
+
+    setUploadingPhoto(true)
+    try {
+      const compressed = await compressImage(file, 800, 0.7)
+      await updateRecipePhoto(recipe.id, compressed)
+      setRecipe({ ...recipe, photoURL: compressed })
+    } catch (err) {
+      console.error('Error uploading photo:', err)
+      alert('Failed to upload photo')
+    }
+    setUploadingPhoto(false)
+  }
+
+  const handleRemovePhoto = async () => {
+    if (!recipe.isUserSubmitted || !confirm('Remove recipe photo?')) return
+
+    setUploadingPhoto(true)
+    try {
+      await updateRecipePhoto(recipe.id, null)
+      setRecipe({ ...recipe, photoURL: null })
+    } catch (err) {
+      console.error('Error removing photo:', err)
+    }
+    setUploadingPhoto(false)
+  }
+
   const groupedIngredients = recipe.ingredients.reduce((acc, ing) => {
     const category = ing.category || 'other'
     if (!acc[category]) acc[category] = []
@@ -111,16 +164,53 @@ function RecipeDetail() {
       </button>
 
       <div className="card overflow-hidden">
-        <div className="aspect-video bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-          <span className="text-8xl opacity-50">
-            {(recipe.tags || []).includes('vegan') || (recipe.tags || []).includes('vegetarian')
-              ? '🥗'
-              : (recipe.tags || []).includes('fish')
-              ? '🐟'
-              : (recipe.tags || []).includes('poultry')
-              ? '🍗'
-              : '🍖'}
-          </span>
+        <div className="aspect-video bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center relative overflow-hidden">
+          {recipe.photoURL ? (
+            <img
+              src={recipe.photoURL}
+              alt={recipe.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-8xl opacity-50">
+              {(recipe.tags || []).includes('vegan') || (recipe.tags || []).includes('vegetarian')
+                ? '🥗'
+                : (recipe.tags || []).includes('fish')
+                ? '🐟'
+                : (recipe.tags || []).includes('poultry')
+                ? '🍗'
+                : '🍖'}
+            </span>
+          )}
+
+          {/* Admin Photo Controls */}
+          {isAdmin && recipe.isUserSubmitted && (
+            <div className="absolute bottom-3 right-3 flex gap-2">
+              <input
+                type="file"
+                ref={photoInputRef}
+                onChange={handlePhotoUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <button
+                onClick={() => photoInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                className="px-3 py-1.5 bg-white/90 hover:bg-white text-gray-700 rounded-lg text-sm font-medium shadow-md transition-colors"
+              >
+                {uploadingPhoto ? 'Uploading...' : recipe.photoURL ? 'Change Photo' : 'Add Photo'}
+              </button>
+              {recipe.photoURL && (
+                <button
+                  onClick={handleRemovePhoto}
+                  disabled={uploadingPhoto}
+                  className="px-3 py-1.5 bg-red-500/90 hover:bg-red-500 text-white rounded-lg text-sm font-medium shadow-md transition-colors"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="p-6">

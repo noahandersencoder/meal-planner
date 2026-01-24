@@ -2,6 +2,249 @@ import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic();
 
+// Standard ingredients database - AI must use these exact names, units, and costs
+const STANDARD_INGREDIENTS = {
+  produce: [
+    { name: "Asparagus", unit: "bunch", cost: 3.50 },
+    { name: "Avocado", unit: "whole", cost: 2.00 },
+    { name: "Banana", unit: "whole", cost: 0.25 },
+    { name: "Basil (Fresh)", unit: "cup", cost: 1.75 },
+    { name: "Bean Sprouts", unit: "cup", cost: 1.25 },
+    { name: "Bell Pepper", unit: "whole", cost: 1.50 },
+    { name: "Blueberries", unit: "cup", cost: 3.50 },
+    { name: "Broccoli", unit: "cups", cost: 2.50 },
+    { name: "Butter Lettuce", unit: "head", cost: 2.50 },
+    { name: "Butternut Squash", unit: "lb", cost: 3.50 },
+    { name: "Cabbage", unit: "head", cost: 2.00 },
+    { name: "Carrot", unit: "whole", cost: 0.30 },
+    { name: "Cauliflower", unit: "head", cost: 3.00 },
+    { name: "Celery", unit: "stalks", cost: 0.50 },
+    { name: "Cherry Tomatoes", unit: "pint", cost: 3.00 },
+    { name: "Cilantro", unit: "bunch", cost: 1.00 },
+    { name: "Corn on the Cob", unit: "whole", cost: 0.75 },
+    { name: "Cucumber", unit: "whole", cost: 1.00 },
+    { name: "Dill (Fresh)", unit: "bunch", cost: 1.50 },
+    { name: "Eggplant", unit: "whole", cost: 2.50 },
+    { name: "Garlic", unit: "cloves", cost: 0.15 },
+    { name: "Ginger", unit: "tbsp", cost: 0.40 },
+    { name: "Green Beans", unit: "lb", cost: 3.00 },
+    { name: "Green Onion", unit: "bunch", cost: 1.00 },
+    { name: "Jalapeño", unit: "whole", cost: 0.25 },
+    { name: "Kale", unit: "bunch", cost: 2.50 },
+    { name: "Lemon", unit: "whole", cost: 0.75 },
+    { name: "Lemongrass", unit: "stalks", cost: 2.00 },
+    { name: "Lettuce (Romaine)", unit: "head", cost: 2.50 },
+    { name: "Lime", unit: "whole", cost: 0.50 },
+    { name: "Mango", unit: "whole", cost: 2.00 },
+    { name: "Mint (Fresh)", unit: "bunch", cost: 1.50 },
+    { name: "Mushrooms", unit: "oz", cost: 3.00 },
+    { name: "Onion", unit: "whole", cost: 0.75 },
+    { name: "Orange", unit: "whole", cost: 0.75 },
+    { name: "Parsley (Fresh)", unit: "bunch", cost: 1.25 },
+    { name: "Potato", unit: "lb", cost: 1.50 },
+    { name: "Red Onion", unit: "whole", cost: 0.75 },
+    { name: "Rosemary (Fresh)", unit: "sprigs", cost: 1.50 },
+    { name: "Shallot", unit: "whole", cost: 0.75 },
+    { name: "Snap Peas", unit: "cup", cost: 2.50 },
+    { name: "Spinach", unit: "cups", cost: 2.50 },
+    { name: "Strawberries", unit: "cup", cost: 3.00 },
+    { name: "Sweet Potato", unit: "whole", cost: 1.50 },
+    { name: "Thai Chili", unit: "whole", cost: 0.25 },
+    { name: "Thyme (Fresh)", unit: "sprigs", cost: 1.50 },
+    { name: "Tomato", unit: "whole", cost: 0.75 },
+    { name: "Zucchini", unit: "whole", cost: 1.50 }
+  ],
+  meat: [
+    { name: "Bacon", unit: "lb", cost: 7.00 },
+    { name: "Beef Chuck", unit: "lb", cost: 8.00 },
+    { name: "Beef Short Ribs", unit: "lb", cost: 10.00 },
+    { name: "Brisket", unit: "lb", cost: 9.00 },
+    { name: "Chicken Breast", unit: "lb", cost: 5.00 },
+    { name: "Chicken Drumsticks", unit: "lb", cost: 3.00 },
+    { name: "Chicken Thighs", unit: "lb", cost: 4.00 },
+    { name: "Chicken Wings", unit: "lb", cost: 4.50 },
+    { name: "Flank Steak", unit: "lb", cost: 12.00 },
+    { name: "Ground Beef", unit: "lb", cost: 6.00 },
+    { name: "Ground Chicken", unit: "lb", cost: 5.50 },
+    { name: "Ground Lamb", unit: "lb", cost: 10.00 },
+    { name: "Ground Pork", unit: "lb", cost: 5.00 },
+    { name: "Ground Turkey", unit: "lb", cost: 5.50 },
+    { name: "Ham", unit: "lb", cost: 6.00 },
+    { name: "Italian Sausage", unit: "lb", cost: 5.00 },
+    { name: "Lamb Chops", unit: "lb", cost: 14.00 },
+    { name: "Pork Belly", unit: "lb", cost: 6.00 },
+    { name: "Pork Chops", unit: "lb", cost: 5.00 },
+    { name: "Pork Shoulder", unit: "lb", cost: 4.00 },
+    { name: "Pork Tenderloin", unit: "lb", cost: 7.00 },
+    { name: "Prosciutto", unit: "oz", cost: 2.50 },
+    { name: "Ribeye Steak", unit: "lb", cost: 15.00 },
+    { name: "Sirloin Steak", unit: "lb", cost: 10.00 },
+    { name: "Turkey Breast", unit: "lb", cost: 6.00 },
+    { name: "Whole Chicken", unit: "whole", cost: 10.00 }
+  ],
+  seafood: [
+    { name: "Cod Fillet", unit: "lb", cost: 10.00 },
+    { name: "Crab Meat", unit: "oz", cost: 8.00 },
+    { name: "Halibut", unit: "lb", cost: 20.00 },
+    { name: "Mahi Mahi", unit: "lb", cost: 14.00 },
+    { name: "Mussels", unit: "lb", cost: 6.00 },
+    { name: "Salmon Fillet", unit: "lb", cost: 12.00 },
+    { name: "Scallops", unit: "lb", cost: 18.00 },
+    { name: "Shrimp", unit: "lb", cost: 10.00 },
+    { name: "Tilapia Fillet", unit: "lb", cost: 7.00 },
+    { name: "Tuna (canned)", unit: "can", cost: 2.00 },
+    { name: "Tuna Steak", unit: "lb", cost: 15.00 }
+  ],
+  dairy: [
+    { name: "Butter", unit: "tbsp", cost: 0.25 },
+    { name: "Buttermilk", unit: "cup", cost: 0.75 },
+    { name: "Cheddar Cheese", unit: "cup", cost: 3.00 },
+    { name: "Cream Cheese", unit: "oz", cost: 2.00 },
+    { name: "Egg", unit: "whole", cost: 0.35 },
+    { name: "Feta Cheese", unit: "oz", cost: 3.00 },
+    { name: "Goat Cheese", unit: "oz", cost: 4.00 },
+    { name: "Greek Yogurt", unit: "cup", cost: 2.00 },
+    { name: "Gruyere Cheese", unit: "oz", cost: 2.50 },
+    { name: "Half and Half", unit: "cup", cost: 1.00 },
+    { name: "Heavy Cream", unit: "cup", cost: 2.50 },
+    { name: "Milk", unit: "cup", cost: 0.50 },
+    { name: "Mozzarella Cheese", unit: "cup", cost: 3.00 },
+    { name: "Parmesan Cheese", unit: "cup", cost: 4.00 },
+    { name: "Ricotta Cheese", unit: "cup", cost: 3.50 },
+    { name: "Sour Cream", unit: "cup", cost: 2.00 }
+  ],
+  pantry: [
+    { name: "All-Purpose Flour", unit: "cup", cost: 0.25 },
+    { name: "Arborio Rice", unit: "cup", cost: 2.00 },
+    { name: "Balsamic Vinegar", unit: "tbsp", cost: 0.50 },
+    { name: "BBQ Sauce", unit: "cup", cost: 2.00 },
+    { name: "Beef Broth", unit: "cups", cost: 2.00 },
+    { name: "Black Beans (canned)", unit: "can", cost: 1.25 },
+    { name: "Bread Crumbs", unit: "cup", cost: 1.00 },
+    { name: "Brown Rice", unit: "cup", cost: 1.00 },
+    { name: "Brown Sugar", unit: "cup", cost: 1.00 },
+    { name: "Chicken Broth", unit: "cups", cost: 2.00 },
+    { name: "Chickpeas (canned)", unit: "can", cost: 1.50 },
+    { name: "Coconut Milk", unit: "can", cost: 2.50 },
+    { name: "Corn Tortillas", unit: "whole", cost: 0.20 },
+    { name: "Cornstarch", unit: "tbsp", cost: 0.10 },
+    { name: "Crushed Tomatoes (canned)", unit: "oz", cost: 2.00 },
+    { name: "Diced Tomatoes (canned)", unit: "oz", cost: 1.50 },
+    { name: "Dijon Mustard", unit: "tbsp", cost: 0.50 },
+    { name: "Fish Sauce", unit: "tbsp", cost: 0.50 },
+    { name: "Flour Tortillas", unit: "whole", cost: 0.30 },
+    { name: "Hoisin Sauce", unit: "tbsp", cost: 0.50 },
+    { name: "Honey", unit: "tbsp", cost: 0.50 },
+    { name: "Jasmine Rice", unit: "cup", cost: 1.00 },
+    { name: "Ketchup", unit: "tbsp", cost: 0.10 },
+    { name: "Kidney Beans (canned)", unit: "can", cost: 1.25 },
+    { name: "Maple Syrup", unit: "tbsp", cost: 0.75 },
+    { name: "Marinara Sauce", unit: "oz", cost: 3.00 },
+    { name: "Mayonnaise", unit: "tbsp", cost: 0.25 },
+    { name: "Oats (Rolled)", unit: "cup", cost: 0.50 },
+    { name: "Olive Oil", unit: "tbsp", cost: 0.30 },
+    { name: "Oyster Sauce", unit: "tbsp", cost: 0.50 },
+    { name: "Panko Bread Crumbs", unit: "cup", cost: 1.50 },
+    { name: "Pasta (any shape)", unit: "lb", cost: 1.50 },
+    { name: "Peanut Butter", unit: "tbsp", cost: 0.25 },
+    { name: "Penne Pasta", unit: "lb", cost: 1.75 },
+    { name: "Quinoa", unit: "cup", cost: 2.50 },
+    { name: "Red Curry Paste", unit: "tbsp", cost: 0.75 },
+    { name: "Rice (White)", unit: "cup", cost: 0.75 },
+    { name: "Rice Noodles", unit: "oz", cost: 2.00 },
+    { name: "Rice Vinegar", unit: "tbsp", cost: 0.20 },
+    { name: "Sesame Oil", unit: "tbsp", cost: 0.50 },
+    { name: "Soy Sauce", unit: "tbsp", cost: 0.25 },
+    { name: "Spaghetti", unit: "lb", cost: 1.75 },
+    { name: "Sriracha", unit: "tbsp", cost: 0.30 },
+    { name: "Sugar", unit: "cup", cost: 0.50 },
+    { name: "Tahini", unit: "tbsp", cost: 0.75 },
+    { name: "Teriyaki Sauce", unit: "tbsp", cost: 0.40 },
+    { name: "Tomato Paste", unit: "tbsp", cost: 0.50 },
+    { name: "Vegetable Broth", unit: "cups", cost: 1.75 },
+    { name: "Vegetable Oil", unit: "tbsp", cost: 0.10 },
+    { name: "White Wine", unit: "cup", cost: 2.00 },
+    { name: "Worcestershire Sauce", unit: "tbsp", cost: 0.25 }
+  ],
+  spices: [
+    { name: "Bay Leaves", unit: "whole", cost: 0.10 },
+    { name: "Black Pepper", unit: "tsp", cost: 0.10 },
+    { name: "Cayenne Pepper", unit: "tsp", cost: 0.15 },
+    { name: "Chili Flakes", unit: "tsp", cost: 0.15 },
+    { name: "Chili Powder", unit: "tsp", cost: 0.15 },
+    { name: "Cinnamon (Ground)", unit: "tsp", cost: 0.15 },
+    { name: "Coriander (Ground)", unit: "tsp", cost: 0.15 },
+    { name: "Cumin (Ground)", unit: "tsp", cost: 0.15 },
+    { name: "Curry Powder", unit: "tbsp", cost: 0.40 },
+    { name: "Dried Basil", unit: "tsp", cost: 0.10 },
+    { name: "Dried Oregano", unit: "tsp", cost: 0.10 },
+    { name: "Dried Thyme", unit: "tsp", cost: 0.10 },
+    { name: "Garam Masala", unit: "tbsp", cost: 0.50 },
+    { name: "Garlic Powder", unit: "tsp", cost: 0.15 },
+    { name: "Ginger (Ground)", unit: "tsp", cost: 0.20 },
+    { name: "Italian Seasoning", unit: "tbsp", cost: 0.25 },
+    { name: "Nutmeg (Ground)", unit: "tsp", cost: 0.25 },
+    { name: "Onion Powder", unit: "tsp", cost: 0.15 },
+    { name: "Paprika", unit: "tsp", cost: 0.15 },
+    { name: "Red Pepper Flakes", unit: "tsp", cost: 0.10 },
+    { name: "Salt", unit: "tsp", cost: 0.05 },
+    { name: "Smoked Paprika", unit: "tsp", cost: 0.20 },
+    { name: "Turmeric", unit: "tsp", cost: 0.20 }
+  ],
+  baking: [
+    { name: "Baking Powder", unit: "tsp", cost: 0.10 },
+    { name: "Baking Soda", unit: "tsp", cost: 0.05 },
+    { name: "Chocolate Chips (Semi-Sweet)", unit: "cup", cost: 3.00 },
+    { name: "Cocoa Powder (Unsweetened)", unit: "cup", cost: 2.00 },
+    { name: "Coconut (Shredded)", unit: "cup", cost: 2.00 },
+    { name: "Lemon Zest", unit: "tbsp", cost: 0.25 },
+    { name: "Orange Zest", unit: "tbsp", cost: 0.25 },
+    { name: "Pecans", unit: "cup", cost: 5.00 },
+    { name: "Powdered Sugar", unit: "cup", cost: 0.75 },
+    { name: "Sliced Almonds", unit: "cup", cost: 4.00 },
+    { name: "Vanilla Extract", unit: "tsp", cost: 0.75 },
+    { name: "Walnuts", unit: "cup", cost: 4.00 }
+  ],
+  frozen: [
+    { name: "Corn (Frozen)", unit: "cup", cost: 1.00 },
+    { name: "Edamame (Frozen)", unit: "cup", cost: 2.00 },
+    { name: "Mixed Vegetables (Frozen)", unit: "cup", cost: 1.50 },
+    { name: "Peas (Frozen)", unit: "cup", cost: 1.25 },
+    { name: "Spinach (Frozen)", unit: "cup", cost: 1.50 }
+  ],
+  other: [
+    { name: "Almonds", unit: "cup", cost: 4.00 },
+    { name: "Cashews", unit: "cup", cost: 5.00 },
+    { name: "Chia Seeds", unit: "tbsp", cost: 0.50 },
+    { name: "Coconut Flakes", unit: "cup", cost: 2.00 },
+    { name: "Pine Nuts", unit: "oz", cost: 4.00 },
+    { name: "Tofu", unit: "oz", cost: 3.00 }
+  ]
+};
+
+// Create a flat lookup map for ingredient matching
+function createIngredientLookup() {
+  const lookup = {};
+  for (const [category, ingredients] of Object.entries(STANDARD_INGREDIENTS)) {
+    for (const ing of ingredients) {
+      lookup[ing.name.toLowerCase()] = { ...ing, category };
+    }
+  }
+  return lookup;
+}
+
+const INGREDIENT_LOOKUP = createIngredientLookup();
+
+// Format ingredients list for the prompt
+function formatIngredientsForPrompt() {
+  let output = '';
+  for (const [category, ingredients] of Object.entries(STANDARD_INGREDIENTS)) {
+    output += `\n${category.toUpperCase()}:\n`;
+    output += ingredients.map(i => `- ${i.name} (${i.unit}, $${i.cost.toFixed(2)})`).join('\n');
+  }
+  return output;
+}
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,12 +274,18 @@ export default async function handler(req, res) {
       ? `Preferred cuisine style: ${preferences.cuisine}.`
       : '';
 
+    const ingredientsList = formatIngredientsForPrompt();
+
     const prompt = `You are a helpful cooking assistant. Create a recipe using the following ingredients: ${ingredients.join(', ')}.
 
 ${dietaryStr}
 ${cuisineStr}
 
-Generate a complete recipe in JSON format with the following structure. Be creative but practical. Estimate realistic costs and times.
+IMPORTANT: You MUST use ingredients from this standard database. Use EXACT names as shown below.
+When the user mentions an ingredient, find the closest match from this list:
+${ingredientsList}
+
+Generate a complete recipe in JSON format:
 
 {
   "name": "Recipe Name",
@@ -49,11 +298,11 @@ Generate a complete recipe in JSON format with the following structure. Be creat
   "tags": ["tag1", "tag2"],
   "ingredients": [
     {
-      "name": "ingredient name",
+      "name": "EXACT name from database",
       "amount": 1.5,
-      "unit": "cups",
+      "unit": "unit from database",
       "cost": 2.50,
-      "category": "produce"
+      "category": "category from database"
     }
   ],
   "instructions": [
@@ -63,17 +312,18 @@ Generate a complete recipe in JSON format with the following structure. Be creat
 }
 
 Rules:
+- CRITICAL: Use EXACT ingredient names from the database above (e.g., "Chicken Breast" not "chicken breast" or "chicken")
+- Use the unit shown for each ingredient in the database
+- Calculate cost by multiplying the per-unit cost by the amount
 - prepTime and cookTime are in minutes (integers)
 - difficulty must be one of: "easy", "medium", "hard"
 - costLevel must be 1, 2, or 3 (representing $, $$, $$$)
 - Valid tags include: vegetarian, vegan, dairy-free, gluten-free, red-meat, poultry, fish, quick
-- Valid categories for ingredients: produce, meat, seafood, dairy, pantry, spices, baking, frozen, other
-- Valid units: whole, cup, cups, tbsp, tsp, oz, lb, g, ml, can, bunch, head, cloves, stalks, sprigs, slices, pint, packet
-- Include all provided ingredients, and add common pantry items (salt, pepper, oil) as needed
-- Instructions should be clear, numbered implicitly by array position
-- Cost should be a realistic USD estimate for that amount of ingredient
+- Include all provided ingredients (matched to database), and add common pantry items as needed
+- Instructions should be clear and practical
 
 Return ONLY valid JSON. No markdown, no code blocks, no explanation.`;
+
 
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
@@ -116,6 +366,46 @@ Return ONLY valid JSON. No markdown, no code blocks, no explanation.`;
         throw new Error(`Missing required field: ${field}`);
       }
     }
+
+    // Validate and fix ingredients to match standard database
+    recipe.ingredients = recipe.ingredients.map(ing => {
+      const lookupKey = ing.name.toLowerCase();
+      const standardIng = INGREDIENT_LOOKUP[lookupKey];
+
+      if (standardIng) {
+        // Exact match found - use standard values
+        return {
+          name: standardIng.name,
+          amount: ing.amount,
+          unit: standardIng.unit,
+          cost: Math.round((standardIng.cost * ing.amount) * 100) / 100,
+          category: standardIng.category
+        };
+      }
+
+      // Try to find a partial match
+      const partialMatch = Object.entries(INGREDIENT_LOOKUP).find(([key, val]) =>
+        key.includes(lookupKey) || lookupKey.includes(key.split(' ')[0])
+      );
+
+      if (partialMatch) {
+        const [, matched] = partialMatch;
+        return {
+          name: matched.name,
+          amount: ing.amount,
+          unit: matched.unit,
+          cost: Math.round((matched.cost * ing.amount) * 100) / 100,
+          category: matched.category
+        };
+      }
+
+      // No match found - keep original but ensure valid category
+      const validCategories = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'other'];
+      return {
+        ...ing,
+        category: validCategories.includes(ing.category) ? ing.category : 'other'
+      };
+    });
 
     return res.status(200).json({ recipe });
   } catch (error) {
