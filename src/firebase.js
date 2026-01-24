@@ -472,7 +472,7 @@ export async function getAllRatings() {
   return allRatings
 }
 
-// Add a comment to a recipe
+// Add a comment to a recipe (legacy - kept for backwards compatibility)
 export async function addRecipeComment(recipeId, userId, userEmail, comment, photoURL = null) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')
   const commentId = `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -494,7 +494,7 @@ export async function addRecipeComment(recipeId, userId, userEmail, comment, pho
   return commentId
 }
 
-// Get all comments for a recipe
+// Get all comments for a recipe (legacy)
 export async function getRecipeComments(recipeId) {
   if (!firebaseEnabled) return []
   const commentsRef = ref(database, `recipeComments/${recipeId}`)
@@ -515,6 +515,94 @@ export async function deleteRecipeComment(recipeId, commentId) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')
   const commentRef = ref(database, `recipeComments/${recipeId}/${commentId}`)
   await set(commentRef, null)
+}
+
+// ============ UNIFIED REVIEWS (rating + comment together) ============
+
+// Add or update a review (rating + comment)
+export async function addReview(recipeId, userId, userEmail, rating, comment, photoURL = null) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Get user profile for display name
+  const profile = await getUserProfile(userId)
+
+  // Check if user already has a review to preserve createdAt
+  const existingRef = ref(database, `recipeReviews/${recipeId}/${userId}`)
+  const existingSnapshot = await get(existingRef)
+  const existingCreatedAt = existingSnapshot.exists() ? existingSnapshot.val().createdAt : Date.now()
+
+  const reviewRef = ref(database, `recipeReviews/${recipeId}/${userId}`)
+  await set(reviewRef, {
+    userId,
+    userEmail,
+    userName: profile?.displayName || null,
+    userPhoto: profile?.photoURL || null,
+    rating,
+    comment: comment || '',
+    photoURL,
+    createdAt: existingCreatedAt,
+    updatedAt: Date.now()
+  })
+
+  // Also update the legacy ratings for backwards compatibility with sorting
+  const ratingRef = ref(database, `recipeRatings/${recipeId}/${userId}`)
+  await set(ratingRef, {
+    rating,
+    updatedAt: Date.now()
+  })
+}
+
+// Get all reviews for a recipe
+export async function getRecipeReviews(recipeId) {
+  if (!firebaseEnabled) return { reviews: [], average: 0, count: 0 }
+  const reviewsRef = ref(database, `recipeReviews/${recipeId}`)
+  const snapshot = await get(reviewsRef)
+
+  if (!snapshot.exists()) {
+    // Fall back to old ratings system for backwards compatibility
+    return { reviews: [], average: 0, count: 0 }
+  }
+
+  const reviews = []
+  let total = 0
+  snapshot.forEach((child) => {
+    const data = child.val()
+    reviews.push({ id: child.key, ...data })
+    total += data.rating
+  })
+
+  // Sort by newest first
+  reviews.sort((a, b) => b.createdAt - a.createdAt)
+
+  return {
+    reviews,
+    average: reviews.length > 0 ? total / reviews.length : 0,
+    count: reviews.length
+  }
+}
+
+// Get user's review for a recipe
+export async function getUserReview(recipeId, userId) {
+  if (!firebaseEnabled) return null
+  const reviewRef = ref(database, `recipeReviews/${recipeId}/${userId}`)
+  const snapshot = await get(reviewRef)
+  if (snapshot.exists()) {
+    return snapshot.val()
+  }
+  return null
+}
+
+// Delete a review (admin only or own review)
+export async function deleteReview(recipeId, oderId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Delete from reviews
+  const reviewRef = ref(database, `recipeReviews/${recipeId}/${oderId}`)
+  await set(reviewRef, null)
+
+  // Also delete from legacy ratings
+  const ratingRef = ref(database, `recipeRatings/${recipeId}/${oderId}`)
+  await set(ratingRef, null)
 }
 
 export { database, auth }
