@@ -328,6 +328,7 @@ function GroceryList() {
   const activeList = getActiveList()
   const groceryList = activeList.items || []
   const checkedItems = activeList.checkedItems || {}
+  const sourceRecipes = activeList.sourceRecipes || []
 
   const totalCost = getGroceryListTotal()
   const checkedCount = Object.values(checkedItems).filter(Boolean).length
@@ -570,6 +571,7 @@ function GroceryList() {
       addItemToGroceryList={addItemToGroceryList}
       removeItemFromGroceryList={removeItemFromGroceryList}
       listSelectorProps={listSelectorProps}
+      sourceRecipes={sourceRecipes}
     />
   )
 }
@@ -593,6 +595,7 @@ function LocalGroceryList({
   addItemToGroceryList,
   removeItemFromGroceryList,
   listSelectorProps,
+  sourceRecipes = [],
 }) {
   const [showAddItem, setShowAddItem] = useState(false)
   const [newItemName, setNewItemName] = useState('')
@@ -655,6 +658,16 @@ function LocalGroceryList({
         {checkedCount} of {totalCount} items checked
         {user && <span className="ml-2 text-green-600">Synced</span>}
       </p>
+
+      {/* Source Recipes */}
+      {sourceRecipes.length > 0 && (
+        <div className="card p-3 bg-blue-50 border border-blue-100">
+          <p className="text-sm text-blue-800">
+            <span className="font-medium">Generated from:</span>{' '}
+            {sourceRecipes.join(', ')}
+          </p>
+        </div>
+      )}
 
       {/* Add Item Form */}
       {showAddItem && (

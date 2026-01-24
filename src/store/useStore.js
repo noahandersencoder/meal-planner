@@ -162,6 +162,9 @@ const useStore = create(
         const recipes = getAllMealPlanRecipes()
         const ingredientMap = new Map()
 
+        // Track recipe names for display
+        const sourceRecipes = recipes.map(r => r.name)
+
         recipes.forEach((recipe) => {
           recipe.ingredients.forEach((ing) => {
             const key = `${ing.name.toLowerCase()}-${ing.unit}`
@@ -192,7 +195,10 @@ const useStore = create(
             ...groceryLists,
             [listId]: {
               ...groceryLists[listId],
-              items
+              items,
+              checkedItems: {}, // Clear all checkmarks when regenerating
+              sourceRecipes, // Store which recipes this list was generated from
+              generatedAt: Date.now()
             }
           }
         })
