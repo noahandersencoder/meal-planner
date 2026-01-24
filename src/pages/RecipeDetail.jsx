@@ -127,29 +127,42 @@ function RecipeDetail() {
           <h1 className="text-2xl font-bold text-gray-900">{recipe.name}</h1>
           <p className="text-gray-600 mt-2">{recipe.description}</p>
 
-          {recipe.isUserSubmitted && (
-            <div className="flex items-center gap-3 mt-4 p-3 bg-gray-50 rounded-lg">
-              {creatorProfile?.photoURL ? (
-                <img
-                  src={creatorProfile.photoURL}
-                  alt={creatorProfile.displayName || 'User'}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                  <span className="text-primary-600 font-medium">
-                    {(creatorProfile?.displayName || recipe.submitterEmail || '?')[0].toUpperCase()}
-                  </span>
+          {/* Author attribution */}
+          <div className="flex items-center gap-3 mt-4 p-3 bg-gray-50 rounded-lg">
+            {recipe.isUserSubmitted && !recipe.tags?.includes('ai-generated') ? (
+              <>
+                {creatorProfile?.photoURL ? (
+                  <img
+                    src={creatorProfile.photoURL}
+                    alt={creatorProfile.displayName || 'User'}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                    <span className="text-primary-600 font-medium">
+                      {(creatorProfile?.displayName || recipe.submitterEmail || '?')[0].toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-gray-500">Recipe by</p>
+                  <p className="font-medium text-gray-900">
+                    {creatorProfile?.displayName || recipe.submitterEmail}
+                  </p>
                 </div>
-              )}
-              <div>
-                <p className="text-sm text-gray-500">Recipe by</p>
-                <p className="font-medium text-gray-900">
-                  {creatorProfile?.displayName || recipe.submitterEmail}
-                </p>
-              </div>
-            </div>
-          )}
+              </>
+            ) : (
+              <>
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                  <span className="text-xl">✨</span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Recipe by</p>
+                  <p className="font-medium text-gray-900">AI</p>
+                </div>
+              </>
+            )}
+          </div>
 
           {recipe.tags && recipe.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">

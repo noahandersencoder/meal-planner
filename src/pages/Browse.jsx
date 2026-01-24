@@ -8,6 +8,26 @@ import RecipeCard from '../components/RecipeCard'
 import RecipeRow from '../components/RecipeRow'
 import FilterPanel from '../components/FilterPanel'
 
+const SORT_OPTIONS = [
+  { value: 'name', label: 'Name (A-Z)' },
+  { value: 'time', label: 'Time (fastest)' },
+  { value: 'cost', label: 'Cost (lowest)' },
+  { value: 'difficulty', label: 'Difficulty (easiest)' },
+  { value: 'author', label: 'Author (A-Z)' },
+]
+
+const DIFFICULTY_ORDER = { easy: 1, medium: 2, hard: 3 }
+
+// Helper to get author display name
+function getAuthorName(recipe) {
+  // AI-generated recipes
+  if (recipe.tags?.includes('ai-generated')) return 'AI'
+  // User-submitted recipes
+  if (recipe.submitterEmail) return recipe.submitterEmail.split('@')[0]
+  // Built-in recipes
+  return 'AI'
+}
+
 function Browse() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -17,6 +37,7 @@ function Browse() {
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [userRecipes, setUserRecipes] = useState([])
+  const [sortBy, setSortBy] = useState('name')
 
   const selectedDay = searchParams.get('day')
 
@@ -33,7 +54,7 @@ function Browse() {
   }, [userRecipes])
 
   const filteredRecipes = useMemo(() => {
-    return allRecipes.filter((recipe) => {
+    const filtered = allRecipes.filter((recipe) => {
       const totalTime = recipe.prepTime + recipe.cookTime
       if (totalTime > filters.maxCookTime) return false
 
@@ -60,7 +81,28 @@ function Browse() {
 
       return true
     })
-  }, [filters, searchQuery, allRecipes])
+
+    // Sort the filtered results
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'time':
+          return (a.prepTime + a.cookTime) - (b.prepTime + b.cookTime)
+        case 'cost': {
+          const costA = a.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
+          const costB = b.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
+          return costA - costB
+        }
+        case 'difficulty':
+          return (DIFFICULTY_ORDER[a.difficulty] || 2) - (DIFFICULTY_ORDER[b.difficulty] || 2)
+        case 'author':
+          return getAuthorName(a).localeCompare(getAuthorName(b))
+        default:
+          return 0
+      }
+    })
+  }, [filters, searchQuery, allRecipes, sortBy])
 
   const handleAddToMealPlan = (recipe) => {
     if (selectedDay !== null) {
@@ -90,6 +132,18 @@ function Browse() {
               + Add Recipe
             </Link>
           )}
+          {/* Sort Dropdown */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="input py-2 text-sm"
+          >
+            {SORT_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           {/* View Toggle */}
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
@@ -171,6 +225,7 @@ function Browse() {
               recipe={recipe}
               showAddButton
               onAddToMealPlan={handleAddToMealPlan}
+              author={getAuthorName(recipe)}
             />
           ))}
         </div>
@@ -181,6 +236,7 @@ function Browse() {
               key={recipe.id}
               recipe={recipe}
               onAddToMealPlan={handleAddToMealPlan}
+              author={getAuthorName(recipe)}
             />
           ))}
         </div>

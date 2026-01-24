@@ -27,6 +27,13 @@ const COUNTABLE_UNITS = ['whole', 'cloves', 'stalks', 'sprigs', 'slices', 'bunch
 const GRAMS_PER_CUP = {
   // Flours & Grains
   'All-Purpose Flour': 125,
+  'Bread Flour': 127,
+  'Cake Flour': 114,
+  'Self-Rising Flour': 125,
+  'Whole Wheat Flour': 120,
+  'Almond Flour': 96,
+  'Coconut Flour': 128,
+  'Semolina Flour': 167,
   'Bread Crumbs': 108,
   'Panko Bread Crumbs': 60,
   'Rice (White)': 185,
@@ -34,8 +41,13 @@ const GRAMS_PER_CUP = {
   'Arborio Rice': 200,
   'Quinoa': 170,
   'Couscous': 157,
+
+  // Sugars
   'Sugar': 200,
   'Brown Sugar': 220,
+  'Confectioners Sugar': 120,
+  'Powdered Sugar': 120,
+  'Turbinado Sugar': 200,
 
   // Dairy
   'Butter': 227,

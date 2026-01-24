@@ -14,7 +14,7 @@ const costLabels = {
   3: '$$$',
 }
 
-function RecipeCard({ recipe, onAddToMealPlan, showAddButton = false }) {
+function RecipeCard({ recipe, onAddToMealPlan, showAddButton = false, author }) {
   const [rating, setRating] = useState({ average: 0, count: 0 })
 
   useEffect(() => {
@@ -44,6 +44,16 @@ function RecipeCard({ recipe, onAddToMealPlan, showAddButton = false }) {
             {recipe.name}
           </h3>
         </Link>
+        {author && (
+          <p className="text-xs text-gray-400 mt-0.5">
+            by {author === 'AI' ? (
+              <span className="inline-flex items-center gap-1">
+                <span>AI</span>
+                <span className="text-purple-400">✨</span>
+              </span>
+            ) : author}
+          </p>
+        )}
         {rating.count > 0 && (
           <div className="flex items-center gap-1 mt-1">
             <span className="text-yellow-400">★</span>

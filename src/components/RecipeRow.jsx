@@ -4,7 +4,7 @@ import { getRecipeRatings, isFirebaseEnabled } from '../firebase'
 
 const costLabels = { 1: '$', 2: '$$', 3: '$$$' }
 
-function RecipeRow({ recipe, onAddToMealPlan }) {
+function RecipeRow({ recipe, onAddToMealPlan, author }) {
   const totalTime = recipe.prepTime + recipe.cookTime
   const totalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
   const [rating, setRating] = useState({ average: 0, count: 0 })
@@ -18,9 +18,21 @@ function RecipeRow({ recipe, onAddToMealPlan }) {
   return (
     <div className="card p-4 flex items-center gap-4">
       <div className="flex-1 min-w-0">
-        <Link to={`/recipe/${recipe.id}`} className="hover:text-primary-600 transition-colors">
-          <h3 className="font-semibold text-gray-900 truncate">{recipe.name}</h3>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to={`/recipe/${recipe.id}`} className="hover:text-primary-600 transition-colors">
+            <h3 className="font-semibold text-gray-900 truncate">{recipe.name}</h3>
+          </Link>
+          {author && (
+            <span className="text-xs text-gray-400">
+              by {author === 'AI' ? (
+                <span className="inline-flex items-center gap-0.5">
+                  <span>AI</span>
+                  <span className="text-purple-400">✨</span>
+                </span>
+              ) : author}
+            </span>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
           {rating.count > 0 && (
             <>
