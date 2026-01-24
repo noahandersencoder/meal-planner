@@ -77,12 +77,98 @@ const useStore = create(
         }, 0)
       },
 
-      // Grocery List
-      groceryList: [],
-      checkedItems: {},
+      // Multiple Grocery Lists
+      groceryLists: {},
+      activeListId: null,
+
+      // Helper to get/create default list
+      ensureActiveList: () => {
+        const { groceryLists, activeListId } = get()
+        if (activeListId && groceryLists[activeListId]) {
+          return activeListId
+        }
+        // Create default list if none exists
+        const defaultId = 'default-list'
+        if (!groceryLists[defaultId]) {
+          set({
+            groceryLists: {
+              ...groceryLists,
+              [defaultId]: {
+                id: defaultId,
+                name: 'My Grocery List',
+                items: [],
+                checkedItems: {},
+                createdAt: Date.now()
+              }
+            },
+            activeListId: defaultId
+          })
+        } else {
+          set({ activeListId: defaultId })
+        }
+        return defaultId
+      },
+
+      createGroceryList: (name) => {
+        const id = `list-${Date.now()}`
+        set((state) => ({
+          groceryLists: {
+            ...state.groceryLists,
+            [id]: {
+              id,
+              name: name || 'New List',
+              items: [],
+              checkedItems: {},
+              createdAt: Date.now()
+            }
+          },
+          activeListId: id
+        }))
+        return id
+      },
+
+      deleteGroceryList: (listId) =>
+        set((state) => {
+          const { [listId]: deleted, ...remaining } = state.groceryLists
+          const remainingIds = Object.keys(remaining)
+          return {
+            groceryLists: remaining,
+            activeListId: remainingIds.length > 0 ? remainingIds[0] : null
+          }
+        }),
+
+      renameGroceryList: (listId, newName) =>
+        set((state) => ({
+          groceryLists: {
+            ...state.groceryLists,
+            [listId]: {
+              ...state.groceryLists[listId],
+              name: newName
+            }
+          }
+        })),
+
+      setActiveList: (listId) => set({ activeListId: listId }),
+
+      getActiveList: () => {
+        const { groceryLists, activeListId, ensureActiveList } = get()
+        const id = activeListId || ensureActiveList()
+        return groceryLists[id] || { items: [], checkedItems: {} }
+      },
+
+      // Legacy compatibility getters
+      get groceryList() {
+        return get().getActiveList().items || []
+      },
+
+      get checkedItems() {
+        return get().getActiveList().checkedItems || {}
+      },
 
       generateGroceryList: () => {
-        const recipes = get().getAllMealPlanRecipes()
+        const { getAllMealPlanRecipes, groceryLists, ensureActiveList } = get()
+        const listId = ensureActiveList()
+        const recipes = getAllMealPlanRecipes()
         const ingredientMap = new Map()
 
         recipes.forEach((recipe) => {
@@ -105,30 +191,40 @@ const useStore = create(
           })
         })
 
-        const groceryList = Array.from(ingredientMap.values()).sort((a, b) => {
+        const items = Array.from(ingredientMap.values()).sort((a, b) => {
           const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'snacks', 'breakfast', 'drinks', 'other']
           return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
         })
 
-        set({ groceryList })
+        set({
+          groceryLists: {
+            ...groceryLists,
+            [listId]: {
+              ...groceryLists[listId],
+              items
+            }
+          }
+        })
       },
 
       addItemToGroceryList: (item) =>
         set((state) => {
-          const key = `${item.name.toLowerCase()}-${item.unit}`
-          const existingIndex = state.groceryList.findIndex(i => i.id === key)
+          const listId = state.activeListId || state.ensureActiveList()
+          const list = state.groceryLists[listId]
+          if (!list) return state
 
+          const key = `${item.name.toLowerCase()}-${item.unit}`
+          const existingIndex = list.items.findIndex(i => i.id === key)
+
+          let newItems
           if (existingIndex >= 0) {
-            // Update existing item
-            const newList = [...state.groceryList]
-            newList[existingIndex] = {
-              ...newList[existingIndex],
-              amount: newList[existingIndex].amount + item.amount,
-              cost: newList[existingIndex].cost + (item.cost || 0)
+            newItems = [...list.items]
+            newItems[existingIndex] = {
+              ...newItems[existingIndex],
+              amount: newItems[existingIndex].amount + item.amount,
+              cost: newItems[existingIndex].cost + (item.cost || 0)
             }
-            return { groceryList: newList }
           } else {
-            // Add new item
             const newItem = {
               id: key,
               name: item.name,
@@ -138,51 +234,125 @@ const useStore = create(
               category: item.category || 'other',
             }
             const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'snacks', 'breakfast', 'drinks', 'other']
-            const newList = [...state.groceryList, newItem].sort((a, b) => {
+            newItems = [...list.items, newItem].sort((a, b) => {
               return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
             })
-            return { groceryList: newList }
+          }
+
+          return {
+            groceryLists: {
+              ...state.groceryLists,
+              [listId]: { ...list, items: newItems }
+            }
           }
         }),
 
       removeItemFromGroceryList: (itemId) =>
-        set((state) => ({
-          groceryList: state.groceryList.filter(item => item.id !== itemId),
-          checkedItems: { ...state.checkedItems, [itemId]: undefined }
-        })),
+        set((state) => {
+          const listId = state.activeListId
+          const list = state.groceryLists[listId]
+          if (!list) return state
+
+          const { [itemId]: removed, ...remainingChecked } = list.checkedItems || {}
+          return {
+            groceryLists: {
+              ...state.groceryLists,
+              [listId]: {
+                ...list,
+                items: list.items.filter(item => item.id !== itemId),
+                checkedItems: remainingChecked
+              }
+            }
+          }
+        }),
 
       toggleGroceryItem: (itemId) =>
-        set((state) => ({
-          checkedItems: {
-            ...state.checkedItems,
-            [itemId]: !state.checkedItems[itemId],
-          },
-        })),
+        set((state) => {
+          const listId = state.activeListId
+          const list = state.groceryLists[listId]
+          if (!list) return state
 
-      clearCheckedItems: () => set({ checkedItems: {} }),
+          return {
+            groceryLists: {
+              ...state.groceryLists,
+              [listId]: {
+                ...list,
+                checkedItems: {
+                  ...list.checkedItems,
+                  [itemId]: !list.checkedItems?.[itemId]
+                }
+              }
+            }
+          }
+        }),
 
-      clearGroceryList: () => set({ groceryList: [], checkedItems: {} }),
+      clearCheckedItems: () =>
+        set((state) => {
+          const listId = state.activeListId
+          const list = state.groceryLists[listId]
+          if (!list) return state
+
+          return {
+            groceryLists: {
+              ...state.groceryLists,
+              [listId]: { ...list, checkedItems: {} }
+            }
+          }
+        }),
+
+      clearGroceryList: () =>
+        set((state) => {
+          const listId = state.activeListId
+          const list = state.groceryLists[listId]
+          if (!list) return state
+
+          return {
+            groceryLists: {
+              ...state.groceryLists,
+              [listId]: { ...list, items: [], checkedItems: {} }
+            }
+          }
+        }),
 
       getGroceryListTotal: () => {
-        const { groceryList } = get()
-        return groceryList.reduce((sum, item) => sum + item.cost, 0)
+        const list = get().getActiveList()
+        return (list.items || []).reduce((sum, item) => sum + item.cost, 0)
       },
 
       // Shared list functionality
       sharedListId: null,
       setSharedListId: (id) => set({ sharedListId: id }),
 
-      // Set grocery list from cloud
+      // Set grocery lists from cloud (for sync)
+      setGroceryListsFromCloud: (groceryLists, activeListId) =>
+        set({ groceryLists: groceryLists || {}, activeListId }),
+
+      // Legacy: Set single list from cloud (backwards compatible)
       setGroceryListFromCloud: (groceryList, checkedItems) =>
-        set({ groceryList, checkedItems: checkedItems || {} }),
+        set((state) => {
+          const listId = state.activeListId || 'default-list'
+          return {
+            groceryLists: {
+              ...state.groceryLists,
+              [listId]: {
+                id: listId,
+                name: state.groceryLists[listId]?.name || 'My Grocery List',
+                items: groceryList || [],
+                checkedItems: checkedItems || {},
+                createdAt: state.groceryLists[listId]?.createdAt || Date.now()
+              }
+            },
+            activeListId: listId
+          }
+        }),
     }),
     {
       name: 'meal-planner-storage',
       partialize: (state) => ({
         preferences: state.preferences,
         mealPlan: state.mealPlan,
-        groceryList: state.groceryList,
-        checkedItems: state.checkedItems,
+        groceryLists: state.groceryLists,
+        activeListId: state.activeListId,
         sharedListId: state.sharedListId,
         recipeViewMode: state.recipeViewMode,
       }),

@@ -114,6 +114,178 @@ function QuickAddItem({ addItemToGroceryList }) {
   )
 }
 
+// List selector component
+function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDelete }) {
+  const [showMenu, setShowMenu] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [isRenaming, setIsRenaming] = useState(null)
+  const [newName, setNewName] = useState('')
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false)
+        setIsCreating(false)
+        setIsRenaming(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const listArray = Object.values(lists).sort((a, b) => a.createdAt - b.createdAt)
+  const activeList = lists[activeListId]
+
+  const handleCreate = () => {
+    if (newName.trim()) {
+      onCreate(newName.trim())
+      setNewName('')
+      setIsCreating(false)
+      setShowMenu(false)
+    }
+  }
+
+  const handleRename = (listId) => {
+    if (newName.trim()) {
+      onRename(listId, newName.trim())
+      setNewName('')
+      setIsRenaming(null)
+    }
+  }
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+      >
+        <span className="text-lg">📋</span>
+        <span className="font-medium text-gray-900 max-w-[150px] truncate">
+          {activeList?.name || 'Select List'}
+        </span>
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {showMenu && (
+        <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="p-2 border-b border-gray-100">
+            <p className="text-xs font-semibold text-gray-500 uppercase px-2">Your Lists</p>
+          </div>
+
+          <div className="max-h-60 overflow-y-auto">
+            {listArray.map((list) => (
+              <div
+                key={list.id}
+                className={`flex items-center justify-between px-3 py-2 hover:bg-gray-50 ${
+                  list.id === activeListId ? 'bg-primary-50' : ''
+                }`}
+              >
+                {isRenaming === list.id ? (
+                  <div className="flex-1 flex gap-1">
+                    <input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleRename(list.id)}
+                      className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                      placeholder="List name"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleRename(list.id)}
+                      className="px-2 py-1 text-xs bg-primary-500 text-white rounded"
+                    >
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        onSelect(list.id)
+                        setShowMenu(false)
+                      }}
+                      className="flex-1 text-left"
+                    >
+                      <span className={`font-medium ${list.id === activeListId ? 'text-primary-700' : 'text-gray-900'}`}>
+                        {list.name}
+                      </span>
+                      <span className="text-xs text-gray-400 ml-2">
+                        ({list.items?.length || 0} items)
+                      </span>
+                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          setNewName(list.name)
+                          setIsRenaming(list.id)
+                        }}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                        title="Rename"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                      {listArray.length > 1 && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete "${list.name}"?`)) {
+                              onDelete(list.id)
+                            }
+                          }}
+                          className="p-1 text-gray-400 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="p-2 border-t border-gray-100">
+            {isCreating ? (
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                  className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                  placeholder="New list name"
+                  autoFocus
+                />
+                <button
+                  onClick={handleCreate}
+                  className="px-2 py-1 text-sm bg-primary-500 text-white rounded"
+                >
+                  Create
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsCreating(true)}
+                className="w-full px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded flex items-center gap-2"
+              >
+                <span>+</span> New List
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function GroceryList() {
   const navigate = useNavigate()
   const { user, loading: authLoading, isApproved, checkingApproval } = useAuth()
@@ -126,25 +298,43 @@ function GroceryList() {
   const initialLoadDone = useRef(false)
 
   const {
-    groceryList,
-    checkedItems,
+    groceryLists,
+    activeListId,
+    getActiveList,
+    setActiveList,
+    createGroceryList,
+    deleteGroceryList,
+    renameGroceryList,
+    ensureActiveList,
     toggleGroceryItem,
     clearCheckedItems,
     clearGroceryList,
     getGroceryListTotal,
     generateGroceryList,
     getAllMealPlanRecipes,
+    setGroceryListsFromCloud,
     setGroceryListFromCloud,
     addItemToGroceryList,
     removeItemFromGroceryList,
   } = useStore()
+
+  // Ensure we have at least one list
+  useEffect(() => {
+    if (!isLoading && Object.keys(groceryLists).length === 0) {
+      ensureActiveList()
+    }
+  }, [isLoading, groceryLists])
+
+  const activeList = getActiveList()
+  const groceryList = activeList.items || []
+  const checkedItems = activeList.checkedItems || {}
 
   const totalCost = getGroceryListTotal()
   const checkedCount = Object.values(checkedItems).filter(Boolean).length
   const totalCount = groceryList.length
   const allChecked = totalCount > 0 && checkedCount === totalCount
 
-  // Load user's grocery list on login
+  // Load user's grocery lists on login
   useEffect(() => {
     if (authLoading) return
     if (!isFirebaseEnabled() || !user) {
@@ -157,8 +347,14 @@ function GroceryList() {
 
     loadUserGroceryList(user.uid)
       .then((data) => {
-        if (data && data.groceryList) {
-          setGroceryListFromCloud(data.groceryList, data.checkedItems || {})
+        if (data) {
+          // Support both old format (groceryList) and new format (groceryLists)
+          if (data.groceryLists) {
+            setGroceryListsFromCloud(data.groceryLists, data.activeListId)
+          } else if (data.groceryList) {
+            // Migrate old format to new
+            setGroceryListFromCloud(data.groceryList, data.checkedItems || {})
+          }
         }
         setIsLoading(false)
         initialLoadDone.current = true
@@ -179,7 +375,11 @@ function GroceryList() {
     const unsubscribe = subscribeToUserList(user.uid, (data) => {
       if (data && initialLoadDone.current) {
         isFromFirebase.current = true
-        setGroceryListFromCloud(data.groceryList || [], data.checkedItems || {})
+        if (data.groceryLists) {
+          setGroceryListsFromCloud(data.groceryLists, data.activeListId)
+        } else if (data.groceryList) {
+          setGroceryListFromCloud(data.groceryList || [], data.checkedItems || {})
+        }
         setTimeout(() => { isFromFirebase.current = false }, 100)
       }
     })
@@ -187,7 +387,7 @@ function GroceryList() {
     return () => unsubscribe()
   }, [user, firebaseError])
 
-  // Sync changes to cloud when list changes (debounced)
+  // Sync changes to cloud when lists change (debounced)
   useEffect(() => {
     if (!isFirebaseEnabled() || !user || firebaseError) return
     if (!initialLoadDone.current) return
@@ -195,7 +395,7 @@ function GroceryList() {
 
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
     saveTimeout.current = setTimeout(() => {
-      saveUserGroceryList(user.uid, { groceryList, checkedItems })
+      saveUserGroceryList(user.uid, { groceryLists, activeListId })
         .catch((err) => {
           console.error('Sync error:', err)
           setFirebaseError(true)
@@ -205,7 +405,7 @@ function GroceryList() {
     return () => {
       if (saveTimeout.current) clearTimeout(saveTimeout.current)
     }
-  }, [groceryList, checkedItems, user, firebaseError])
+  }, [groceryLists, activeListId, user, firebaseError])
 
   const groupedItems = groceryList.reduce((acc, item) => {
     const category = item.category || 'other'
@@ -304,16 +504,29 @@ function GroceryList() {
     )
   }
 
+  // List selector props
+  const listSelectorProps = {
+    lists: groceryLists,
+    activeListId,
+    onSelect: setActiveList,
+    onCreate: createGroceryList,
+    onRename: renameGroceryList,
+    onDelete: deleteGroceryList,
+  }
+
   // Empty state
   if (groceryList.length === 0) {
     const hasRecipes = getAllMealPlanRecipes().length > 0
 
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
+          <ListSelector {...listSelectorProps} />
+        </div>
         <div className="text-center py-8">
           <div className="text-6xl mb-4">🛒</div>
-          <p className="text-gray-500 mb-4">Your grocery list is empty</p>
+          <p className="text-gray-500 mb-4">This list is empty</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {hasRecipes && (
               <button onClick={handleRefresh} className="btn btn-primary">
@@ -356,6 +569,7 @@ function GroceryList() {
       user={user}
       addItemToGroceryList={addItemToGroceryList}
       removeItemFromGroceryList={removeItemFromGroceryList}
+      listSelectorProps={listSelectorProps}
     />
   )
 }
@@ -378,6 +592,7 @@ function LocalGroceryList({
   user,
   addItemToGroceryList,
   removeItemFromGroceryList,
+  listSelectorProps,
 }) {
   const [showAddItem, setShowAddItem] = useState(false)
   const [newItemName, setNewItemName] = useState('')
@@ -415,13 +630,10 @@ function LocalGroceryList({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
-          <p className="text-gray-500 text-sm">
-            {checkedCount} of {totalCount} items checked
-            {user && <span className="ml-2 text-green-600">Synced</span>}
-          </p>
+          {listSelectorProps && <ListSelector {...listSelectorProps} />}
         </div>
         <div className="flex gap-2">
           <button
@@ -439,6 +651,10 @@ function LocalGroceryList({
           </button>
         </div>
       </div>
+      <p className="text-gray-500 text-sm -mt-4">
+        {checkedCount} of {totalCount} items checked
+        {user && <span className="ml-2 text-green-600">Synced</span>}
+      </p>
 
       {/* Add Item Form */}
       {showAddItem && (
