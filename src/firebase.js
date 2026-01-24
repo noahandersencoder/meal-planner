@@ -441,6 +441,37 @@ export async function getUserRating(recipeId, userId) {
   return null
 }
 
+// Delete a rating (admin only)
+export async function deleteRating(recipeId, oderId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const ratingRef = ref(database, `recipeRatings/${recipeId}/${oderId}`)
+  await set(ratingRef, null)
+}
+
+// Get all ratings for all recipes (for sorting)
+export async function getAllRatings() {
+  if (!firebaseEnabled) return {}
+  const ratingsRef = ref(database, 'recipeRatings')
+  const snapshot = await get(ratingsRef)
+  if (!snapshot.exists()) return {}
+
+  const allRatings = {}
+  snapshot.forEach((recipeChild) => {
+    const recipeId = recipeChild.key
+    let total = 0
+    let count = 0
+    recipeChild.forEach((ratingChild) => {
+      total += ratingChild.val().rating
+      count++
+    })
+    allRatings[recipeId] = {
+      average: count > 0 ? total / count : 0,
+      count
+    }
+  })
+  return allRatings
+}
+
 // Add a comment to a recipe
 export async function addRecipeComment(recipeId, userId, userEmail, comment, photoURL = null) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')

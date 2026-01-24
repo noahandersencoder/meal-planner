@@ -3,13 +3,14 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled } from '../firebase'
+import { getApprovedRecipes, getAllRatings, isFirebaseEnabled } from '../firebase'
 import RecipeCard from '../components/RecipeCard'
 import RecipeRow from '../components/RecipeRow'
 import FilterPanel from '../components/FilterPanel'
 
 const SORT_OPTIONS = [
   { value: 'name', label: 'Name (A-Z)' },
+  { value: 'rating', label: 'Rating (highest)' },
   { value: 'time', label: 'Time (fastest)' },
   { value: 'cost', label: 'Cost (lowest)' },
   { value: 'difficulty', label: 'Difficulty (easiest)' },
@@ -38,13 +39,15 @@ function Browse() {
   const [searchQuery, setSearchQuery] = useState('')
   const [userRecipes, setUserRecipes] = useState([])
   const [sortBy, setSortBy] = useState('name')
+  const [allRatings, setAllRatings] = useState({})
 
   const selectedDay = searchParams.get('day')
 
-  // Load user-submitted approved recipes
+  // Load user-submitted approved recipes and all ratings
   useEffect(() => {
     if (isFirebaseEnabled()) {
       getApprovedRecipes().then(setUserRecipes).catch(console.error)
+      getAllRatings().then(setAllRatings).catch(console.error)
     }
   }, [])
 
@@ -87,6 +90,11 @@ function Browse() {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name)
+        case 'rating': {
+          const ratingA = allRatings[a.id]?.average || 0
+          const ratingB = allRatings[b.id]?.average || 0
+          return ratingB - ratingA // Highest first
+        }
         case 'time':
           return (a.prepTime + a.cookTime) - (b.prepTime + b.cookTime)
         case 'cost': {
@@ -102,7 +110,7 @@ function Browse() {
           return 0
       }
     })
-  }, [filters, searchQuery, allRecipes, sortBy])
+  }, [filters, searchQuery, allRecipes, sortBy, allRatings])
 
   const handleAddToMealPlan = (recipe) => {
     if (selectedDay !== null) {

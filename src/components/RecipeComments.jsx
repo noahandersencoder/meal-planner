@@ -4,6 +4,7 @@ import {
   rateRecipe,
   getRecipeRatings,
   getUserRating,
+  deleteRating,
   addRecipeComment,
   getRecipeComments,
   deleteRecipeComment,
@@ -14,6 +15,24 @@ function StarRating({ rating, onRate, interactive = false, size = 'md' }) {
   const [hoverRating, setHoverRating] = useState(0)
   const sizeClasses = size === 'lg' ? 'text-3xl' : size === 'md' ? 'text-2xl' : 'text-lg'
 
+  const handleClick = (star, event) => {
+    if (!interactive || !onRate) return
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const isLeftHalf = x < rect.width / 2
+    onRate(isLeftHalf ? star - 0.5 : star)
+  }
+
+  const handleMouseMove = (star, event) => {
+    if (!interactive) return
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const isLeftHalf = x < rect.width / 2
+    setHoverRating(isLeftHalf ? star - 0.5 : star)
+  }
+
+  const displayRating = hoverRating || rating
+
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -21,16 +40,22 @@ function StarRating({ rating, onRate, interactive = false, size = 'md' }) {
           key={star}
           type="button"
           disabled={!interactive}
-          onClick={() => interactive && onRate?.(star)}
-          onMouseEnter={() => interactive && setHoverRating(star)}
+          onClick={(e) => handleClick(star, e)}
+          onMouseMove={(e) => handleMouseMove(star, e)}
           onMouseLeave={() => interactive && setHoverRating(0)}
-          className={`${sizeClasses} transition-transform ${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
+          className={`${sizeClasses} transition-transform ${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'} relative`}
         >
-          {(hoverRating || rating) >= star ? (
-            <span className="text-yellow-400">★</span>
-          ) : (
-            <span className="text-gray-300">★</span>
-          )}
+          {/* Full star background (gray) */}
+          <span className="text-gray-300">★</span>
+          {/* Filled portion overlay */}
+          <span
+            className="absolute left-0 top-0 text-yellow-400 overflow-hidden"
+            style={{
+              width: displayRating >= star ? '100%' : displayRating >= star - 0.5 ? '50%' : '0%'
+            }}
+          >
+            ★
+          </span>
         </button>
       ))}
     </div>
@@ -39,7 +64,7 @@ function StarRating({ rating, onRate, interactive = false, size = 'md' }) {
 
 function RecipeComments({ recipeId }) {
   const { user, isApproved, isAdmin } = useAuth()
-  const [ratings, setRatings] = useState({ average: 0, count: 0 })
+  const [ratings, setRatings] = useState({ average: 0, count: 0, ratings: [] })
   const [userRating, setUserRating] = useState(null)
   const [comments, setComments] = useState([])
   const [newComment, setNewComment] = useState('')
@@ -85,6 +110,22 @@ function RecipeComments({ recipeId }) {
       setRatings(ratingsData)
     } catch (err) {
       console.error('Error rating recipe:', err)
+    }
+  }
+
+  const handleDeleteRating = async (oderId) => {
+    if (!confirm('Delete this rating?')) return
+    try {
+      await deleteRating(recipeId, oderId)
+      // Check if we deleted our own rating
+      if (oderId === user?.uid) {
+        setUserRating(null)
+      }
+      // Reload ratings
+      const ratingsData = await getRecipeRatings(recipeId)
+      setRatings(ratingsData)
+    } catch (err) {
+      console.error('Error deleting rating:', err)
     }
   }
 
@@ -196,6 +237,33 @@ function RecipeComments({ recipeId }) {
           <p className="text-sm text-gray-500 text-center py-2 bg-gray-50 rounded-lg">
             Log in to rate and comment on recipes
           </p>
+        )}
+
+        {/* Admin: Manage Individual Ratings */}
+        {isAdmin && ratings.ratings && ratings.ratings.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">
+              Manage Ratings (Admin)
+            </h4>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {ratings.ratings.map((r) => (
+                <div key={r.oderId} className="flex items-center justify-between text-sm bg-gray-50 px-3 py-2 rounded">
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-400">{'★'.repeat(Math.floor(r.rating))}{r.rating % 1 ? '½' : ''}</span>
+                    <span className="text-gray-500">{r.rating} stars</span>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-500 text-xs">{r.oderId.substring(0, 8)}...</span>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteRating(r.oderId)}
+                    className="text-red-500 hover:text-red-700 text-xs"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
