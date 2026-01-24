@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import recipes from '../data/recipes.json'
 import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail } from '../firebase'
+import RecipeComments from '../components/RecipeComments'
 
 const categoryLabels = {
   produce: 'Produce',
@@ -216,6 +217,9 @@ function RecipeDetail() {
           ))}
         </ol>
       </div>
+
+      {/* Ratings and Comments */}
+      <RecipeComments recipeId={recipe.id} />
 
       <div className="sticky bottom-20 bg-white p-4 border-t border-gray-200 -mx-4">
         <button onClick={handleAddToMealPlan} className="btn btn-primary w-full">

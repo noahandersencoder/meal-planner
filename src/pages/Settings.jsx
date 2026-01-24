@@ -53,15 +53,37 @@ function Settings() {
     setSaving(false)
   }
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // Convert to base64 for simple storage (works for small images)
+  const compressImage = (file, maxWidth = 200, quality = 0.7) => {
+    return new Promise((resolve) => {
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setPhotoURL(reader.result)
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
+          canvas.width = img.width * ratio
+          canvas.height = img.height * ratio
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+          resolve(canvas.toDataURL('image/jpeg', quality))
+        }
+        img.src = e.target.result
       }
       reader.readAsDataURL(file)
+    })
+  }
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      try {
+        // Compress image to reduce size for Firebase storage
+        const compressed = await compressImage(file, 200, 0.7)
+        setPhotoURL(compressed)
+      } catch (err) {
+        console.error('Error compressing image:', err)
+        setSaveMessage('Error processing image')
+      }
     }
   }
 

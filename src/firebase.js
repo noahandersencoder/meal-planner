@@ -396,4 +396,94 @@ export async function getUserProfileByEmail(email) {
   return profile
 }
 
+// Recipe ratings and comments
+
+// Add or update a rating for a recipe
+export async function rateRecipe(recipeId, userId, rating) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const ratingRef = ref(database, `recipeRatings/${recipeId}/${userId}`)
+  await set(ratingRef, {
+    rating,
+    updatedAt: Date.now()
+  })
+}
+
+// Get all ratings for a recipe
+export async function getRecipeRatings(recipeId) {
+  if (!firebaseEnabled) return { ratings: [], average: 0, count: 0 }
+  const ratingsRef = ref(database, `recipeRatings/${recipeId}`)
+  const snapshot = await get(ratingsRef)
+  if (!snapshot.exists()) return { ratings: [], average: 0, count: 0 }
+
+  const ratings = []
+  let total = 0
+  snapshot.forEach((child) => {
+    const data = child.val()
+    ratings.push({ oderId: child.key, ...data })
+    total += data.rating
+  })
+
+  return {
+    ratings,
+    average: ratings.length > 0 ? total / ratings.length : 0,
+    count: ratings.length
+  }
+}
+
+// Get user's rating for a recipe
+export async function getUserRating(recipeId, userId) {
+  if (!firebaseEnabled) return null
+  const ratingRef = ref(database, `recipeRatings/${recipeId}/${userId}`)
+  const snapshot = await get(ratingRef)
+  if (snapshot.exists()) {
+    return snapshot.val().rating
+  }
+  return null
+}
+
+// Add a comment to a recipe
+export async function addRecipeComment(recipeId, userId, userEmail, comment, photoURL = null) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const commentId = `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const commentRef = ref(database, `recipeComments/${recipeId}/${commentId}`)
+
+  // Get user profile for display name
+  const profile = await getUserProfile(userId)
+
+  await set(commentRef, {
+    id: commentId,
+    userId,
+    userEmail,
+    userName: profile?.displayName || null,
+    userPhoto: profile?.photoURL || null,
+    comment,
+    photoURL,
+    createdAt: Date.now()
+  })
+  return commentId
+}
+
+// Get all comments for a recipe
+export async function getRecipeComments(recipeId) {
+  if (!firebaseEnabled) return []
+  const commentsRef = ref(database, `recipeComments/${recipeId}`)
+  const snapshot = await get(commentsRef)
+  if (!snapshot.exists()) return []
+
+  const comments = []
+  snapshot.forEach((child) => {
+    comments.push({ id: child.key, ...child.val() })
+  })
+
+  // Sort by newest first
+  return comments.sort((a, b) => b.createdAt - a.createdAt)
+}
+
+// Delete a comment (user can delete their own, admin can delete any)
+export async function deleteRecipeComment(recipeId, commentId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const commentRef = ref(database, `recipeComments/${recipeId}/${commentId}`)
+  await set(commentRef, null)
+}
+
 export { database, auth }
