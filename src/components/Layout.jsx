@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { logOut, isFirebaseEnabled, getUserProfile } from '../firebase'
 
 function Layout({ children }) {
-  const { user, loading, isAdmin } = useAuth()
+  const { user, loading, isAdmin, isApproved } = useAuth()
   const [userProfile, setUserProfile] = useState(null)
 
   useEffect(() => {
