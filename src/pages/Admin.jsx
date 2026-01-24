@@ -12,7 +12,8 @@ import {
   isFirebaseEnabled,
   getApprovedRecipes,
   updatePendingRecipe,
-  updateApprovedRecipe
+  updateApprovedRecipe,
+  deleteApprovedRecipe
 } from '../firebase'
 import RecipeEditModal from '../components/RecipeEditModal'
 
@@ -147,6 +148,21 @@ function Admin() {
       alert('Failed to save recipe. Please try again.')
     }
     setSavingEdit(false)
+  }
+
+  const handleDeleteRecipe = async (recipe) => {
+    if (!confirm(`Are you sure you want to delete "${recipe.name}"? This cannot be undone.`)) {
+      return
+    }
+    setActionLoading(prev => ({ ...prev, [`delete-${recipe.id}`]: true }))
+    try {
+      await deleteApprovedRecipe(recipe.id)
+      setApprovedRecipes(prev => prev.filter(r => r.id !== recipe.id))
+    } catch (err) {
+      console.error('Error deleting recipe:', err)
+      alert('Failed to delete recipe. Please try again.')
+    }
+    setActionLoading(prev => ({ ...prev, [`delete-${recipe.id}`]: null }))
   }
 
   if (!isFirebaseEnabled()) {
@@ -402,15 +418,24 @@ function Admin() {
                 <div>
                   <p className="font-medium text-gray-900">{recipe.name}</p>
                   <p className="text-sm text-gray-500">
-                    {recipe.ingredients?.length || 0} ingredients • Approved {recipe.approvedAt ? new Date(recipe.approvedAt).toLocaleDateString() : 'N/A'}
+                    by {recipe.submitterEmail} • {recipe.ingredients?.length || 0} ingredients
                   </p>
                 </div>
-                <button
-                  onClick={() => handleEditRecipe(recipe, 'approved')}
-                  className="btn btn-secondary text-sm"
-                >
-                  Edit
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditRecipe(recipe, 'approved')}
+                    className="btn btn-secondary text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRecipe(recipe)}
+                    disabled={actionLoading[`delete-${recipe.id}`]}
+                    className="btn btn-outline text-sm text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    {actionLoading[`delete-${recipe.id}`] ? '...' : 'Delete'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

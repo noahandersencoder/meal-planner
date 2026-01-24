@@ -1,7 +1,69 @@
+import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
+import { updateUserProfile, getUserProfile, isFirebaseEnabled } from '../firebase'
 
 function Settings() {
   const { theme, setTheme, THEMES } = useTheme()
+  const { user } = useAuth()
+  const [displayName, setDisplayName] = useState('')
+  const [photoURL, setPhotoURL] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    if (user && isFirebaseEnabled()) {
+      loadProfile()
+    } else {
+      setLoadingProfile(false)
+    }
+  }, [user])
+
+  const loadProfile = async () => {
+    try {
+      const profile = await getUserProfile(user.uid)
+      if (profile) {
+        setDisplayName(profile.displayName || '')
+        setPhotoURL(profile.photoURL || '')
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err)
+    }
+    setLoadingProfile(false)
+  }
+
+  const handleSaveProfile = async () => {
+    if (!user) return
+    setSaving(true)
+    setSaveMessage('')
+    try {
+      await updateUserProfile(user.uid, {
+        displayName: displayName.trim(),
+        photoURL: photoURL.trim(),
+        email: user.email
+      })
+      setSaveMessage('Profile saved!')
+      setTimeout(() => setSaveMessage(''), 3000)
+    } catch (err) {
+      console.error('Error saving profile:', err)
+      setSaveMessage('Error saving profile')
+    }
+    setSaving(false)
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Convert to base64 for simple storage (works for small images)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPhotoURL(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const themeOptions = [
     {
@@ -32,6 +94,116 @@ function Settings() {
       <h2 className="text-2xl font-bold text-gray-900 retro:text-yellow-300 retro:font-mono">
         Settings
       </h2>
+
+      {/* Profile Section */}
+      {user && isFirebaseEnabled() && (
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Profile</h3>
+
+          {loadingProfile ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Profile Picture */}
+              <div className="flex items-center gap-4">
+                <div
+                  className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {photoURL ? (
+                    <img
+                      src={photoURL}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl text-gray-400">
+                      {displayName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
+                    </span>
+                  )}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition-all">
+                    <span className="text-white opacity-0 hover:opacity-100">Edit</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="btn btn-secondary text-sm"
+                  >
+                    Upload Photo
+                  </button>
+                  {photoURL && (
+                    <button
+                      onClick={() => setPhotoURL('')}
+                      className="ml-2 text-sm text-red-600 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Click to upload a profile picture
+                  </p>
+                </div>
+              </div>
+
+              {/* Display Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Display Name
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="input"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This name will be shown on recipes you create
+                </p>
+              </div>
+
+              {/* Email (read-only) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={user.email}
+                  disabled
+                  className="input bg-gray-50 text-gray-500"
+                />
+              </div>
+
+              {/* Save Button */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="btn btn-primary"
+                >
+                  {saving ? 'Saving...' : 'Save Profile'}
+                </button>
+                {saveMessage && (
+                  <span className={`text-sm ${saveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
+                    {saveMessage}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="card p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Display Theme</h3>

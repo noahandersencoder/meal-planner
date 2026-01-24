@@ -163,7 +163,7 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
         <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
           <h2 className="text-xl font-bold text-gray-900">Edit Recipe</h2>

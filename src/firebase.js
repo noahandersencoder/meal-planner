@@ -354,4 +354,46 @@ export async function updateApprovedRecipe(recipeId, updates) {
   })
 }
 
+// Delete an approved recipe (admin only)
+export async function deleteApprovedRecipe(recipeId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const recipeRef = ref(database, `approvedRecipes/${recipeId}`)
+  await set(recipeRef, null)
+}
+
+// User profile functions
+export async function updateUserProfile(userId, profileData) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const profileRef = ref(database, `userProfiles/${userId}`)
+  await set(profileRef, {
+    ...profileData,
+    updatedAt: Date.now()
+  })
+}
+
+export async function getUserProfile(userId) {
+  if (!firebaseEnabled) return null
+  const profileRef = ref(database, `userProfiles/${userId}`)
+  const snapshot = await get(profileRef)
+  if (snapshot.exists()) {
+    return snapshot.val()
+  }
+  return null
+}
+
+export async function getUserProfileByEmail(email) {
+  if (!firebaseEnabled) return null
+  const profilesRef = ref(database, 'userProfiles')
+  const snapshot = await get(profilesRef)
+  if (!snapshot.exists()) return null
+
+  let profile = null
+  snapshot.forEach((child) => {
+    if (child.val().email === email) {
+      profile = { id: child.key, ...child.val() }
+    }
+  })
+  return profile
+}
+
 export { database, auth }
