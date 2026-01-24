@@ -20,6 +20,10 @@ const CUISINE_OPTIONS = [
   { value: 'indian', label: 'Indian' },
 ]
 
+const DIFFICULTY_OPTIONS = ['easy', 'medium', 'hard']
+const CATEGORY_OPTIONS = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'other']
+const UNIT_OPTIONS = ['whole', 'cup', 'cups', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'ml', 'can', 'bunch', 'cloves', 'stalks', 'slices']
+
 // API endpoint - update this after deploying to Vercel
 const API_URL = import.meta.env.VITE_RECIPE_AI_API_URL || 'http://localhost:3000'
 
@@ -38,6 +42,8 @@ function GenerateRecipe() {
 
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  const [isEditing, setIsEditing] = useState(false)
 
   // Approved users only
   if (!user || !isApproved) {
@@ -96,6 +102,7 @@ function GenerateRecipe() {
     setGenerating(true)
     setGeneratedRecipe(null)
     setSaved(false)
+    setIsEditing(false)
 
     try {
       const response = await fetch(`${API_URL}/api/generate-recipe`, {
@@ -134,14 +141,16 @@ function GenerateRecipe() {
     setError('')
 
     try {
-      // Add AI-generated tag
+      // Add AI-generated tag if not already present
+      const tags = generatedRecipe.tags || []
       const recipeToSave = {
         ...generatedRecipe,
-        tags: [...(generatedRecipe.tags || []), 'ai-generated'],
+        tags: tags.includes('ai-generated') ? tags : [...tags, 'ai-generated'],
       }
 
       await submitRecipe(user.uid, user.email, recipeToSave)
       setSaved(true)
+      setIsEditing(false)
     } catch (err) {
       console.error('Save error:', err)
       setError('Failed to save recipe. Please try again.')
@@ -154,6 +163,47 @@ function GenerateRecipe() {
     setGeneratedRecipe(null)
     setSaved(false)
     setError('')
+    setIsEditing(false)
+  }
+
+  // Recipe editing functions
+  const updateRecipeField = (field, value) => {
+    setGeneratedRecipe({ ...generatedRecipe, [field]: value })
+  }
+
+  const updateIngredientField = (index, field, value) => {
+    const newIngredients = [...generatedRecipe.ingredients]
+    newIngredients[index] = { ...newIngredients[index], [field]: value }
+    setGeneratedRecipe({ ...generatedRecipe, ingredients: newIngredients })
+  }
+
+  const removeRecipeIngredient = (index) => {
+    const newIngredients = generatedRecipe.ingredients.filter((_, i) => i !== index)
+    setGeneratedRecipe({ ...generatedRecipe, ingredients: newIngredients })
+  }
+
+  const addRecipeIngredient = () => {
+    const newIngredients = [
+      ...generatedRecipe.ingredients,
+      { name: '', amount: 1, unit: 'whole', cost: 0, category: 'other' }
+    ]
+    setGeneratedRecipe({ ...generatedRecipe, ingredients: newIngredients })
+  }
+
+  const updateInstruction = (index, value) => {
+    const newInstructions = [...generatedRecipe.instructions]
+    newInstructions[index] = value
+    setGeneratedRecipe({ ...generatedRecipe, instructions: newInstructions })
+  }
+
+  const removeInstruction = (index) => {
+    const newInstructions = generatedRecipe.instructions.filter((_, i) => i !== index)
+    setGeneratedRecipe({ ...generatedRecipe, instructions: newInstructions })
+  }
+
+  const addInstruction = () => {
+    const newInstructions = [...generatedRecipe.instructions, '']
+    setGeneratedRecipe({ ...generatedRecipe, instructions: newInstructions })
   }
 
   const getCategoryIcon = (category) => {
@@ -184,29 +234,120 @@ function GenerateRecipe() {
         </div>
       )}
 
-      {/* Recipe Preview */}
+      {/* Recipe Preview/Edit */}
       {generatedRecipe && (
         <div className="space-y-4">
+          {/* Header Card */}
           <div className="card p-6 space-y-4">
             <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">{generatedRecipe.name}</h3>
-                <p className="text-gray-600 mt-1">{generatedRecipe.description}</p>
+              <div className="flex-1">
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={generatedRecipe.name}
+                      onChange={(e) => updateRecipeField('name', e.target.value)}
+                      className="input text-xl font-bold"
+                      placeholder="Recipe name"
+                    />
+                    <textarea
+                      value={generatedRecipe.description}
+                      onChange={(e) => updateRecipeField('description', e.target.value)}
+                      className="input"
+                      placeholder="Description"
+                      rows={2}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-bold text-gray-900">{generatedRecipe.name}</h3>
+                    <p className="text-gray-600 mt-1">{generatedRecipe.description}</p>
+                  </>
+                )}
               </div>
-              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
-                AI Generated
-              </span>
+              <div className="flex items-center gap-2 ml-4">
+                <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                  AI Generated
+                </span>
+                {!saved && (
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="text-sm text-primary-600 hover:text-primary-700"
+                  >
+                    {isEditing ? 'Done' : 'Edit'}
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-              <span>⏱ Prep: {generatedRecipe.prepTime}min</span>
-              <span>🍳 Cook: {generatedRecipe.cookTime}min</span>
-              <span>👥 Serves: {generatedRecipe.servings}</span>
-              <span className="capitalize">📊 {generatedRecipe.difficulty}</span>
-              <span>💰 {'$'.repeat(generatedRecipe.costLevel || 2)}</span>
-            </div>
+            {isEditing ? (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div>
+                  <label className="text-xs text-gray-500">Prep (min)</label>
+                  <input
+                    type="number"
+                    value={generatedRecipe.prepTime}
+                    onChange={(e) => updateRecipeField('prepTime', parseInt(e.target.value) || 0)}
+                    className="input"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Cook (min)</label>
+                  <input
+                    type="number"
+                    value={generatedRecipe.cookTime}
+                    onChange={(e) => updateRecipeField('cookTime', parseInt(e.target.value) || 0)}
+                    className="input"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Servings</label>
+                  <input
+                    type="number"
+                    value={generatedRecipe.servings}
+                    onChange={(e) => updateRecipeField('servings', parseInt(e.target.value) || 1)}
+                    className="input"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Difficulty</label>
+                  <select
+                    value={generatedRecipe.difficulty}
+                    onChange={(e) => updateRecipeField('difficulty', e.target.value)}
+                    className="input"
+                  >
+                    {DIFFICULTY_OPTIONS.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Cost Level</label>
+                  <select
+                    value={generatedRecipe.costLevel || 2}
+                    onChange={(e) => updateRecipeField('costLevel', parseInt(e.target.value))}
+                    className="input"
+                  >
+                    <option value={1}>$ (Budget)</option>
+                    <option value={2}>$$ (Moderate)</option>
+                    <option value={3}>$$$ (Premium)</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                <span>⏱ Prep: {generatedRecipe.prepTime}min</span>
+                <span>🍳 Cook: {generatedRecipe.cookTime}min</span>
+                <span>👥 Serves: {generatedRecipe.servings}</span>
+                <span className="capitalize">📊 {generatedRecipe.difficulty}</span>
+                <span>💰 {'$'.repeat(generatedRecipe.costLevel || 2)}</span>
+              </div>
+            )}
 
-            {generatedRecipe.tags?.length > 0 && (
+            {generatedRecipe.tags?.length > 0 && !isEditing && (
               <div className="flex flex-wrap gap-2">
                 {generatedRecipe.tags.map(tag => (
                   <span
@@ -220,39 +361,145 @@ function GenerateRecipe() {
             )}
           </div>
 
+          {/* Ingredients Card */}
           <div className="card p-6 space-y-4">
-            <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-              <span>🥗</span> Ingredients
-            </h4>
-            <ul className="space-y-2">
-              {generatedRecipe.ingredients.map((ing, idx) => (
-                <li key={idx} className="flex items-center gap-3 text-sm">
-                  <span>{getCategoryIcon(ing.category)}</span>
-                  <span>
-                    <strong>{ing.amount} {ing.unit}</strong> {ing.name}
-                  </span>
-                  {ing.cost > 0 && (
-                    <span className="text-gray-400 ml-auto">${ing.cost.toFixed(2)}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                <span>🥗</span> Ingredients
+              </h4>
+              {isEditing && (
+                <button
+                  onClick={addRecipeIngredient}
+                  className="text-sm text-primary-600 hover:text-primary-700"
+                >
+                  + Add Ingredient
+                </button>
+              )}
+            </div>
+
+            {isEditing ? (
+              <div className="space-y-2">
+                {generatedRecipe.ingredients.map((ing, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="number"
+                      value={ing.amount}
+                      onChange={(e) => updateIngredientField(idx, 'amount', parseFloat(e.target.value) || 0)}
+                      className="input w-20"
+                      min="0"
+                      step="0.25"
+                    />
+                    <select
+                      value={ing.unit}
+                      onChange={(e) => updateIngredientField(idx, 'unit', e.target.value)}
+                      className="input w-24"
+                    >
+                      {UNIT_OPTIONS.map(u => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={ing.name}
+                      onChange={(e) => updateIngredientField(idx, 'name', e.target.value)}
+                      className="input flex-1"
+                      placeholder="Ingredient name"
+                    />
+                    <select
+                      value={ing.category}
+                      onChange={(e) => updateIngredientField(idx, 'category', e.target.value)}
+                      className="input w-28"
+                    >
+                      {CATEGORY_OPTIONS.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      value={ing.cost}
+                      onChange={(e) => updateIngredientField(idx, 'cost', parseFloat(e.target.value) || 0)}
+                      className="input w-20"
+                      placeholder="$"
+                      min="0"
+                      step="0.01"
+                    />
+                    <button
+                      onClick={() => removeRecipeIngredient(idx)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {generatedRecipe.ingredients.map((ing, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-sm">
+                    <span>{getCategoryIcon(ing.category)}</span>
+                    <span>
+                      <strong>{ing.amount} {ing.unit}</strong> {ing.name}
+                    </span>
+                    {ing.cost > 0 && (
+                      <span className="text-gray-400 ml-auto">${ing.cost.toFixed(2)}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
+          {/* Instructions Card */}
           <div className="card p-6 space-y-4">
-            <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-              <span>📋</span> Instructions
-            </h4>
-            <ol className="space-y-3">
-              {generatedRecipe.instructions.map((step, idx) => (
-                <li key={idx} className="flex gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm font-medium">
-                    {idx + 1}
-                  </span>
-                  <span className="text-gray-700">{step}</span>
-                </li>
-              ))}
-            </ol>
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                <span>📋</span> Instructions
+              </h4>
+              {isEditing && (
+                <button
+                  onClick={addInstruction}
+                  className="text-sm text-primary-600 hover:text-primary-700"
+                >
+                  + Add Step
+                </button>
+              )}
+            </div>
+
+            {isEditing ? (
+              <div className="space-y-2">
+                {generatedRecipe.instructions.map((step, idx) => (
+                  <div key={idx} className="flex gap-2 items-start">
+                    <span className="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm font-medium mt-2">
+                      {idx + 1}
+                    </span>
+                    <textarea
+                      value={step}
+                      onChange={(e) => updateInstruction(idx, e.target.value)}
+                      className="input flex-1"
+                      rows={2}
+                      placeholder="Instruction step"
+                    />
+                    <button
+                      onClick={() => removeInstruction(idx)}
+                      className="text-red-500 hover:text-red-700 p-1 mt-2"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ol className="space-y-3">
+                {generatedRecipe.instructions.map((step, idx) => (
+                  <li key={idx} className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm font-medium">
+                      {idx + 1}
+                    </span>
+                    <span className="text-gray-700">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -264,7 +511,7 @@ function GenerateRecipe() {
                   disabled={saving || !isFirebaseEnabled()}
                   className="btn btn-primary flex-1"
                 >
-                  {saving ? 'Saving...' : 'Save as My Recipe'}
+                  {saving ? 'Saving...' : 'Save Recipe'}
                 </button>
                 <button
                   onClick={handleReset}

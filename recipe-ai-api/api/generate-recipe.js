@@ -73,7 +73,7 @@ Rules:
 - Instructions should be clear, numbered implicitly by array position
 - Cost should be a realistic USD estimate for that amount of ingredient
 
-Return ONLY the JSON object, no markdown formatting or explanation.`;
+Return ONLY valid JSON. No markdown, no code blocks, no explanation.`;
 
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
@@ -86,19 +86,26 @@ Return ONLY the JSON object, no markdown formatting or explanation.`;
       ]
     });
 
-    const responseText = message.content[0].text;
+    let responseText = message.content[0].text;
+
+    // Clean up the response - remove markdown code blocks if present
+    responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     // Parse the JSON response
     let recipe;
     try {
       recipe = JSON.parse(responseText);
-    } catch {
+    } catch (parseError) {
       // Try to extract JSON from the response if it has extra text
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        recipe = JSON.parse(jsonMatch[0]);
+        try {
+          recipe = JSON.parse(jsonMatch[0]);
+        } catch {
+          throw new Error(`Failed to parse recipe JSON: ${parseError.message}`);
+        }
       } else {
-        throw new Error('Failed to parse recipe JSON');
+        throw new Error(`Failed to parse recipe JSON: ${parseError.message}`);
       }
     }
 
