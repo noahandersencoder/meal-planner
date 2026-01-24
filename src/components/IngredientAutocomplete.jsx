@@ -84,7 +84,11 @@ function IngredientAutocomplete({ value, onChange, onSelect, placeholder }) {
       dairy: '🧀',
       pantry: '🥫',
       spices: '🧂',
+      baking: '🧁',
       frozen: '🧊',
+      snacks: '🍿',
+      breakfast: '🥣',
+      drinks: '🥤',
       other: '📦'
     }
     return icons[category] || '📦'

@@ -14,6 +14,9 @@ const CATEGORIES = [
   { value: 'spices', label: 'Spices', icon: '🧂' },
   { value: 'baking', label: 'Baking', icon: '🧁' },
   { value: 'frozen', label: 'Frozen', icon: '🧊' },
+  { value: 'snacks', label: 'Snacks', icon: '🍿' },
+  { value: 'breakfast', label: 'Breakfast', icon: '🥣' },
+  { value: 'drinks', label: 'Drinks', icon: '🥤' },
   { value: 'other', label: 'Other', icon: '📦' },
 ]
 

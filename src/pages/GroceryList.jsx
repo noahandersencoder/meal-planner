@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import GroceryItem from '../components/GroceryItem'
+import IngredientAutocomplete from '../components/IngredientAutocomplete'
 import {
   saveUserGroceryList,
   loadUserGroceryList,
@@ -17,11 +18,101 @@ const categoryLabels = {
   dairy: { label: 'Dairy', icon: '🧀' },
   pantry: { label: 'Pantry', icon: '🥫' },
   spices: { label: 'Spices', icon: '🧂' },
+  baking: { label: 'Baking', icon: '🧁' },
   frozen: { label: 'Frozen', icon: '🧊' },
+  snacks: { label: 'Snacks', icon: '🍿' },
+  breakfast: { label: 'Breakfast', icon: '🥣' },
+  drinks: { label: 'Drinks', icon: '🥤' },
   other: { label: 'Other', icon: '📦' },
 }
 
-const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'frozen', 'other']
+const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'snacks', 'breakfast', 'drinks', 'other']
+
+// Quick add component for empty state
+function QuickAddItem({ addItemToGroceryList }) {
+  const [name, setName] = useState('')
+  const [amount, setAmount] = useState(1)
+  const [unit, setUnit] = useState('whole')
+  const [category, setCategory] = useState('snacks')
+  const [cost, setCost] = useState('')
+
+  const handleAdd = () => {
+    if (!name.trim()) return
+    addItemToGroceryList({
+      name: name.trim(),
+      amount: parseFloat(amount) || 1,
+      unit,
+      category,
+      cost: parseFloat(cost) || 0,
+    })
+    setName('')
+    setAmount(1)
+    setCost('')
+  }
+
+  const handleSelect = (ingredient) => {
+    setName(ingredient.name)
+    setUnit(ingredient.defaultUnit)
+    setCategory(ingredient.category)
+    setCost(ingredient.avgCost.toFixed(2))
+  }
+
+  return (
+    <div className="space-y-3">
+      <IngredientAutocomplete
+        value={name}
+        onChange={setName}
+        onSelect={handleSelect}
+        placeholder="Search for items..."
+      />
+      <div className="grid grid-cols-4 gap-2">
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="input"
+          placeholder="Qty"
+          min="0.25"
+          step="0.25"
+        />
+        <select value={unit} onChange={(e) => setUnit(e.target.value)} className="input">
+          <option value="whole">whole</option>
+          <option value="box">box</option>
+          <option value="bag">bag</option>
+          <option value="pack">pack</option>
+          <option value="bottle">bottle</option>
+          <option value="can">can</option>
+          <option value="oz">oz</option>
+          <option value="lb">lb</option>
+          <option value="gallon">gallon</option>
+        </select>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="input">
+          {categoryOrder.map((cat) => (
+            <option key={cat} value={cat}>
+              {categoryLabels[cat].icon} {categoryLabels[cat].label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          value={cost}
+          onChange={(e) => setCost(e.target.value)}
+          className="input"
+          placeholder="$"
+          min="0"
+          step="0.01"
+        />
+      </div>
+      <button
+        onClick={handleAdd}
+        disabled={!name.trim()}
+        className="btn btn-primary w-full"
+      >
+        Add to List
+      </button>
+    </div>
+  )
+}
 
 function GroceryList() {
   const navigate = useNavigate()
@@ -44,6 +135,8 @@ function GroceryList() {
     generateGroceryList,
     getAllMealPlanRecipes,
     setGroceryListFromCloud,
+    addItemToGroceryList,
+    removeItemFromGroceryList,
   } = useStore()
 
   const totalCost = getGroceryListTotal()
@@ -202,6 +295,8 @@ function GroceryList() {
               sortedCategories={sortedCategories}
               handleRefresh={handleRefresh}
               navigate={navigate}
+              addItemToGroceryList={addItemToGroceryList}
+              removeItemFromGroceryList={removeItemFromGroceryList}
             />
           </div>
         )}
@@ -216,22 +311,28 @@ function GroceryList() {
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
-        <div className="text-center py-12">
+        <div className="text-center py-8">
           <div className="text-6xl mb-4">🛒</div>
-          <p className="text-gray-500 mb-4">
-            {hasRecipes
-              ? 'Generate a grocery list from your meal plan'
-              : 'Add some recipes to your meal plan first'}
-          </p>
-          {hasRecipes ? (
-            <button onClick={handleRefresh} className="btn btn-primary">
-              Generate List
-            </button>
-          ) : (
-            <button onClick={() => navigate('/meal-plan')} className="btn btn-primary">
+          <p className="text-gray-500 mb-4">Your grocery list is empty</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {hasRecipes && (
+              <button onClick={handleRefresh} className="btn btn-primary">
+                Generate from Meal Plan
+              </button>
+            )}
+            <button onClick={() => navigate('/meal-plan')} className="btn btn-secondary">
               Go to Meal Plan
             </button>
-          )}
+          </div>
+        </div>
+
+        {/* Quick Add Section */}
+        <div className="card p-6">
+          <h3 className="font-semibold text-gray-900 mb-3">Quick Add Items</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Add snacks, drinks, breakfast items, or anything else to your list
+          </p>
+          <QuickAddItem addItemToGroceryList={addItemToGroceryList} />
         </div>
       </div>
     )
@@ -253,6 +354,8 @@ function GroceryList() {
       handleRefresh={handleRefresh}
       navigate={navigate}
       user={user}
+      addItemToGroceryList={addItemToGroceryList}
+      removeItemFromGroceryList={removeItemFromGroceryList}
     />
   )
 }
@@ -273,7 +376,43 @@ function LocalGroceryList({
   handleRefresh,
   navigate,
   user,
+  addItemToGroceryList,
+  removeItemFromGroceryList,
 }) {
+  const [showAddItem, setShowAddItem] = useState(false)
+  const [newItemName, setNewItemName] = useState('')
+  const [newItemAmount, setNewItemAmount] = useState(1)
+  const [newItemUnit, setNewItemUnit] = useState('whole')
+  const [newItemCategory, setNewItemCategory] = useState('other')
+  const [newItemCost, setNewItemCost] = useState('')
+
+  const handleAddItem = () => {
+    if (!newItemName.trim()) return
+
+    addItemToGroceryList({
+      name: newItemName.trim(),
+      amount: parseFloat(newItemAmount) || 1,
+      unit: newItemUnit,
+      category: newItemCategory,
+      cost: parseFloat(newItemCost) || 0,
+    })
+
+    // Reset form
+    setNewItemName('')
+    setNewItemAmount(1)
+    setNewItemUnit('whole')
+    setNewItemCategory('other')
+    setNewItemCost('')
+    setShowAddItem(false)
+  }
+
+  const handleSelectIngredient = (ingredient) => {
+    setNewItemName(ingredient.name)
+    setNewItemUnit(ingredient.defaultUnit)
+    setNewItemCategory(ingredient.category)
+    setNewItemCost(ingredient.avgCost.toFixed(2))
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -284,14 +423,98 @@ function LocalGroceryList({
             {user && <span className="ml-2 text-green-600">Synced</span>}
           </p>
         </div>
-        <button
-          onClick={handleRefresh}
-          className="btn btn-secondary text-sm"
-          title="Regenerate from meal plan"
-        >
-          Refresh
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddItem(!showAddItem)}
+            className="btn btn-primary text-sm"
+          >
+            + Add Item
+          </button>
+          <button
+            onClick={handleRefresh}
+            className="btn btn-secondary text-sm"
+            title="Regenerate from meal plan"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
+
+      {/* Add Item Form */}
+      {showAddItem && (
+        <div className="card p-4 space-y-3 bg-gray-50">
+          <h3 className="font-medium text-gray-900">Add Item</h3>
+          <IngredientAutocomplete
+            value={newItemName}
+            onChange={setNewItemName}
+            onSelect={handleSelectIngredient}
+            placeholder="Search snacks, drinks, breakfast items..."
+          />
+          <div className="grid grid-cols-4 gap-2">
+            <input
+              type="number"
+              value={newItemAmount}
+              onChange={(e) => setNewItemAmount(e.target.value)}
+              className="input"
+              placeholder="Qty"
+              min="0.25"
+              step="0.25"
+            />
+            <select
+              value={newItemUnit}
+              onChange={(e) => setNewItemUnit(e.target.value)}
+              className="input"
+            >
+              <option value="whole">whole</option>
+              <option value="box">box</option>
+              <option value="bag">bag</option>
+              <option value="pack">pack</option>
+              <option value="bottle">bottle</option>
+              <option value="can">can</option>
+              <option value="cup">cup</option>
+              <option value="oz">oz</option>
+              <option value="lb">lb</option>
+              <option value="gallon">gallon</option>
+              <option value="liter">liter</option>
+            </select>
+            <select
+              value={newItemCategory}
+              onChange={(e) => setNewItemCategory(e.target.value)}
+              className="input"
+            >
+              {categoryOrder.map((cat) => (
+                <option key={cat} value={cat}>
+                  {categoryLabels[cat].icon} {categoryLabels[cat].label}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              value={newItemCost}
+              onChange={(e) => setNewItemCost(e.target.value)}
+              className="input"
+              placeholder="$ Cost"
+              min="0"
+              step="0.01"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleAddItem}
+              disabled={!newItemName.trim()}
+              className="btn btn-primary flex-1"
+            >
+              Add to List
+            </button>
+            <button
+              onClick={() => setShowAddItem(false)}
+              className="btn btn-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card p-4 bg-primary-50 flex items-center justify-between">
         <span className="font-medium text-primary-900">Estimated Total</span>
@@ -310,9 +533,9 @@ function LocalGroceryList({
         {sortedCategories.map((category) => (
           <div key={category}>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xl">{categoryLabels[category].icon}</span>
+              <span className="text-xl">{categoryLabels[category]?.icon || '📦'}</span>
               <h3 className="font-semibold text-gray-900">
-                {categoryLabels[category].label}
+                {categoryLabels[category]?.label || category}
               </h3>
               <span className="text-sm text-gray-400">
                 ({groupedItems[category].length})
@@ -325,6 +548,7 @@ function LocalGroceryList({
                   item={item}
                   checked={checkedItems[item.id] || false}
                   onToggle={() => toggleGroceryItem(item.id)}
+                  onRemove={removeItemFromGroceryList ? () => removeItemFromGroceryList(item.id) : null}
                 />
               ))}
             </div>

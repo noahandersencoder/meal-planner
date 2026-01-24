@@ -14,6 +14,9 @@ const categoryLabels = {
   spices: 'Spices',
   baking: 'Baking',
   frozen: 'Frozen',
+  snacks: 'Snacks',
+  breakfast: 'Breakfast',
+  drinks: 'Drinks',
   other: 'Other',
 }
 

@@ -106,12 +106,50 @@ const useStore = create(
         })
 
         const groceryList = Array.from(ingredientMap.values()).sort((a, b) => {
-          const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'frozen', 'other']
+          const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'snacks', 'breakfast', 'drinks', 'other']
           return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
         })
 
         set({ groceryList })
       },
+
+      addItemToGroceryList: (item) =>
+        set((state) => {
+          const key = `${item.name.toLowerCase()}-${item.unit}`
+          const existingIndex = state.groceryList.findIndex(i => i.id === key)
+
+          if (existingIndex >= 0) {
+            // Update existing item
+            const newList = [...state.groceryList]
+            newList[existingIndex] = {
+              ...newList[existingIndex],
+              amount: newList[existingIndex].amount + item.amount,
+              cost: newList[existingIndex].cost + (item.cost || 0)
+            }
+            return { groceryList: newList }
+          } else {
+            // Add new item
+            const newItem = {
+              id: key,
+              name: item.name,
+              amount: item.amount,
+              unit: item.unit,
+              cost: item.cost || 0,
+              category: item.category || 'other',
+            }
+            const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'snacks', 'breakfast', 'drinks', 'other']
+            const newList = [...state.groceryList, newItem].sort((a, b) => {
+              return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
+            })
+            return { groceryList: newList }
+          }
+        }),
+
+      removeItemFromGroceryList: (itemId) =>
+        set((state) => ({
+          groceryList: state.groceryList.filter(item => item.id !== itemId),
+          checkedItems: { ...state.checkedItems, [itemId]: undefined }
+        })),
 
       toggleGroceryItem: (itemId) =>
         set((state) => ({

@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { getRecipeRatings, isFirebaseEnabled } from '../firebase'
 
 const difficultyColors = {
   easy: 'bg-green-100 text-green-800',
@@ -13,6 +15,13 @@ const costLabels = {
 }
 
 function RecipeCard({ recipe, onAddToMealPlan, showAddButton = false }) {
+  const [rating, setRating] = useState({ average: 0, count: 0 })
+
+  useEffect(() => {
+    if (isFirebaseEnabled()) {
+      getRecipeRatings(recipe.id).then(setRating).catch(console.error)
+    }
+  }, [recipe.id])
   const totalTime = recipe.prepTime + recipe.cookTime
   const totalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
 
@@ -35,6 +44,13 @@ function RecipeCard({ recipe, onAddToMealPlan, showAddButton = false }) {
             {recipe.name}
           </h3>
         </Link>
+        {rating.count > 0 && (
+          <div className="flex items-center gap-1 mt-1">
+            <span className="text-yellow-400">★</span>
+            <span className="text-sm font-medium text-gray-700">{rating.average.toFixed(1)}</span>
+            <span className="text-xs text-gray-400">({rating.count})</span>
+          </div>
+        )}
         <p className="text-sm text-gray-500 mt-1 line-clamp-2">{recipe.description}</p>
 
         <div className="flex flex-wrap gap-2 mt-3">

@@ -1,10 +1,19 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { getRecipeRatings, isFirebaseEnabled } from '../firebase'
 
 const costLabels = { 1: '$', 2: '$$', 3: '$$$' }
 
 function RecipeRow({ recipe, onAddToMealPlan }) {
   const totalTime = recipe.prepTime + recipe.cookTime
   const totalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
+  const [rating, setRating] = useState({ average: 0, count: 0 })
+
+  useEffect(() => {
+    if (isFirebaseEnabled()) {
+      getRecipeRatings(recipe.id).then(setRating).catch(console.error)
+    }
+  }, [recipe.id])
 
   return (
     <div className="card p-4 flex items-center gap-4">
@@ -13,6 +22,16 @@ function RecipeRow({ recipe, onAddToMealPlan }) {
           <h3 className="font-semibold text-gray-900 truncate">{recipe.name}</h3>
         </Link>
         <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
+          {rating.count > 0 && (
+            <>
+              <span className="flex items-center gap-0.5">
+                <span className="text-yellow-400">★</span>
+                <span className="font-medium text-gray-700">{rating.average.toFixed(1)}</span>
+                <span className="text-xs text-gray-400">({rating.count})</span>
+              </span>
+              <span>•</span>
+            </>
+          )}
           <span>{totalTime} min</span>
           <span>•</span>
           <span>{recipe.servings} servings</span>

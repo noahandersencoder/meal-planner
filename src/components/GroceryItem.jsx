@@ -1,8 +1,13 @@
-function GroceryItem({ item, checked, onToggle }) {
+function GroceryItem({ item, checked, onToggle, onRemove }) {
+  const handleRemove = (e) => {
+    e.stopPropagation()
+    onRemove?.()
+  }
+
   return (
     <div
       onClick={onToggle}
-      className={`flex items-center p-3 rounded-lg cursor-pointer transition-all ${
+      className={`flex items-center p-3 rounded-lg cursor-pointer transition-all group ${
         checked
           ? 'bg-gray-100 opacity-60'
           : 'bg-white hover:bg-gray-50'
@@ -31,9 +36,21 @@ function GroceryItem({ item, checked, onToggle }) {
         </span>
       </div>
 
-      <span className="text-sm text-gray-400">
+      <span className="text-sm text-gray-400 mr-2">
         ${item.cost.toFixed(2)}
       </span>
+
+      {onRemove && (
+        <button
+          onClick={handleRemove}
+          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity p-1"
+          title="Remove item"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
