@@ -12,6 +12,7 @@ import Login from './pages/Login'
 import Admin from './pages/Admin'
 import Settings from './pages/Settings'
 import RecipeSubmit from './pages/RecipeSubmit'
+import GenerateRecipe from './pages/GenerateRecipe'
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/submit-recipe" element={<RecipeSubmit />} />
+            <Route path="/generate" element={<GenerateRecipe />} />
           </Routes>
         </Layout>
       </AuthProvider>

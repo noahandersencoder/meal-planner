@@ -36,12 +36,20 @@ function Layout({ children }) {
               {user ? (
                 <>
                   {isAdmin && (
-                    <Link
-                      to="/admin"
-                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                      Admin
-                    </Link>
+                    <>
+                      <Link
+                        to="/generate"
+                        className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                      >
+                        <span>✨</span> Generate
+                      </Link>
+                      <Link
+                        to="/admin"
+                        className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                      >
+                        Admin
+                      </Link>
+                    </>
                   )}
                   <Link to="/settings" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     {userProfile?.photoURL ? (

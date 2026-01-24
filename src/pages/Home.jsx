@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom'
 import useStore from '../store/useStore'
 
 function Home() {
-  const { mealPlan, groceryList } = useStore()
+  const { mealPlan, getActiveList } = useStore()
   const totalRecipes = Object.values(mealPlan.recipes).flat().length
+  const groceryList = getActiveList()?.items || []
 
   return (
     <div className="space-y-6">

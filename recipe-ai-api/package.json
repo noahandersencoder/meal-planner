@@ -1,0 +1,12 @@
+{
+  "name": "recipe-ai-api",
+  "version": "1.0.0",
+  "description": "AI Recipe Generation API using Claude Haiku",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0"
+  }
+}
