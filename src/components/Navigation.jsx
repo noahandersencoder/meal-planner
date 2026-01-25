@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom'
 
 const navItems = [
-  { to: '/', icon: '🏠', label: 'Home' },
   { to: '/browse', icon: '🍳', label: 'Recipes' },
   { to: '/meal-plan', icon: '📅', label: 'Plan' },
-  { to: '/grocery-list', icon: '🛒', label: 'List' },
-  { to: '/profile', icon: '👤', label: 'Profile' },
+  { to: '/community', icon: '👥', label: 'Community' },
+  { to: '/my-cooking', icon: '👨‍🍳', label: 'My Cooking' },
 ]
 
 function Navigation() {

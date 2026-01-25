@@ -521,8 +521,22 @@ function GroceryList() {
 
     return (
       <div className="space-y-6">
+        {/* Plan/List Tabs */}
+        <div className="flex gap-2 border-b border-gray-200">
+          <button
+            onClick={() => navigate('/meal-plan')}
+            className="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+          >
+            📅 Meal Plan
+          </button>
+          <button
+            className="px-4 py-2 font-medium text-sm border-b-2 border-primary-600 text-primary-600"
+          >
+            🛒 Grocery List
+          </button>
+        </div>
+
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
           <ListSelector {...listSelectorProps} />
         </div>
         <div className="text-center py-8">
@@ -642,9 +656,23 @@ function LocalGroceryList({
 
   return (
     <div className="space-y-6">
+      {/* Plan/List Tabs */}
+      <div className="flex gap-2 border-b border-gray-200">
+        <button
+          onClick={() => navigate('/meal-plan')}
+          className="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+        >
+          📅 Meal Plan
+        </button>
+        <button
+          className="px-4 py-2 font-medium text-sm border-b-2 border-primary-600 text-primary-600"
+        >
+          🛒 Grocery List
+        </button>
+      </div>
+
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">Grocery List</h2>
           {listSelectorProps && <ListSelector {...listSelectorProps} />}
         </div>
         <div className="flex gap-2">

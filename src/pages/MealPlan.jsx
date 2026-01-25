@@ -335,9 +335,23 @@ function MealPlan() {
 
   return (
     <div className="space-y-6">
+      {/* Plan/List Tabs */}
+      <div className="flex gap-2 border-b border-gray-200">
+        <button
+          className="px-4 py-2 font-medium text-sm border-b-2 border-primary-600 text-primary-600"
+        >
+          📅 Meal Plan
+        </button>
+        <button
+          onClick={() => navigate('/grocery-list')}
+          className="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+        >
+          🛒 Grocery List
+        </button>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Meal Plan</h2>
           <p className="text-gray-500 text-sm">
             {totalRecipes > 0
               ? `${totalRecipes} meal${totalRecipes !== 1 ? 's' : ''} planned`

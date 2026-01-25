@@ -149,9 +149,14 @@ function Browse() {
           </p>
         </div>
         {user && isApproved && (
-          <Link to="/submit-recipe" className="btn btn-primary text-sm">
-            + Add Recipe
-          </Link>
+          <div className="flex gap-2">
+            <Link to="/generate" className="btn btn-secondary text-sm flex items-center gap-1">
+              <span>✨</span> Generate
+            </Link>
+            <Link to="/submit-recipe" className="btn btn-primary text-sm">
+              + Add
+            </Link>
+          </div>
         )}
       </div>
 
