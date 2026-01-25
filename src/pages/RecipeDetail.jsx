@@ -3,7 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto } from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe } from '../firebase'
+
+const CUISINE_TAGS = [
+  'italian', 'mediterranean', 'mexican', 'chinese', 'japanese',
+  'thai', 'indian', 'american', 'french', 'greek', 'korean',
+  'vietnamese', 'middle-eastern'
+]
+
+const COMMON_TAGS = [
+  'vegetarian', 'vegan', 'dairy-free', 'gluten-free',
+  'red-meat', 'poultry', 'fish', 'quick', 'healthy', 'comfort-food'
+]
 import RecipeComments from '../components/RecipeComments'
 import IngredientWithUnitSelect from '../components/IngredientWithUnitSelect'
 
@@ -31,6 +42,10 @@ function RecipeDetail() {
   const [loading, setLoading] = useState(true)
   const [creatorProfile, setCreatorProfile] = useState(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [editingTags, setEditingTags] = useState(false)
+  const [savingTags, setSavingTags] = useState(false)
+  const [tempTags, setTempTags] = useState([])
+  const [newTag, setNewTag] = useState('')
   const photoInputRef = useRef(null)
 
   useEffect(() => {
@@ -147,6 +162,45 @@ function RecipeDetail() {
     setUploadingPhoto(false)
   }
 
+  // Tag management functions
+  const startEditingTags = () => {
+    setTempTags([...(recipe.tags || [])])
+    setEditingTags(true)
+  }
+
+  const cancelEditingTags = () => {
+    setEditingTags(false)
+    setTempTags([])
+    setNewTag('')
+  }
+
+  const addTag = (tag) => {
+    const normalizedTag = tag.toLowerCase().trim()
+    if (normalizedTag && !tempTags.includes(normalizedTag)) {
+      setTempTags([...tempTags, normalizedTag])
+    }
+    setNewTag('')
+  }
+
+  const removeTag = (tagToRemove) => {
+    setTempTags(tempTags.filter(t => t !== tagToRemove))
+  }
+
+  const saveTags = async () => {
+    if (!isFirebaseRecipe) return
+
+    setSavingTags(true)
+    try {
+      await updateApprovedRecipe(recipe.id, { tags: tempTags })
+      setRecipe({ ...recipe, tags: tempTags })
+      setEditingTags(false)
+    } catch (err) {
+      console.error('Error saving tags:', err)
+      alert('Failed to save tags')
+    }
+    setSavingTags(false)
+  }
+
   const groupedIngredients = recipe.ingredients.reduce((acc, ing) => {
     const category = ing.category || 'other'
     if (!acc[category]) acc[category] = []
@@ -257,18 +311,132 @@ function RecipeDetail() {
             )}
           </div>
 
-          {recipe.tags && recipe.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {recipe.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
+          {/* Tags Display and Admin Edit */}
+          <div className="mt-4">
+            {!editingTags ? (
+              <>
+                {recipe.tags && recipe.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {recipe.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {isAdmin && isFirebaseRecipe && (
+                  <button
+                    onClick={startEditingTags}
+                    className="mt-2 text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Edit Tags
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium text-gray-700">Edit Recipe Tags</p>
+
+                {/* Current Tags */}
+                <div className="flex flex-wrap gap-2">
+                  {tempTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-1"
+                    >
+                      {tag}
+                      <button
+                        onClick={() => removeTag(tag)}
+                        className="hover:text-red-600"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                  {tempTags.length === 0 && (
+                    <span className="text-sm text-gray-400">No tags yet</span>
+                  )}
+                </div>
+
+                {/* Quick Add - Cuisines */}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Cuisine Types:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {CUISINE_TAGS.filter(t => !tempTags.includes(t)).map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => addTag(tag)}
+                        className="px-2 py-0.5 bg-white border border-gray-300 rounded text-xs hover:bg-gray-100 hover:border-primary-400"
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Add - Common Tags */}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Common Tags:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {COMMON_TAGS.filter(t => !tempTags.includes(t)).map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => addTag(tag)}
+                        className="px-2 py-0.5 bg-white border border-gray-300 rounded text-xs hover:bg-gray-100 hover:border-primary-400"
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Tag Input */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addTag(newTag)}
+                    placeholder="Add custom tag..."
+                    className="input flex-1 text-sm"
+                  />
+                  <button
+                    onClick={() => addTag(newTag)}
+                    disabled={!newTag.trim()}
+                    className="btn btn-secondary text-sm"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {/* Save/Cancel */}
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={saveTags}
+                    disabled={savingTags}
+                    className="btn btn-primary text-sm"
+                  >
+                    {savingTags ? 'Saving...' : 'Save Tags'}
+                  </button>
+                  <button
+                    onClick={cancelEditingTags}
+                    disabled={savingTags}
+                    className="btn btn-secondary text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
             <div className="text-center p-3 bg-gray-50 rounded-lg">
