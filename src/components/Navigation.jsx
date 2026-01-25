@@ -5,7 +5,7 @@ const navItems = [
   { to: '/browse', icon: '🍳', label: 'Recipes' },
   { to: '/meal-plan', icon: '📅', label: 'Plan' },
   { to: '/grocery-list', icon: '🛒', label: 'List' },
-  { to: '/settings', icon: '⚙️', label: 'Settings' },
+  { to: '/profile', icon: '👤', label: 'Profile' },
 ]
 
 function Navigation() {

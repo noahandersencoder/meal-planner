@@ -35,28 +35,6 @@ function Layout({ children }) {
             <div className="flex items-center gap-3">
               {user ? (
                 <>
-                  <Link
-                    to="/community"
-                    className="text-sm text-gray-600 hover:text-primary-600 font-medium"
-                  >
-                    Community
-                  </Link>
-                  {isApproved && (
-                    <>
-                      <Link
-                        to="/my-cooking"
-                        className="text-sm text-gray-600 hover:text-primary-600 font-medium"
-                      >
-                        My Cooking
-                      </Link>
-                      <Link
-                        to="/generate"
-                        className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
-                      >
-                        <span>✨</span> Generate
-                      </Link>
-                    </>
-                  )}
                   {isAdmin && (
                     <Link
                       to="/admin"
@@ -65,24 +43,6 @@ function Layout({ children }) {
                       Admin
                     </Link>
                   )}
-                  <Link to="/settings" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    {userProfile?.photoURL ? (
-                      <img
-                        src={userProfile.photoURL}
-                        alt={userProfile.displayName || user.email}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-primary-600 text-sm font-medium">
-                          {(userProfile?.displayName || user.email)?.[0]?.toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-sm text-gray-600 hidden sm:block">
-                      {userProfile?.displayName || user.email}
-                    </span>
-                  </Link>
                   <button
                     onClick={handleLogout}
                     className="text-sm text-gray-500 hover:text-gray-700"

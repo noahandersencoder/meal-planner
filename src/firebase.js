@@ -874,4 +874,83 @@ export async function getAllUsers() {
   return users
 }
 
+// ============ LIKES & COMMENTS ON COOKING HISTORY ============
+
+// Like a cooking history entry
+export async function likeHistoryEntry(oderId, entryId, oderId2) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const likeRef = ref(database, `historyLikes/${oderId}/${entryId}/${oderId2}`)
+  await set(likeRef, { likedAt: Date.now() })
+}
+
+// Unlike a cooking history entry
+export async function unlikeHistoryEntry(oderId, entryId, oderId2) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const likeRef = ref(database, `historyLikes/${oderId}/${entryId}/${oderId2}`)
+  await set(likeRef, null)
+}
+
+// Get likes for a cooking history entry
+export async function getHistoryEntryLikes(oderId, entryId) {
+  if (!firebaseEnabled) return { count: 0, likedBy: [] }
+  const likesRef = ref(database, `historyLikes/${oderId}/${entryId}`)
+  const snapshot = await get(likesRef)
+  if (!snapshot.exists()) return { count: 0, likedBy: [] }
+
+  const likedBy = []
+  snapshot.forEach((child) => {
+    likedBy.push(child.key)
+  })
+  return { count: likedBy.length, likedBy }
+}
+
+// Check if user liked an entry
+export async function hasUserLikedEntry(oderId, entryId, oderId2) {
+  if (!firebaseEnabled) return false
+  const likeRef = ref(database, `historyLikes/${oderId}/${entryId}/${oderId2}`)
+  const snapshot = await get(likeRef)
+  return snapshot.exists()
+}
+
+// Add comment to cooking history entry
+export async function addHistoryComment(oderId, entryId, commenterId, commenterEmail, text) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const commentId = `comment-${Date.now()}`
+  const commentRef = ref(database, `historyComments/${oderId}/${entryId}/${commentId}`)
+
+  const profile = await getUserProfile(commenterId)
+
+  await set(commentRef, {
+    id: commentId,
+    userId: commenterId,
+    userEmail: commenterEmail,
+    userName: profile?.displayName || null,
+    userPhoto: profile?.photoURL || null,
+    text,
+    createdAt: Date.now()
+  })
+  return commentId
+}
+
+// Get comments for a cooking history entry
+export async function getHistoryComments(oderId, entryId) {
+  if (!firebaseEnabled) return []
+  const commentsRef = ref(database, `historyComments/${oderId}/${entryId}`)
+  const snapshot = await get(commentsRef)
+  if (!snapshot.exists()) return []
+
+  const comments = []
+  snapshot.forEach((child) => {
+    comments.push({ id: child.key, ...child.val() })
+  })
+  return comments.sort((a, b) => a.createdAt - b.createdAt)
+}
+
+// Delete a comment
+export async function deleteHistoryComment(oderId, entryId, commentId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const commentRef = ref(database, `historyComments/${oderId}/${entryId}/${commentId}`)
+  await set(commentRef, null)
+}
+
 export { database, auth }

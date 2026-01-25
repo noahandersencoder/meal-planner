@@ -16,6 +16,7 @@ import GenerateRecipe from './pages/GenerateRecipe'
 import CookingHistory from './pages/CookingHistory'
 import UserProfile from './pages/UserProfile'
 import Community from './pages/Community'
+import Profile from './pages/Profile'
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             <Route path="/my-cooking" element={<CookingHistory />} />
             <Route path="/user/:oderId" element={<UserProfile />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </Layout>
       </AuthProvider>

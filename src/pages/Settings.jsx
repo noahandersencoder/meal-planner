@@ -3,10 +3,13 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { updateUserProfile, getUserProfile, isFirebaseEnabled } from '../firebase'
 import ImageCropper from '../components/ImageCropper'
+import FilterPanel from '../components/FilterPanel'
+import useStore from '../store/useStore'
 
 function Settings() {
   const { theme, setTheme, THEMES } = useTheme()
   const { user } = useAuth()
+  const { preferences, setPreferences } = useStore()
   const [displayName, setDisplayName] = useState('')
   const [photoURL, setPhotoURL] = useState('')
   const [saving, setSaving] = useState(false)
@@ -259,6 +262,44 @@ function Settings() {
           </p>
         </div>
       )}
+
+      {/* Cooking Preferences */}
+      <div className="card p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Cooking Preferences</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          These settings filter recipes when browsing
+        </p>
+
+        <FilterPanel filters={preferences} onChange={setPreferences} />
+
+        <div className="mt-6">
+          <h4 className="font-medium text-gray-900 mb-3">Servings per Meal</h4>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() =>
+                setPreferences({ servings: Math.max(1, preferences.servings - 1) })
+              }
+              className="w-10 h-10 rounded-full bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors"
+            >
+              -
+            </button>
+            <span className="text-2xl font-bold text-gray-900 w-12 text-center">
+              {preferences.servings}
+            </span>
+            <button
+              onClick={() =>
+                setPreferences({ servings: Math.min(12, preferences.servings + 1) })
+              }
+              className="w-10 h-10 rounded-full bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors"
+            >
+              +
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">
+            Recipe costs will be adjusted based on serving size
+          </p>
+        </div>
+      </div>
 
       {/* Image Cropper Modal */}
       {imageToCrop && (
