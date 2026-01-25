@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe } from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe, getRecipeTagOverrides, setRecipeTagOverrides } from '../firebase'
 
 const CUISINE_TAGS = [
   'italian', 'mediterranean', 'mexican', 'chinese', 'japanese',
@@ -52,8 +52,23 @@ function RecipeDetail() {
     // First check static recipes
     const staticRecipe = recipes.find((r) => r.id === id)
     if (staticRecipe) {
-      setRecipe(staticRecipe)
-      setLoading(false)
+      // Load any tag overrides from Firebase
+      if (isFirebaseEnabled()) {
+        getRecipeTagOverrides(id).then((overrideTags) => {
+          if (overrideTags) {
+            setRecipe({ ...staticRecipe, tags: overrideTags, isStaticRecipe: true })
+          } else {
+            setRecipe({ ...staticRecipe, isStaticRecipe: true })
+          }
+          setLoading(false)
+        }).catch(() => {
+          setRecipe({ ...staticRecipe, isStaticRecipe: true })
+          setLoading(false)
+        })
+      } else {
+        setRecipe({ ...staticRecipe, isStaticRecipe: true })
+        setLoading(false)
+      }
       return
     }
 
@@ -187,11 +202,17 @@ function RecipeDetail() {
   }
 
   const saveTags = async () => {
-    if (!isFirebaseRecipe) return
+    if (!isFirebaseEnabled()) return
 
     setSavingTags(true)
     try {
-      await updateApprovedRecipe(recipe.id, { tags: tempTags })
+      if (isFirebaseRecipe) {
+        // For Firebase recipes (AI-generated or user-submitted)
+        await updateApprovedRecipe(recipe.id, { tags: tempTags })
+      } else {
+        // For static recipes, store tag overrides in Firebase
+        await setRecipeTagOverrides(recipe.id, tempTags)
+      }
       setRecipe({ ...recipe, tags: tempTags })
       setEditingTags(false)
     } catch (err) {
@@ -327,7 +348,7 @@ function RecipeDetail() {
                     ))}
                   </div>
                 )}
-                {isAdmin && isFirebaseRecipe && (
+                {isAdmin && isFirebaseEnabled() && (
                   <button
                     onClick={startEditingTags}
                     className="mt-2 text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"

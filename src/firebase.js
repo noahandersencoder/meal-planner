@@ -636,4 +636,38 @@ export async function updateRecipePhoto(recipeId, photoURL) {
   throw new Error('Recipe not found')
 }
 
+// Tag overrides for static recipes (admin only)
+export async function getRecipeTagOverrides(recipeId) {
+  if (!firebaseEnabled) return null
+  const tagRef = ref(database, `recipeTagOverrides/${recipeId}`)
+  const snapshot = await get(tagRef)
+  if (snapshot.exists()) {
+    return snapshot.val().tags
+  }
+  return null
+}
+
+export async function setRecipeTagOverrides(recipeId, tags) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const tagRef = ref(database, `recipeTagOverrides/${recipeId}`)
+  await set(tagRef, {
+    tags,
+    updatedAt: Date.now()
+  })
+}
+
+// Get all tag overrides (for bulk loading)
+export async function getAllTagOverrides() {
+  if (!firebaseEnabled) return {}
+  const overridesRef = ref(database, 'recipeTagOverrides')
+  const snapshot = await get(overridesRef)
+  if (!snapshot.exists()) return {}
+
+  const overrides = {}
+  snapshot.forEach((child) => {
+    overrides[child.key] = child.val().tags
+  })
+  return overrides
+}
+
 export { database, auth }

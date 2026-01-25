@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, getAllRatings, isFirebaseEnabled } from '../firebase'
+import { getApprovedRecipes, getAllRatings, getAllTagOverrides, isFirebaseEnabled } from '../firebase'
 import RecipeCard from '../components/RecipeCard'
 import RecipeRow from '../components/RecipeRow'
 import FilterPanel from '../components/FilterPanel'
@@ -40,21 +40,27 @@ function Browse() {
   const [userRecipes, setUserRecipes] = useState([])
   const [sortBy, setSortBy] = useState('name')
   const [allRatings, setAllRatings] = useState({})
+  const [tagOverrides, setTagOverrides] = useState({})
 
   const selectedDay = searchParams.get('day')
 
-  // Load user-submitted approved recipes and all ratings
+  // Load user-submitted approved recipes, ratings, and tag overrides
   useEffect(() => {
     if (isFirebaseEnabled()) {
       getApprovedRecipes().then(setUserRecipes).catch(console.error)
       getAllRatings().then(setAllRatings).catch(console.error)
+      getAllTagOverrides().then(setTagOverrides).catch(console.error)
     }
   }, [])
 
-  // Combine built-in recipes with user-submitted ones
+  // Combine built-in recipes with user-submitted ones, applying tag overrides
   const allRecipes = useMemo(() => {
-    return [...recipes, ...userRecipes.map(r => ({ ...r, isUserSubmitted: true }))]
-  }, [userRecipes])
+    const staticWithOverrides = recipes.map(r => ({
+      ...r,
+      tags: tagOverrides[r.id] || r.tags
+    }))
+    return [...staticWithOverrides, ...userRecipes.map(r => ({ ...r, isUserSubmitted: true }))]
+  }, [userRecipes, tagOverrides])
 
   const filteredRecipes = useMemo(() => {
     const filtered = allRecipes.filter((recipe) => {
