@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe, getRecipeTagOverrides, setRecipeTagOverrides } from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe, getRecipeTagOverrides, setRecipeTagOverrides, getRecipePhotoOverride, setRecipePhotoOverride } from '../firebase'
 
 const CUISINE_TAGS = [
   'italian', 'mediterranean', 'mexican', 'chinese', 'japanese',
@@ -17,6 +17,7 @@ const COMMON_TAGS = [
 ]
 import RecipeComments from '../components/RecipeComments'
 import IngredientWithUnitSelect from '../components/IngredientWithUnitSelect'
+import ImageCropper from '../components/ImageCropper'
 
 const categoryLabels = {
   produce: 'Produce',
@@ -46,20 +47,25 @@ function RecipeDetail() {
   const [savingTags, setSavingTags] = useState(false)
   const [tempTags, setTempTags] = useState([])
   const [newTag, setNewTag] = useState('')
+  const [imageToCrop, setImageToCrop] = useState(null)
   const photoInputRef = useRef(null)
 
   useEffect(() => {
     // First check static recipes
     const staticRecipe = recipes.find((r) => r.id === id)
     if (staticRecipe) {
-      // Load any tag overrides from Firebase
+      // Load any tag and photo overrides from Firebase
       if (isFirebaseEnabled()) {
-        getRecipeTagOverrides(id).then((overrideTags) => {
-          if (overrideTags) {
-            setRecipe({ ...staticRecipe, tags: overrideTags, isStaticRecipe: true })
-          } else {
-            setRecipe({ ...staticRecipe, isStaticRecipe: true })
-          }
+        Promise.all([
+          getRecipeTagOverrides(id),
+          getRecipePhotoOverride(id)
+        ]).then(([overrideTags, overridePhoto]) => {
+          setRecipe({
+            ...staticRecipe,
+            tags: overrideTags || staticRecipe.tags,
+            photoURL: overridePhoto || staticRecipe.photoURL,
+            isStaticRecipe: true
+          })
           setLoading(false)
         }).catch(() => {
           setRecipe({ ...staticRecipe, isStaticRecipe: true })
@@ -148,15 +154,34 @@ function RecipeDetail() {
   // Check if recipe is stored in Firebase (user-submitted or AI-generated)
   const isFirebaseRecipe = recipe?.id?.startsWith('user-')
 
-  const handlePhotoUpload = async (e) => {
+  const handlePhotoSelect = (e) => {
     const file = e.target.files?.[0]
-    if (!file || !isFirebaseRecipe) return
+    if (!file) return
 
+    // Read file and show cropper
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setImageToCrop(event.target.result)
+    }
+    reader.readAsDataURL(file)
+
+    // Reset file input so same file can be selected again
+    e.target.value = ''
+  }
+
+  const handleCropComplete = async (croppedImage) => {
+    setImageToCrop(null)
     setUploadingPhoto(true)
+
     try {
-      const compressed = await compressImage(file, 800, 0.7)
-      await updateRecipePhoto(recipe.id, compressed)
-      setRecipe({ ...recipe, photoURL: compressed })
+      if (isFirebaseRecipe) {
+        // For Firebase recipes (AI-generated or user-submitted)
+        await updateRecipePhoto(recipe.id, croppedImage)
+      } else {
+        // For static recipes, store photo override in Firebase
+        await setRecipePhotoOverride(recipe.id, croppedImage)
+      }
+      setRecipe({ ...recipe, photoURL: croppedImage })
     } catch (err) {
       console.error('Error uploading photo:', err)
       alert('Failed to upload photo')
@@ -165,11 +190,15 @@ function RecipeDetail() {
   }
 
   const handleRemovePhoto = async () => {
-    if (!isFirebaseRecipe || !confirm('Remove recipe photo?')) return
+    if (!confirm('Remove recipe photo?')) return
 
     setUploadingPhoto(true)
     try {
-      await updateRecipePhoto(recipe.id, null)
+      if (isFirebaseRecipe) {
+        await updateRecipePhoto(recipe.id, null)
+      } else {
+        await setRecipePhotoOverride(recipe.id, null)
+      }
       setRecipe({ ...recipe, photoURL: null })
     } catch (err) {
       console.error('Error removing photo:', err)
@@ -262,12 +291,12 @@ function RecipeDetail() {
           )}
 
           {/* Admin Photo Controls */}
-          {isAdmin && isFirebaseRecipe && (
+          {isAdmin && isFirebaseEnabled() && (
             <div className="absolute bottom-3 right-3 flex gap-2">
               <input
                 type="file"
                 ref={photoInputRef}
-                onChange={handlePhotoUpload}
+                onChange={handlePhotoSelect}
                 accept="image/*"
                 className="hidden"
               />
@@ -523,6 +552,18 @@ function RecipeDetail() {
           Add to Meal Plan
         </button>
       </div>
+
+      {/* Image Cropper Modal */}
+      {imageToCrop && (
+        <ImageCropper
+          image={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setImageToCrop(null)}
+          aspect={16 / 9}
+          maxSize={800}
+          quality={0.8}
+        />
+      )}
     </div>
   )
 }

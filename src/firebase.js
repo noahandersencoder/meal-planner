@@ -670,4 +670,42 @@ export async function getAllTagOverrides() {
   return overrides
 }
 
+// Photo overrides for static recipes (admin only)
+export async function getRecipePhotoOverride(recipeId) {
+  if (!firebaseEnabled) return null
+  const photoRef = ref(database, `recipePhotoOverrides/${recipeId}`)
+  const snapshot = await get(photoRef)
+  if (snapshot.exists()) {
+    return snapshot.val().photoURL
+  }
+  return null
+}
+
+export async function setRecipePhotoOverride(recipeId, photoURL) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const photoRef = ref(database, `recipePhotoOverrides/${recipeId}`)
+  if (photoURL === null) {
+    await set(photoRef, null)
+  } else {
+    await set(photoRef, {
+      photoURL,
+      updatedAt: Date.now()
+    })
+  }
+}
+
+// Get all photo overrides (for bulk loading)
+export async function getAllPhotoOverrides() {
+  if (!firebaseEnabled) return {}
+  const overridesRef = ref(database, 'recipePhotoOverrides')
+  const snapshot = await get(overridesRef)
+  if (!snapshot.exists()) return {}
+
+  const overrides = {}
+  snapshot.forEach((child) => {
+    overrides[child.key] = child.val().photoURL
+  })
+  return overrides
+}
+
 export { database, auth }

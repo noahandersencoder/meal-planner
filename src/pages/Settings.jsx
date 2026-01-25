@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { updateUserProfile, getUserProfile, isFirebaseEnabled } from '../firebase'
+import ImageCropper from '../components/ImageCropper'
 
 function Settings() {
   const { theme, setTheme, THEMES } = useTheme()
@@ -11,6 +12,7 @@ function Settings() {
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [loadingProfile, setLoadingProfile] = useState(true)
+  const [imageToCrop, setImageToCrop] = useState(null)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -53,38 +55,22 @@ function Settings() {
     setSaving(false)
   }
 
-  const compressImage = (file, maxWidth = 200, quality = 0.7) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const img = new Image()
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
-          canvas.width = img.width * ratio
-          canvas.height = img.height * ratio
-          const ctx = canvas.getContext('2d')
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-          resolve(canvas.toDataURL('image/jpeg', quality))
-        }
-        img.src = e.target.result
-      }
-      reader.readAsDataURL(file)
-    })
-  }
-
-  const handleFileChange = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
     if (file) {
-      try {
-        // Compress image to reduce size for Firebase storage
-        const compressed = await compressImage(file, 200, 0.7)
-        setPhotoURL(compressed)
-      } catch (err) {
-        console.error('Error compressing image:', err)
-        setSaveMessage('Error processing image')
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setImageToCrop(event.target.result)
       }
+      reader.readAsDataURL(file)
+      // Reset input so same file can be selected again
+      e.target.value = ''
     }
+  }
+
+  const handleCropComplete = (croppedImage) => {
+    setPhotoURL(croppedImage)
+    setImageToCrop(null)
   }
 
   const themeOptions = [
@@ -160,7 +146,7 @@ function Settings() {
                   <input
                     type="file"
                     ref={fileInputRef}
-                    onChange={handleFileChange}
+                    onChange={handleFileSelect}
                     accept="image/*"
                     className="hidden"
                   />
@@ -272,6 +258,18 @@ function Settings() {
             <span className="text-sm">Best viewed in Netscape Navigator 4.0</span>
           </p>
         </div>
+      )}
+
+      {/* Image Cropper Modal */}
+      {imageToCrop && (
+        <ImageCropper
+          image={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setImageToCrop(null)}
+          aspect={1}
+          maxSize={200}
+          quality={0.8}
+        />
       )}
     </div>
   )

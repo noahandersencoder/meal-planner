@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, getAllRatings, getAllTagOverrides, isFirebaseEnabled } from '../firebase'
+import { getApprovedRecipes, getAllRatings, getAllTagOverrides, getAllPhotoOverrides, isFirebaseEnabled } from '../firebase'
 import RecipeCard from '../components/RecipeCard'
 import RecipeRow from '../components/RecipeRow'
 import FilterPanel from '../components/FilterPanel'
@@ -41,26 +41,29 @@ function Browse() {
   const [sortBy, setSortBy] = useState('name')
   const [allRatings, setAllRatings] = useState({})
   const [tagOverrides, setTagOverrides] = useState({})
+  const [photoOverrides, setPhotoOverrides] = useState({})
 
   const selectedDay = searchParams.get('day')
 
-  // Load user-submitted approved recipes, ratings, and tag overrides
+  // Load user-submitted approved recipes, ratings, tag overrides, and photo overrides
   useEffect(() => {
     if (isFirebaseEnabled()) {
       getApprovedRecipes().then(setUserRecipes).catch(console.error)
       getAllRatings().then(setAllRatings).catch(console.error)
       getAllTagOverrides().then(setTagOverrides).catch(console.error)
+      getAllPhotoOverrides().then(setPhotoOverrides).catch(console.error)
     }
   }, [])
 
-  // Combine built-in recipes with user-submitted ones, applying tag overrides
+  // Combine built-in recipes with user-submitted ones, applying tag and photo overrides
   const allRecipes = useMemo(() => {
     const staticWithOverrides = recipes.map(r => ({
       ...r,
-      tags: tagOverrides[r.id] || r.tags
+      tags: tagOverrides[r.id] || r.tags,
+      photoURL: photoOverrides[r.id] || r.photoURL
     }))
     return [...staticWithOverrides, ...userRecipes.map(r => ({ ...r, isUserSubmitted: true }))]
-  }, [userRecipes, tagOverrides])
+  }, [userRecipes, tagOverrides, photoOverrides])
 
   const filteredRecipes = useMemo(() => {
     const filtered = allRecipes.filter((recipe) => {
