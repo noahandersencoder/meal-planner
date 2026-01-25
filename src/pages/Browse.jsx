@@ -73,6 +73,11 @@ function Browse() {
         }
       }
 
+      // Cuisine filter
+      if (filters.cuisine) {
+        if (!recipe.tags?.includes(filters.cuisine)) return false
+      }
+
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         return (

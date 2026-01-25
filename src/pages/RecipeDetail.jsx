@@ -115,9 +115,12 @@ function RecipeDetail() {
     })
   }
 
+  // Check if recipe is stored in Firebase (user-submitted or AI-generated)
+  const isFirebaseRecipe = recipe?.id?.startsWith('user-')
+
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0]
-    if (!file || !recipe.isUserSubmitted) return
+    if (!file || !isFirebaseRecipe) return
 
     setUploadingPhoto(true)
     try {
@@ -132,7 +135,7 @@ function RecipeDetail() {
   }
 
   const handleRemovePhoto = async () => {
-    if (!recipe.isUserSubmitted || !confirm('Remove recipe photo?')) return
+    if (!isFirebaseRecipe || !confirm('Remove recipe photo?')) return
 
     setUploadingPhoto(true)
     try {
@@ -184,7 +187,7 @@ function RecipeDetail() {
           )}
 
           {/* Admin Photo Controls */}
-          {isAdmin && recipe.isUserSubmitted && (
+          {isAdmin && isFirebaseRecipe && (
             <div className="absolute bottom-3 right-3 flex gap-2">
               <input
                 type="file"

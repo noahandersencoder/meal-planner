@@ -5,7 +5,8 @@ const ThemeContext = createContext(null)
 const THEMES = {
   default: 'default',
   dark: 'dark',
-  retro: 'retro'
+  retro: 'retro',
+  techno: 'techno'
 }
 
 export function ThemeProvider({ children }) {
@@ -18,7 +19,7 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('app-theme', theme)
 
     // Remove all theme classes
-    document.documentElement.classList.remove('theme-default', 'theme-dark', 'theme-retro')
+    document.documentElement.classList.remove('theme-default', 'theme-dark', 'theme-retro', 'theme-techno')
     // Add current theme class
     document.documentElement.classList.add(`theme-${theme}`)
   }, [theme])

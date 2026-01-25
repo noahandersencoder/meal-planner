@@ -21,6 +21,23 @@ const budgetOptions = [
   { value: 3, label: '$$$' },
 ]
 
+const cuisineOptions = [
+  { value: '', label: 'All Cuisines' },
+  { value: 'italian', label: 'Italian' },
+  { value: 'mediterranean', label: 'Mediterranean' },
+  { value: 'mexican', label: 'Mexican' },
+  { value: 'chinese', label: 'Chinese' },
+  { value: 'japanese', label: 'Japanese' },
+  { value: 'thai', label: 'Thai' },
+  { value: 'indian', label: 'Indian' },
+  { value: 'american', label: 'American' },
+  { value: 'french', label: 'French' },
+  { value: 'greek', label: 'Greek' },
+  { value: 'korean', label: 'Korean' },
+  { value: 'vietnamese', label: 'Vietnamese' },
+  { value: 'middle-eastern', label: 'Middle Eastern' },
+]
+
 function FilterPanel({ filters, onChange, compact = false }) {
   const handleTimeChange = (value) => {
     onChange({ ...filters, maxCookTime: value })
@@ -46,6 +63,10 @@ function FilterPanel({ filters, onChange, compact = false }) {
     onChange({ ...filters, vegetarianMode: !filters.vegetarianMode })
   }
 
+  const handleCuisineChange = (value) => {
+    onChange({ ...filters, cuisine: value })
+  }
+
   if (compact) {
     return (
       <div className="flex flex-wrap gap-2 p-4 bg-white rounded-lg shadow-sm">
@@ -69,6 +90,18 @@ function FilterPanel({ filters, onChange, compact = false }) {
           {budgetOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label} & below
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filters.cuisine || ''}
+          onChange={(e) => handleCuisineChange(e.target.value)}
+          className="input py-1.5 text-sm w-auto"
+        >
+          {cuisineOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
@@ -161,6 +194,25 @@ function FilterPanel({ filters, onChange, compact = false }) {
           >
             Vegan
           </button>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-medium text-gray-900 mb-3">Cuisine</h3>
+        <div className="flex flex-wrap gap-2">
+          {cuisineOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => handleCuisineChange(opt.value)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                (filters.cuisine || '') === opt.value
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 

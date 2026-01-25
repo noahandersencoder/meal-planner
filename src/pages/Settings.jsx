@@ -103,6 +103,13 @@ function Settings() {
       icon: '🌙'
     },
     {
+      id: THEMES.techno,
+      name: 'Techno',
+      description: 'Futuristic neon vibes',
+      preview: 'bg-black border-cyan-400',
+      icon: '🔮'
+    },
+    {
       id: THEMES.retro,
       name: '90s Internet',
       description: 'Blast from the past!',

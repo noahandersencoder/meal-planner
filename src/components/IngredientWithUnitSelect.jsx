@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getConversionFactor, getUnitType } from '../utils/unitConversions'
+import { getConversionFactor, getUnitType, GRAMS_PER_CUP } from '../utils/unitConversions'
 
 // Available units grouped by type
 const WEIGHT_UNITS = ['g', 'oz', 'lb', 'kg']
@@ -10,13 +10,24 @@ function IngredientWithUnitSelect({ ingredient }) {
   const [selectedUnit, setSelectedUnit] = useState(ingredient.unit)
   const [convertedAmount, setConvertedAmount] = useState(ingredient.amount)
 
+  // Check if ingredient has a known density for cross-type conversion
+  const hasDensity = GRAMS_PER_CUP[ingredient.name] !== undefined
+
   // Get available units based on original unit type
   const getAvailableUnits = () => {
     const originalType = getUnitType(ingredient.unit)
 
     if (originalType === 'weight') {
+      // If ingredient has known density, allow volume conversions too
+      if (hasDensity) {
+        return [...WEIGHT_UNITS, 'cup', 'tbsp', 'tsp']
+      }
       return WEIGHT_UNITS
     } else if (originalType === 'volume') {
+      // If ingredient has known density, allow weight conversions too
+      if (hasDensity) {
+        return [...VOLUME_UNITS, 'g', 'oz']
+      }
       return VOLUME_UNITS
     } else if (originalType === 'countable') {
       return COUNTABLE_UNITS
