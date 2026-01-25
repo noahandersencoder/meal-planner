@@ -708,4 +708,170 @@ export async function getAllPhotoOverrides() {
   return overrides
 }
 
+// ============ COOKING HISTORY ============
+
+// Add entry to cooking history
+export async function addCookingHistoryEntry(userId, entry) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const entryId = `entry-${Date.now()}`
+  const entryRef = ref(database, `cookingHistory/${userId}/${entryId}`)
+  await set(entryRef, {
+    ...entry,
+    id: entryId,
+    createdAt: Date.now()
+  })
+  return entryId
+}
+
+// Update a cooking history entry
+export async function updateCookingHistoryEntry(userId, entryId, updates) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const entryRef = ref(database, `cookingHistory/${userId}/${entryId}`)
+  const snapshot = await get(entryRef)
+  if (!snapshot.exists()) throw new Error('Entry not found')
+
+  await set(entryRef, {
+    ...snapshot.val(),
+    ...updates,
+    updatedAt: Date.now()
+  })
+}
+
+// Delete a cooking history entry
+export async function deleteCookingHistoryEntry(userId, entryId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const entryRef = ref(database, `cookingHistory/${userId}/${entryId}`)
+  await set(entryRef, null)
+}
+
+// Get user's cooking history
+export async function getCookingHistory(userId) {
+  if (!firebaseEnabled) return []
+  const historyRef = ref(database, `cookingHistory/${userId}`)
+  const snapshot = await get(historyRef)
+  if (!snapshot.exists()) return []
+
+  const entries = []
+  snapshot.forEach((child) => {
+    entries.push({ id: child.key, ...child.val() })
+  })
+
+  // Sort by newest first
+  return entries.sort((a, b) => b.createdAt - a.createdAt)
+}
+
+// ============ SOCIAL CONNECTIONS ============
+
+// Follow a user
+export async function followUser(userId, targetUserId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Add to following list
+  const followingRef = ref(database, `following/${userId}/${targetUserId}`)
+  await set(followingRef, { followedAt: Date.now() })
+
+  // Add to followers list (reverse index)
+  const followerRef = ref(database, `followers/${targetUserId}/${userId}`)
+  await set(followerRef, { followedAt: Date.now() })
+}
+
+// Unfollow a user
+export async function unfollowUser(userId, targetUserId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Remove from following list
+  const followingRef = ref(database, `following/${userId}/${targetUserId}`)
+  await set(followingRef, null)
+
+  // Remove from followers list
+  const followerRef = ref(database, `followers/${targetUserId}/${userId}`)
+  await set(followerRef, null)
+}
+
+// Check if user is following another user
+export async function isFollowing(userId, targetUserId) {
+  if (!firebaseEnabled) return false
+  const followingRef = ref(database, `following/${userId}/${targetUserId}`)
+  const snapshot = await get(followingRef)
+  return snapshot.exists()
+}
+
+// Get list of users that a user is following
+export async function getFollowing(userId) {
+  if (!firebaseEnabled) return []
+  const followingRef = ref(database, `following/${userId}`)
+  const snapshot = await get(followingRef)
+  if (!snapshot.exists()) return []
+
+  const following = []
+  snapshot.forEach((child) => {
+    following.push({ oderId: child.key, ...child.val() })
+  })
+  return following
+}
+
+// Get list of followers for a user
+export async function getFollowers(userId) {
+  if (!firebaseEnabled) return []
+  const followersRef = ref(database, `followers/${userId}`)
+  const snapshot = await get(followersRef)
+  if (!snapshot.exists()) return []
+
+  const followers = []
+  snapshot.forEach((child) => {
+    followers.push({ oderId: child.key, ...child.val() })
+  })
+  return followers
+}
+
+// Get cooking history for multiple users (for activity feed)
+export async function getFollowingActivity(userId, limit = 20) {
+  if (!firebaseEnabled) return []
+
+  // Get list of followed users
+  const following = await getFollowing(userId)
+  if (following.length === 0) return []
+
+  // Get recent entries from all followed users
+  const allEntries = []
+  for (const follow of following) {
+    const entries = await getCookingHistory(follow.oderId)
+    // Get user profile for display
+    const profile = await getUserProfile(follow.oderId)
+    entries.forEach(entry => {
+      allEntries.push({
+        ...entry,
+        oderId: follow.oderId,
+        userName: profile?.displayName || profile?.email,
+        userPhoto: profile?.photoURL
+      })
+    })
+  }
+
+  // Sort by newest and limit
+  return allEntries
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, limit)
+}
+
+// Get all users (for discovery) - returns basic profiles
+export async function getAllUsers() {
+  if (!firebaseEnabled) return []
+  const profilesRef = ref(database, 'userProfiles')
+  const snapshot = await get(profilesRef)
+  if (!snapshot.exists()) return []
+
+  const users = []
+  snapshot.forEach((child) => {
+    const profile = child.val()
+    users.push({
+      oderId: child.key,
+      displayName: profile.displayName,
+      email: profile.email,
+      photoURL: profile.photoURL
+    })
+  })
+  return users
+}
+
 export { database, auth }

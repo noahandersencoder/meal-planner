@@ -35,13 +35,27 @@ function Layout({ children }) {
             <div className="flex items-center gap-3">
               {user ? (
                 <>
+                  <Link
+                    to="/community"
+                    className="text-sm text-gray-600 hover:text-primary-600 font-medium"
+                  >
+                    Community
+                  </Link>
                   {isApproved && (
-                    <Link
-                      to="/generate"
-                      className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
-                    >
-                      <span>✨</span> Generate
-                    </Link>
+                    <>
+                      <Link
+                        to="/my-cooking"
+                        className="text-sm text-gray-600 hover:text-primary-600 font-medium"
+                      >
+                        My Cooking
+                      </Link>
+                      <Link
+                        to="/generate"
+                        className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                      >
+                        <span>✨</span> Generate
+                      </Link>
+                    </>
                   )}
                   {isAdmin && (
                     <Link

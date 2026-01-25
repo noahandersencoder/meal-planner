@@ -13,6 +13,9 @@ import Admin from './pages/Admin'
 import Settings from './pages/Settings'
 import RecipeSubmit from './pages/RecipeSubmit'
 import GenerateRecipe from './pages/GenerateRecipe'
+import CookingHistory from './pages/CookingHistory'
+import UserProfile from './pages/UserProfile'
+import Community from './pages/Community'
 
 function App() {
   return (
@@ -31,6 +34,9 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/submit-recipe" element={<RecipeSubmit />} />
             <Route path="/generate" element={<GenerateRecipe />} />
+            <Route path="/my-cooking" element={<CookingHistory />} />
+            <Route path="/user/:oderId" element={<UserProfile />} />
+            <Route path="/community" element={<Community />} />
           </Routes>
         </Layout>
       </AuthProvider>

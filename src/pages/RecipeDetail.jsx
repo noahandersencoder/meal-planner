@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe, getRecipeTagOverrides, setRecipeTagOverrides, getRecipePhotoOverride, setRecipePhotoOverride } from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe, getRecipeTagOverrides, setRecipeTagOverrides, getRecipePhotoOverride, setRecipePhotoOverride, addCookingHistoryEntry } from '../firebase'
 
 const CUISINE_TAGS = [
   'italian', 'mediterranean', 'mexican', 'chinese', 'japanese',
@@ -37,7 +37,7 @@ const categoryLabels = {
 function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { isAdmin } = useAuth()
+  const { user, isAdmin, isApproved } = useAuth()
   const { addRecipeToDay, preferences } = useStore()
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -48,7 +48,13 @@ function RecipeDetail() {
   const [tempTags, setTempTags] = useState([])
   const [newTag, setNewTag] = useState('')
   const [imageToCrop, setImageToCrop] = useState(null)
+  const [showIMadeThisModal, setShowIMadeThisModal] = useState(false)
+  const [iMadeThisNotes, setIMadeThisNotes] = useState('')
+  const [iMadeThisPhotos, setIMadeThisPhotos] = useState([])
+  const [savingHistory, setSavingHistory] = useState(false)
+  const [historyImageToCrop, setHistoryImageToCrop] = useState(null)
   const photoInputRef = useRef(null)
+  const historyPhotoInputRef = useRef(null)
 
   useEffect(() => {
     // First check static recipes
@@ -249,6 +255,52 @@ function RecipeDetail() {
       alert('Failed to save tags')
     }
     setSavingTags(false)
+  }
+
+  // "I Made This" functions
+  const handleHistoryPhotoSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setHistoryImageToCrop(event.target.result)
+      }
+      reader.readAsDataURL(file)
+      e.target.value = ''
+    }
+  }
+
+  const handleHistoryCropComplete = (croppedImage) => {
+    setIMadeThisPhotos([...iMadeThisPhotos, croppedImage])
+    setHistoryImageToCrop(null)
+  }
+
+  const removeHistoryPhoto = (index) => {
+    setIMadeThisPhotos(iMadeThisPhotos.filter((_, i) => i !== index))
+  }
+
+  const handleIMadeThis = async () => {
+    if (!user || !isApproved) return
+
+    setSavingHistory(true)
+    try {
+      await addCookingHistoryEntry(user.uid, {
+        recipeId: recipe.id,
+        recipeName: recipe.name,
+        recipePhotoURL: recipe.photoURL || null,
+        notes: iMadeThisNotes.trim(),
+        photos: iMadeThisPhotos
+      })
+
+      setShowIMadeThisModal(false)
+      setIMadeThisNotes('')
+      setIMadeThisPhotos([])
+      alert('Added to your cooking history!')
+    } catch (err) {
+      console.error('Error saving to history:', err)
+      alert('Failed to save to history')
+    }
+    setSavingHistory(false)
   }
 
   const groupedIngredients = recipe.ingredients.reduce((acc, ing) => {
@@ -548,10 +600,113 @@ function RecipeDetail() {
       <RecipeComments recipeId={recipe.id} />
 
       <div className="sticky bottom-20 bg-white p-4 border-t border-gray-200 -mx-4">
-        <button onClick={handleAddToMealPlan} className="btn btn-primary w-full">
-          Add to Meal Plan
-        </button>
+        <div className="flex gap-3">
+          <button onClick={handleAddToMealPlan} className="btn btn-primary flex-1">
+            Add to Meal Plan
+          </button>
+          {user && isApproved && isFirebaseEnabled() && (
+            <button
+              onClick={() => setShowIMadeThisModal(true)}
+              className="btn btn-secondary flex-shrink-0"
+            >
+              I Made This
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* "I Made This" Modal */}
+      {showIMadeThisModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">I Made This!</h3>
+                <button
+                  onClick={() => setShowIMadeThisModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-500 mb-4">
+                Add this recipe to your cooking history. Share your experience!
+              </p>
+
+              {/* Notes */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes (optional)
+                </label>
+                <textarea
+                  value={iMadeThisNotes}
+                  onChange={(e) => setIMadeThisNotes(e.target.value)}
+                  placeholder="How did it turn out? Any modifications?"
+                  className="input min-h-[80px]"
+                />
+              </div>
+
+              {/* Photos */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Photos (optional)
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {iMadeThisPhotos.map((photo, idx) => (
+                    <div key={idx} className="relative">
+                      <img
+                        src={photo}
+                        alt={`Photo ${idx + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                      <button
+                        onClick={() => removeHistoryPhoto(idx)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <input
+                  type="file"
+                  ref={historyPhotoInputRef}
+                  onChange={handleHistoryPhotoSelect}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => historyPhotoInputRef.current?.click()}
+                  className="text-sm text-primary-600 hover:text-primary-700"
+                >
+                  + Add Photo
+                </button>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowIMadeThisModal(false)}
+                  className="btn btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleIMadeThis}
+                  disabled={savingHistory}
+                  className="btn btn-primary flex-1"
+                >
+                  {savingHistory ? 'Saving...' : 'Save to History'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image Cropper Modal */}
       {imageToCrop && (
@@ -560,6 +715,18 @@ function RecipeDetail() {
           onCropComplete={handleCropComplete}
           onCancel={() => setImageToCrop(null)}
           aspect={16 / 9}
+          maxSize={800}
+          quality={0.8}
+        />
+      )}
+
+      {/* History Image Cropper Modal */}
+      {historyImageToCrop && (
+        <ImageCropper
+          image={historyImageToCrop}
+          onCropComplete={handleHistoryCropComplete}
+          onCancel={() => setHistoryImageToCrop(null)}
+          aspect={4 / 3}
           maxSize={800}
           quality={0.8}
         />
