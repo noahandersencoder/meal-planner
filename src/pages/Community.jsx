@@ -12,7 +12,10 @@ import {
   getHistoryEntryLikes,
   addHistoryComment,
   getHistoryComments,
-  isFirebaseEnabled
+  isFirebaseEnabled,
+  getCookingHistory,
+  getUserProfile,
+  getApprovedRecipes
 } from '../firebase'
 import recipes from '../data/recipes.json'
 
@@ -92,8 +95,11 @@ function ActivityCard({ entry, currentUser }) {
     setSubmitting(false)
   }
 
+  const isRecipeSubmission = entry.type === 'recipe_submission'
+  const displayName = entry.isOwnActivity ? 'You' : entry.userName
+
   return (
-    <div className="card p-4">
+    <div className={`card p-4 ${entry.isOwnActivity ? 'border-l-4 border-primary-300' : ''}`}>
       <div className="flex items-start gap-3">
         {/* User Avatar */}
         <Link to={`/user/${entry.oderId}`}>
@@ -116,17 +122,24 @@ function ActivityCard({ entry, currentUser }) {
           <p className="text-sm">
             <Link
               to={`/user/${entry.oderId}`}
-              className="font-semibold text-gray-900 hover:text-primary-600"
+              className={`font-semibold hover:text-primary-600 ${entry.isOwnActivity ? 'text-primary-700' : 'text-gray-900'}`}
             >
-              {entry.userName}
+              {displayName}
             </Link>
-            <span className="text-gray-500"> made </span>
+            <span className="text-gray-500">
+              {isRecipeSubmission ? ' added a new recipe: ' : ' made '}
+            </span>
             <Link
               to={`/recipe/${entry.recipeId}`}
               className="font-semibold text-gray-900 hover:text-primary-600"
             >
               {entry.recipeName || recipe?.name || 'a recipe'}
             </Link>
+            {isRecipeSubmission && (
+              <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                New Recipe
+              </span>
+            )}
           </p>
           <p className="text-xs text-gray-400 mt-0.5">
             {new Date(entry.createdAt).toLocaleDateString('en-US', {
@@ -141,8 +154,19 @@ function ActivityCard({ entry, currentUser }) {
             <p className="text-sm text-gray-600 mt-2">"{entry.notes}"</p>
           )}
 
-          {/* Photos */}
-          {entry.photos && entry.photos.length > 0 && (
+          {/* Recipe Photo for new recipe submissions */}
+          {isRecipeSubmission && entry.recipePhotoURL && (
+            <Link to={`/recipe/${entry.recipeId}`} className="block mt-3">
+              <img
+                src={entry.recipePhotoURL}
+                alt={entry.recipeName}
+                className="w-full max-w-sm h-48 object-cover rounded-lg hover:opacity-90 transition-opacity"
+              />
+            </Link>
+          )}
+
+          {/* Photos for cooking history */}
+          {!isRecipeSubmission && entry.photos && entry.photos.length > 0 && (
             <div className="flex gap-2 mt-3">
               {entry.photos.slice(0, 3).map((photo, idx) => (
                 <img
@@ -160,84 +184,88 @@ function ActivityCard({ entry, currentUser }) {
             </div>
           )}
 
-          {/* Like & Comment Buttons */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-            <button
-              onClick={handleLike}
-              disabled={!currentUser}
-              className={`flex items-center gap-1 text-sm ${
-                hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
-              } transition-colors`}
-            >
-              <span>{hasLiked ? '❤️' : '🤍'}</span>
-              <span>{likes.count > 0 ? likes.count : ''}</span>
-              <span className="hidden sm:inline">{likes.count === 1 ? 'Like' : 'Likes'}</span>
-            </button>
+          {/* Like & Comment Buttons - only for cooking history, not recipe submissions */}
+          {!isRecipeSubmission && (
+            <>
+              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
+                <button
+                  onClick={handleLike}
+                  disabled={!currentUser}
+                  className={`flex items-center gap-1 text-sm ${
+                    hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                  } transition-colors`}
+                >
+                  <span>{hasLiked ? '❤️' : '🤍'}</span>
+                  <span>{likes.count > 0 ? likes.count : ''}</span>
+                  <span className="hidden sm:inline">{likes.count === 1 ? 'Like' : 'Likes'}</span>
+                </button>
 
-            <button
-              onClick={() => setShowComments(!showComments)}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-600 transition-colors"
-            >
-              <span>💬</span>
-              <span>{comments.length > 0 ? comments.length : ''}</span>
-              <span className="hidden sm:inline">
-                {comments.length === 1 ? 'Comment' : 'Comments'}
-              </span>
-            </button>
-          </div>
+                <button
+                  onClick={() => setShowComments(!showComments)}
+                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-600 transition-colors"
+                >
+                  <span>💬</span>
+                  <span>{comments.length > 0 ? comments.length : ''}</span>
+                  <span className="hidden sm:inline">
+                    {comments.length === 1 ? 'Comment' : 'Comments'}
+                  </span>
+                </button>
+              </div>
 
-          {/* Comments Section */}
-          {showComments && (
-            <div className="mt-3 space-y-3">
-              {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-2">
-                  <Link to={`/user/${comment.userId}`}>
-                    {comment.userPhoto ? (
-                      <img
-                        src={comment.userPhoto}
-                        alt={comment.userName}
-                        className="w-7 h-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-500 text-xs font-medium">
-                          {(comment.userName || comment.userEmail)?.[0]?.toUpperCase()}
-                        </span>
+              {/* Comments Section */}
+              {showComments && (
+                <div className="mt-3 space-y-3">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-2">
+                      <Link to={`/user/${comment.userId}`}>
+                        {comment.userPhoto ? (
+                          <img
+                            src={comment.userPhoto}
+                            alt={comment.userName}
+                            className="w-7 h-7 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-500 text-xs font-medium">
+                              {(comment.userName || comment.userEmail)?.[0]?.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </Link>
+                      <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
+                        <Link
+                          to={`/user/${comment.userId}`}
+                          className="text-sm font-medium text-gray-900 hover:text-primary-600"
+                        >
+                          {comment.userName || comment.userEmail}
+                        </Link>
+                        <p className="text-sm text-gray-700">{comment.text}</p>
                       </div>
-                    )}
-                  </Link>
-                  <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
-                    <Link
-                      to={`/user/${comment.userId}`}
-                      className="text-sm font-medium text-gray-900 hover:text-primary-600"
-                    >
-                      {comment.userName || comment.userEmail}
-                    </Link>
-                    <p className="text-sm text-gray-700">{comment.text}</p>
-                  </div>
-                </div>
-              ))}
+                    </div>
+                  ))}
 
-              {/* Add Comment Form */}
-              {currentUser && (
-                <form onSubmit={handleComment} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="input flex-1 text-sm py-2"
-                  />
-                  <button
-                    type="submit"
-                    disabled={submitting || !newComment.trim()}
-                    className="btn btn-primary text-sm px-3"
-                  >
-                    {submitting ? '...' : 'Post'}
-                  </button>
-                </form>
+                  {/* Add Comment Form */}
+                  {currentUser && (
+                    <form onSubmit={handleComment} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Write a comment..."
+                        className="input flex-1 text-sm py-2"
+                      />
+                      <button
+                        type="submit"
+                        disabled={submitting || !newComment.trim()}
+                        className="btn btn-primary text-sm px-3"
+                      >
+                        {submitting ? '...' : 'Post'}
+                      </button>
+                    </form>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>
@@ -264,16 +292,55 @@ function Community() {
 
   const loadData = async () => {
     try {
-      const [allUsers, followingList, activityFeed] = await Promise.all([
+      const [allUsers, followingList, activityFeed, userRecipes] = await Promise.all([
         getAllUsers(),
         user ? getFollowing(user.uid) : [],
-        user ? getFollowingActivity(user.uid, 30) : []
+        user ? getFollowingActivity(user.uid, 30) : [],
+        getApprovedRecipes()
       ])
 
       setUsers(allUsers.filter(u => u.oderId !== user?.uid))
       setFollowing(followingList)
       setFollowingIds(new Set(followingList.map(f => f.oderId)))
-      setActivity(activityFeed)
+
+      // Get own activity if logged in
+      let ownActivity = []
+      if (user) {
+        const ownHistory = await getCookingHistory(user.uid)
+        const ownProfile = await getUserProfile(user.uid)
+        ownActivity = ownHistory.map(entry => ({
+          ...entry,
+          oderId: user.uid,
+          userName: ownProfile?.displayName || user.email,
+          userPhoto: ownProfile?.photoURL,
+          isOwnActivity: true
+        }))
+      }
+
+      // Get recent recipe submissions from followed users + self
+      const followingIds = new Set(followingList.map(f => f.oderId))
+      if (user) followingIds.add(user.uid)
+
+      const recipeActivity = userRecipes
+        .filter(r => r.submitterId && followingIds.has(r.submitterId) && r.approvedAt)
+        .map(r => ({
+          id: `recipe-${r.id}`,
+          type: 'recipe_submission',
+          oderId: r.submitterId,
+          userName: r.submitterEmail?.split('@')[0] || 'User',
+          recipeName: r.name,
+          recipeId: r.id,
+          recipePhotoURL: r.photoURL,
+          createdAt: r.approvedAt || r.submittedAt,
+          isOwnActivity: r.submitterId === user?.uid
+        }))
+
+      // Combine all activity
+      const combinedActivity = [...activityFeed, ...ownActivity, ...recipeActivity]
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 50)
+
+      setActivity(combinedActivity)
     } catch (err) {
       console.error('Error loading community data:', err)
     }

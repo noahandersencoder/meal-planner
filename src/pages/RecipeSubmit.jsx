@@ -31,6 +31,22 @@ const DIETARY_TAGS = [
   { value: 'quick', label: 'Quick (Under 30 min)' },
 ]
 
+const CUISINE_TAGS = [
+  { value: 'italian', label: 'Italian' },
+  { value: 'mexican', label: 'Mexican' },
+  { value: 'chinese', label: 'Chinese' },
+  { value: 'japanese', label: 'Japanese' },
+  { value: 'thai', label: 'Thai' },
+  { value: 'indian', label: 'Indian' },
+  { value: 'american', label: 'American' },
+  { value: 'mediterranean', label: 'Mediterranean' },
+  { value: 'french', label: 'French' },
+  { value: 'greek', label: 'Greek' },
+  { value: 'korean', label: 'Korean' },
+  { value: 'vietnamese', label: 'Vietnamese' },
+  { value: 'middle-eastern', label: 'Middle Eastern' },
+]
+
 function RecipeSubmit() {
   const navigate = useNavigate()
   const { user, isApproved } = useAuth()
@@ -401,23 +417,53 @@ function RecipeSubmit() {
         {/* Tags */}
         <div className="card p-6 space-y-4">
           <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <span className="text-xl">🏷️</span> Dietary Tags
+            <span className="text-xl">🏷️</span> Tags
           </h3>
-          <div className="flex flex-wrap gap-2">
-            {DIETARY_TAGS.map((tag) => (
-              <button
-                key={tag.value}
-                type="button"
-                onClick={() => toggleTag(tag.value)}
-                className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                  recipe.tags.includes(tag.value)
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {tag.label}
-              </button>
-            ))}
+
+          {/* Cuisine Tags */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cuisine / Origin
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {CUISINE_TAGS.map((tag) => (
+                <button
+                  key={tag.value}
+                  type="button"
+                  onClick={() => toggleTag(tag.value)}
+                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                    recipe.tags.includes(tag.value)
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tag.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dietary Tags */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Dietary Info
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {DIETARY_TAGS.map((tag) => (
+                <button
+                  key={tag.value}
+                  type="button"
+                  onClick={() => toggleTag(tag.value)}
+                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                    recipe.tags.includes(tag.value)
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tag.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

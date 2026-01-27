@@ -184,65 +184,144 @@ function Browse() {
         </svg>
       </div>
 
-      {/* Sort, View Toggle, and Filters - all together */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Sort Dropdown */}
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="input py-2 text-sm"
-        >
-          {SORT_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        {/* View Toggle */}
-        <div className="flex bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setRecipeViewMode('grid')}
-            className={`p-2 rounded transition-colors ${
-              recipeViewMode === 'grid'
-                ? 'bg-white shadow text-primary-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            title="Grid view"
+      {/* Filters - all on one line with labels */}
+      <div className="flex flex-wrap items-end gap-3 p-3 bg-white rounded-lg shadow-sm">
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-500 mb-1">Sort</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="input py-1.5 text-xs w-auto"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          </button>
-          <button
-            onClick={() => setRecipeViewMode('list')}
-            className={`p-2 rounded transition-colors ${
-              recipeViewMode === 'list'
-                ? 'bg-white shadow text-primary-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            title="List view"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-          </button>
+            {SORT_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Filters Button */}
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-500 mb-1">Time</label>
+          <select
+            value={filters.maxCookTime || 60}
+            onChange={(e) => setFilters({ ...filters, maxCookTime: Number(e.target.value) })}
+            className="input py-1.5 text-xs w-auto"
+          >
+            <option value={15}>≤ 15 min</option>
+            <option value={30}>≤ 30 min</option>
+            <option value={45}>≤ 45 min</option>
+            <option value={60}>≤ 1 hr</option>
+            <option value={120}>≤ 1 hr+</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-500 mb-1">Budget</label>
+          <select
+            value={filters.budgetLevel || 3}
+            onChange={(e) => setFilters({ ...filters, budgetLevel: Number(e.target.value) })}
+            className="input py-1.5 text-xs w-auto"
+          >
+            <option value={1}>$</option>
+            <option value={2}>$$</option>
+            <option value={3}>$$$</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-500 mb-1">Cuisine</label>
+          <select
+            value={filters.cuisine || ''}
+            onChange={(e) => setFilters({ ...filters, cuisine: e.target.value })}
+            className="input py-1.5 text-xs w-auto"
+          >
+            <option value="">All</option>
+            <option value="italian">Italian</option>
+            <option value="mexican">Mexican</option>
+            <option value="chinese">Chinese</option>
+            <option value="japanese">Japanese</option>
+            <option value="thai">Thai</option>
+            <option value="indian">Indian</option>
+            <option value="american">American</option>
+            <option value="mediterranean">Mediterranean</option>
+            <option value="french">French</option>
+            <option value="greek">Greek</option>
+            <option value="korean">Korean</option>
+            <option value="vietnamese">Vietnamese</option>
+            <option value="middle-eastern">Middle Eastern</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-500 mb-1">View</label>
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
+            <button
+              onClick={() => setRecipeViewMode('grid')}
+              className={`p-1.5 rounded transition-colors ${
+                recipeViewMode === 'grid'
+                  ? 'bg-white shadow text-primary-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="Grid view"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setRecipeViewMode('list')}
+              className={`p-1.5 rounded transition-colors ${
+                recipeViewMode === 'list'
+                  ? 'bg-white shadow text-primary-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="List view"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setFilters({ ...filters, vegetarianMode: !filters.vegetarianMode })}
+          className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+            filters.vegetarianMode
+              ? 'bg-primary-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Vegetarian
+        </button>
+
+        <button
+          onClick={() => setFilters({ ...filters, veganMode: !filters.veganMode })}
+          className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+            filters.veganMode
+              ? 'bg-primary-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Vegan
+        </button>
+
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="btn btn-secondary"
+          className={`px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+            showFilters
+              ? 'bg-primary-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
         >
-          {showFilters ? 'Hide Filters' : 'Filters'}
+          {showFilters ? 'Less' : 'More'}
         </button>
       </div>
 
-      {/* Filter Panel */}
-      {showFilters ? (
+      {/* Expanded Filter Panel */}
+      {showFilters && (
         <FilterPanel filters={filters} onChange={setFilters} />
-      ) : (
-        <FilterPanel filters={filters} onChange={setFilters} compact />
       )}
 
       {selectedDay !== null && (

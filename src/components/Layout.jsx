@@ -49,6 +49,21 @@ function Layout({ children }) {
                   >
                     Log out
                   </button>
+                  <Link to="/profile" className="flex-shrink-0">
+                    {userProfile?.photoURL ? (
+                      <img
+                        src={userProfile.photoURL}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-primary-200 hover:border-primary-400 transition-colors"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center border-2 border-primary-200 hover:border-primary-400 transition-colors">
+                        <span className="text-primary-600 text-sm font-medium">
+                          {user.email?.[0]?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
                 </>
               ) : (
                 <Link

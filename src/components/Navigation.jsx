@@ -4,7 +4,7 @@ const navItems = [
   { to: '/browse', icon: '🍳', label: 'Recipes' },
   { to: '/meal-plan', icon: '📅', label: 'Plan' },
   { to: '/community', icon: '👥', label: 'Community' },
-  { to: '/my-cooking', icon: '👨‍🍳', label: 'My Cooking' },
+  { to: '/profile', icon: '👤', label: 'My Profile' },
 ]
 
 function Navigation() {

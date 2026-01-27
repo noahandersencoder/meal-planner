@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe, getRecipeTagOverrides, setRecipeTagOverrides, getRecipePhotoOverride, setRecipePhotoOverride, addCookingHistoryEntry } from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe, getRecipeTagOverrides, setRecipeTagOverrides, getRecipePhotoOverride, setRecipePhotoOverride, addCookingHistoryEntry, addReview } from '../firebase'
 
 const CUISINE_TAGS = [
   'italian', 'mediterranean', 'mexican', 'chinese', 'japanese',
@@ -51,6 +51,8 @@ function RecipeDetail() {
   const [showIMadeThisModal, setShowIMadeThisModal] = useState(false)
   const [iMadeThisNotes, setIMadeThisNotes] = useState('')
   const [iMadeThisPhotos, setIMadeThisPhotos] = useState([])
+  const [iMadeThisRating, setIMadeThisRating] = useState(0)
+  const [iMadeThisReview, setIMadeThisReview] = useState('')
   const [savingHistory, setSavingHistory] = useState(false)
   const [historyImageToCrop, setHistoryImageToCrop] = useState(null)
   const photoInputRef = useRef(null)
@@ -284,18 +286,34 @@ function RecipeDetail() {
 
     setSavingHistory(true)
     try {
+      // Add to cooking history
       await addCookingHistoryEntry(user.uid, {
         recipeId: recipe.id,
         recipeName: recipe.name,
         recipePhotoURL: recipe.photoURL || null,
         notes: iMadeThisNotes.trim(),
-        photos: iMadeThisPhotos
+        photos: iMadeThisPhotos,
+        rating: iMadeThisRating || null
       })
+
+      // If they gave a rating, also save it as a review
+      if (iMadeThisRating > 0) {
+        await addReview(
+          recipe.id,
+          user.uid,
+          user.email,
+          iMadeThisRating,
+          iMadeThisReview.trim(),
+          iMadeThisPhotos[0] || null // Use first photo as review photo
+        )
+      }
 
       setShowIMadeThisModal(false)
       setIMadeThisNotes('')
       setIMadeThisPhotos([])
-      alert('Added to your cooking history!')
+      setIMadeThisRating(0)
+      setIMadeThisReview('')
+      alert('Added to your cooking history!' + (iMadeThisRating > 0 ? ' Review saved!' : ''))
     } catch (err) {
       console.error('Error saving to history:', err)
       alert('Failed to save to history')
@@ -633,19 +651,58 @@ function RecipeDetail() {
               </div>
 
               <p className="text-sm text-gray-500 mb-4">
-                Add this recipe to your cooking history. Share your experience!
+                Add this recipe to your cooking history and optionally leave a review!
               </p>
+
+              {/* Rating */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rating (optional)
+                </label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setIMadeThisRating(iMadeThisRating === star ? 0 : star)}
+                      className="text-3xl transition-transform hover:scale-110"
+                    >
+                      <span className={star <= iMadeThisRating ? 'text-yellow-400' : 'text-gray-300'}>
+                        ★
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {iMadeThisRating > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">{iMadeThisRating} star{iMadeThisRating !== 1 ? 's' : ''}</p>
+                )}
+              </div>
+
+              {/* Review (shown if rating is given) */}
+              {iMadeThisRating > 0 && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Review (optional)
+                  </label>
+                  <textarea
+                    value={iMadeThisReview}
+                    onChange={(e) => setIMadeThisReview(e.target.value)}
+                    placeholder="Share your thoughts about this recipe..."
+                    className="input min-h-[60px]"
+                  />
+                </div>
+              )}
 
               {/* Notes */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes (optional)
+                  Personal Notes (optional)
                 </label>
                 <textarea
                   value={iMadeThisNotes}
                   onChange={(e) => setIMadeThisNotes(e.target.value)}
-                  placeholder="How did it turn out? Any modifications?"
-                  className="input min-h-[80px]"
+                  placeholder="Private notes: modifications, tips for next time..."
+                  className="input min-h-[60px]"
                 />
               </div>
 
