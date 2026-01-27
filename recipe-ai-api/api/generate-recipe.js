@@ -225,15 +225,131 @@ const STANDARD_INGREDIENTS = {
 // Create a flat lookup map for ingredient matching
 function createIngredientLookup() {
   const lookup = {};
+  const aliases = {};
+
   for (const [category, ingredients] of Object.entries(STANDARD_INGREDIENTS)) {
     for (const ing of ingredients) {
-      lookup[ing.name.toLowerCase()] = { ...ing, category };
+      const key = ing.name.toLowerCase();
+      lookup[key] = { ...ing, category };
+
+      // Create common aliases
+      const words = key.split(/[\s()]+/).filter(w => w.length > 2);
+      words.forEach(word => {
+        if (!aliases[word]) aliases[word] = [];
+        aliases[word].push({ ...ing, category });
+      });
     }
   }
-  return lookup;
+
+  return { lookup, aliases };
 }
 
-const INGREDIENT_LOOKUP = createIngredientLookup();
+const { lookup: INGREDIENT_LOOKUP, aliases: INGREDIENT_ALIASES } = createIngredientLookup();
+
+// Improved fuzzy ingredient matcher
+function findBestIngredientMatch(ingredientName) {
+  const searchTerm = ingredientName.toLowerCase().trim();
+
+  // 1. Exact match
+  if (INGREDIENT_LOOKUP[searchTerm]) {
+    return INGREDIENT_LOOKUP[searchTerm];
+  }
+
+  // 2. Check if input contains a known ingredient name
+  for (const [name, ing] of Object.entries(INGREDIENT_LOOKUP)) {
+    if (searchTerm.includes(name) || name.includes(searchTerm)) {
+      return ing;
+    }
+  }
+
+  // 3. Check word-based aliases
+  const words = searchTerm.split(/[\s,]+/).filter(w => w.length > 2);
+  for (const word of words) {
+    // Direct word match
+    if (INGREDIENT_ALIASES[word] && INGREDIENT_ALIASES[word].length > 0) {
+      return INGREDIENT_ALIASES[word][0];
+    }
+
+    // Singular/plural handling
+    const singular = word.endsWith('s') ? word.slice(0, -1) : word;
+    const plural = word + 's';
+
+    if (INGREDIENT_ALIASES[singular] && INGREDIENT_ALIASES[singular].length > 0) {
+      return INGREDIENT_ALIASES[singular][0];
+    }
+    if (INGREDIENT_ALIASES[plural] && INGREDIENT_ALIASES[plural].length > 0) {
+      return INGREDIENT_ALIASES[plural][0];
+    }
+  }
+
+  // 4. Common ingredient mappings
+  const commonMappings = {
+    'chicken': 'chicken breast',
+    'beef': 'ground beef',
+    'pork': 'ground pork',
+    'fish': 'tilapia fillet',
+    'white fish': 'tilapia fillet',
+    'steak': 'sirloin steak',
+    'rice': 'rice (white)',
+    'white rice': 'rice (white)',
+    'pasta': 'pasta (any shape)',
+    'noodles': 'pasta (any shape)',
+    'cheese': 'cheddar cheese',
+    'oil': 'olive oil',
+    'cooking oil': 'vegetable oil',
+    'stock': 'chicken broth',
+    'broth': 'chicken broth',
+    'cream': 'heavy cream',
+    'yogurt': 'greek yogurt',
+    'lettuce': 'lettuce (romaine)',
+    'tomatoes': 'tomato',
+    'potatoes': 'potato',
+    'onions': 'onion',
+    'carrots': 'carrot',
+    'peppers': 'bell pepper',
+    'mushroom': 'mushrooms',
+    'garlic cloves': 'garlic',
+    'cloves garlic': 'garlic',
+    'fresh ginger': 'ginger',
+    'ginger root': 'ginger',
+    'soy': 'soy sauce',
+    'sesame': 'sesame oil',
+    'vinegar': 'rice vinegar',
+    'sugar': 'sugar',
+    'salt': 'salt',
+    'pepper': 'black pepper',
+    'flour': 'all-purpose flour',
+    'eggs': 'egg',
+    'butter': 'butter',
+    'milk': 'milk',
+    'honey': 'honey',
+    'lemon juice': 'lemon',
+    'lime juice': 'lime',
+    'orange juice': 'orange',
+    'scallions': 'green onion',
+    'spring onions': 'green onion',
+    'coriander': 'cilantro',
+    'capsicum': 'bell pepper',
+    'aubergine': 'eggplant',
+    'courgette': 'zucchini',
+    'prawns': 'shrimp',
+    'mince': 'ground beef',
+    'minced beef': 'ground beef',
+    'minced chicken': 'ground chicken',
+    'minced pork': 'ground pork',
+    'minced turkey': 'ground turkey'
+  };
+
+  for (const [alias, standard] of Object.entries(commonMappings)) {
+    if (searchTerm.includes(alias) || alias.includes(searchTerm)) {
+      if (INGREDIENT_LOOKUP[standard]) {
+        return INGREDIENT_LOOKUP[standard];
+      }
+    }
+  }
+
+  return null;
+}
 
 // Format ingredients list for the prompt
 function formatIngredientsForPrompt() {
@@ -276,53 +392,71 @@ export default async function handler(req, res) {
 
     const ingredientsList = formatIngredientsForPrompt();
 
-    const prompt = `You are a helpful cooking assistant. Create a recipe using the following ingredients: ${ingredients.join(', ')}.
+    const prompt = `You are a recipe generation assistant. Create a recipe using these ingredients: ${ingredients.join(', ')}.
 
 ${dietaryStr}
 ${cuisineStr}
 
-IMPORTANT: You MUST use ingredients from this standard database. Use EXACT names as shown below.
-When the user mentions an ingredient, find the closest match from this list:
+**CRITICAL REQUIREMENT**: You MUST use ingredient names EXACTLY as they appear in this database (case-sensitive, with parentheses where shown):
 ${ingredientsList}
 
-Generate a complete recipe in JSON format:
+**MAPPING RULES** - Convert user ingredients to EXACT database names:
+- "chicken" → "Chicken Breast" or "Chicken Thighs"
+- "beef" → "Ground Beef" or "Sirloin Steak"
+- "rice" → "Rice (White)" or "Jasmine Rice" or "Brown Rice"
+- "pasta" → "Pasta (any shape)" or "Spaghetti" or "Penne Pasta"
+- "onion/onions" → "Onion"
+- "garlic/garlic cloves" → "Garlic"
+- "tomatoes" → "Tomato" or "Cherry Tomatoes" or "Diced Tomatoes (canned)"
+- "oil" → "Olive Oil" or "Vegetable Oil" or "Sesame Oil"
+- "cheese" → "Cheddar Cheese", "Mozzarella Cheese", "Parmesan Cheese", etc.
+- "broth/stock" → "Chicken Broth" or "Beef Broth" or "Vegetable Broth"
+
+Generate JSON in this EXACT format:
 
 {
   "name": "Recipe Name",
-  "description": "A brief 1-2 sentence description of the dish",
-  "prepTime": 10,
-  "cookTime": 20,
+  "description": "Brief 1-2 sentence description",
+  "prepTime": 15,
+  "cookTime": 30,
   "servings": 4,
   "difficulty": "easy",
   "costLevel": 2,
   "tags": ["tag1", "tag2"],
   "ingredients": [
     {
-      "name": "EXACT name from database",
+      "name": "Chicken Breast",
       "amount": 1.5,
-      "unit": "unit from database",
-      "cost": 2.50,
-      "category": "category from database"
+      "unit": "lb",
+      "cost": 7.50,
+      "category": "meat"
+    },
+    {
+      "name": "Olive Oil",
+      "amount": 2,
+      "unit": "tbsp",
+      "cost": 0.60,
+      "category": "pantry"
     }
   ],
   "instructions": [
-    "Step 1 instruction",
-    "Step 2 instruction"
+    "Step 1 with clear instruction",
+    "Step 2 with clear instruction"
   ]
 }
 
-Rules:
-- CRITICAL: Use EXACT ingredient names from the database above (e.g., "Chicken Breast" not "chicken breast" or "chicken")
-- Use the unit shown for each ingredient in the database
-- Calculate cost by multiplying the per-unit cost by the amount
-- prepTime and cookTime are in minutes (integers)
-- difficulty must be one of: "easy", "medium", "hard"
-- costLevel must be 1, 2, or 3 (representing $, $$, $$$)
-- Valid tags include: vegetarian, vegan, dairy-free, gluten-free, red-meat, poultry, fish, quick
-- Include all provided ingredients (matched to database), and add common pantry items as needed
-- Instructions should be clear and practical
+**STRICT RULES**:
+1. Ingredient "name" MUST match EXACTLY from the database (including capitalization and parentheses)
+2. Use the "unit" shown for that ingredient in the database
+3. cost = database per-unit cost × amount
+4. category MUST match the database category for that ingredient
+5. difficulty: "easy", "medium", or "hard"
+6. costLevel: 1 ($), 2 ($$), or 3 ($$$) based on total cost
+7. tags: use from [vegetarian, vegan, dairy-free, gluten-free, red-meat, poultry, fish, quick, italian, mexican, chinese, japanese, thai, indian, american, mediterranean, french, greek, korean, vietnamese, middle-eastern]
+8. Add "quick" tag if total time ≤ 30 minutes
+9. Add appropriate cuisine tag if applicable
 
-Return ONLY valid JSON. No markdown, no code blocks, no explanation.`;
+Return ONLY the JSON object. No markdown formatting, no code blocks, no extra text.`;
 
 
     const message = await anthropic.messages.create({
@@ -367,8 +501,9 @@ Return ONLY valid JSON. No markdown, no code blocks, no explanation.`;
       }
     }
 
-    // Validate and fix ingredients to match standard database
+    // Validate and fix ingredients to match standard database using improved fuzzy matching
     recipe.ingredients = recipe.ingredients.map(ing => {
+      // First try exact lookup
       const lookupKey = ing.name.toLowerCase();
       const standardIng = INGREDIENT_LOOKUP[lookupKey];
 
@@ -376,36 +511,53 @@ Return ONLY valid JSON. No markdown, no code blocks, no explanation.`;
         // Exact match found - use standard values
         return {
           name: standardIng.name,
-          amount: ing.amount,
+          amount: parseFloat(ing.amount) || 1,
           unit: standardIng.unit,
-          cost: Math.round((standardIng.cost * ing.amount) * 100) / 100,
+          cost: Math.round((standardIng.cost * (parseFloat(ing.amount) || 1)) * 100) / 100,
           category: standardIng.category
         };
       }
 
-      // Try to find a partial match
-      const partialMatch = Object.entries(INGREDIENT_LOOKUP).find(([key, val]) =>
-        key.includes(lookupKey) || lookupKey.includes(key.split(' ')[0])
-      );
-
-      if (partialMatch) {
-        const [, matched] = partialMatch;
+      // Try fuzzy matching
+      const fuzzyMatch = findBestIngredientMatch(ing.name);
+      if (fuzzyMatch) {
         return {
-          name: matched.name,
-          amount: ing.amount,
-          unit: matched.unit,
-          cost: Math.round((matched.cost * ing.amount) * 100) / 100,
-          category: matched.category
+          name: fuzzyMatch.name,
+          amount: parseFloat(ing.amount) || 1,
+          unit: fuzzyMatch.unit,
+          cost: Math.round((fuzzyMatch.cost * (parseFloat(ing.amount) || 1)) * 100) / 100,
+          category: fuzzyMatch.category
         };
       }
 
-      // No match found - keep original but ensure valid category
+      // No match found - log warning and keep original with valid defaults
+      console.warn(`No standard ingredient match found for: "${ing.name}"`);
       const validCategories = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'other'];
       return {
-        ...ing,
+        name: ing.name,
+        amount: parseFloat(ing.amount) || 1,
+        unit: ing.unit || 'whole',
+        cost: parseFloat(ing.cost) || 1.00,
         category: validCategories.includes(ing.category) ? ing.category : 'other'
       };
     });
+
+    // Calculate total cost and set costLevel
+    const totalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0);
+    if (totalCost < 10) recipe.costLevel = 1;
+    else if (totalCost < 20) recipe.costLevel = 2;
+    else recipe.costLevel = 3;
+
+    // Ensure tags is an array
+    if (!Array.isArray(recipe.tags)) {
+      recipe.tags = [];
+    }
+
+    // Add quick tag if applicable
+    const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+    if (totalTime <= 30 && !recipe.tags.includes('quick')) {
+      recipe.tags.push('quick');
+    }
 
     return res.status(200).json({ recipe });
   } catch (error) {
