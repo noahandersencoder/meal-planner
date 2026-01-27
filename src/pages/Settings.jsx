@@ -263,6 +263,18 @@ function Settings() {
         </div>
       )}
 
+      {theme === 'techno' && (
+        <div className="card p-6 bg-black border-2 border-cyan-400">
+          <p className="text-center text-cyan-400 font-mono">
+            <span className="text-2xl">🎵</span> TECHNO MODE ACTIVATED <span className="text-2xl">🎵</span>
+            <br />
+            <span className="text-sm">Playing: "I Want to be a Machine"</span>
+            <br />
+            <span className="text-xs text-cyan-600 mt-2 block">Music opens in a new tab</span>
+          </p>
+        </div>
+      )}
+
       {/* Cooking Preferences */}
       <div className="card p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Cooking Preferences</h3>

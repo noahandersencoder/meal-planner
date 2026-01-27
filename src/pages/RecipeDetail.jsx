@@ -55,6 +55,7 @@ function RecipeDetail() {
   const [iMadeThisReview, setIMadeThisReview] = useState('')
   const [savingHistory, setSavingHistory] = useState(false)
   const [historyImageToCrop, setHistoryImageToCrop] = useState(null)
+  const [adjustedServings, setAdjustedServings] = useState(null) // null means use recipe default
   const photoInputRef = useRef(null)
   const historyPhotoInputRef = useRef(null)
 
@@ -130,9 +131,8 @@ function RecipeDetail() {
   }
 
   const totalTime = recipe.prepTime + recipe.cookTime
-  const totalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
-  const costPerServing = totalCost / recipe.servings
-  const adjustedCost = costPerServing * preferences.servings
+  const baseTotalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
+  const scaledTotalCost = baseTotalCost * servingMultiplier
 
   const handleAddToMealPlan = () => {
     addRecipeToDay(0, recipe)
@@ -321,7 +321,18 @@ function RecipeDetail() {
     setSavingHistory(false)
   }
 
-  const groupedIngredients = recipe.ingredients.reduce((acc, ing) => {
+  // Calculate the serving multiplier
+  const currentServings = adjustedServings || recipe.servings
+  const servingMultiplier = currentServings / recipe.servings
+
+  // Scale ingredients based on serving adjustment
+  const scaledIngredients = recipe.ingredients.map(ing => ({
+    ...ing,
+    amount: Math.round((ing.amount * servingMultiplier) * 100) / 100,
+    cost: Math.round((ing.cost * servingMultiplier) * 100) / 100
+  }))
+
+  const groupedIngredients = scaledIngredients.reduce((acc, ing) => {
     const category = ing.category || 'other'
     if (!acc[category]) acc[category] = []
     acc[category].push(ing)
@@ -582,8 +593,36 @@ function RecipeDetail() {
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-900">Ingredients</h2>
-          <span className="text-xs text-gray-400">Click units to convert</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Servings:</span>
+            <button
+              onClick={() => setAdjustedServings(Math.max(1, currentServings - 1))}
+              className="w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors flex items-center justify-center"
+            >
+              -
+            </button>
+            <span className="w-8 text-center font-bold text-gray-900">{currentServings}</span>
+            <button
+              onClick={() => setAdjustedServings(Math.min(24, currentServings + 1))}
+              className="w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors flex items-center justify-center"
+            >
+              +
+            </button>
+            {adjustedServings && adjustedServings !== recipe.servings && (
+              <button
+                onClick={() => setAdjustedServings(null)}
+                className="text-xs text-primary-600 hover:text-primary-700 ml-1"
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </div>
+        {adjustedServings && adjustedServings !== recipe.servings && (
+          <p className="text-xs text-gray-500 mb-3 -mt-2">
+            Scaled from {recipe.servings} servings • Est. ${scaledTotalCost.toFixed(2)}
+          </p>
+        )}
         <div className="space-y-4">
           {Object.entries(groupedIngredients).map(([category, ingredients]) => (
             <div key={category}>

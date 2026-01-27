@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Navigation from './Navigation'
 import { useAuth } from '../context/AuthContext'
 import { logOut, isFirebaseEnabled, getUserProfile } from '../firebase'
@@ -7,6 +7,12 @@ import { logOut, isFirebaseEnabled, getUserProfile } from '../firebase'
 function Layout({ children }) {
   const { user, loading, isAdmin, isApproved } = useAuth()
   const [userProfile, setUserProfile] = useState(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  // Pages where we should show a back button
+  const mainPages = ['/', '/browse', '/meal-plan', '/grocery-list', '/community', '/profile']
+  const showBackButton = !mainPages.includes(location.pathname)
 
   useEffect(() => {
     if (user && isFirebaseEnabled()) {
@@ -28,9 +34,22 @@ function Layout({ children }) {
     <div className="min-h-screen bg-gray-50 pb-20">
       <header className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold text-primary-600">
-            Meal Planner
-          </Link>
+          <div className="flex items-center gap-3">
+            {showBackButton && (
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+            )}
+            <Link to="/" className="text-xl font-bold text-primary-600">
+              Meal Planner
+            </Link>
+          </div>
           {isFirebaseEnabled() && !loading && (
             <div className="flex items-center gap-3">
               {user ? (

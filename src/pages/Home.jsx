@@ -20,60 +20,59 @@ function Home() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Main Navigation - matches bottom nav */}
+      <div className="grid gap-4 grid-cols-2">
         <Link
           to="/browse"
-          className="card p-6 hover:shadow-md transition-shadow group"
+          className="card p-6 hover:shadow-md transition-shadow group text-center"
         >
-          <div className="text-4xl mb-3">🍳</div>
+          <div className="text-5xl mb-3">🍳</div>
           <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
             Recipes
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            Explore 50+ recipes with filters for time, budget, and diet
+            Browse & add recipes
           </p>
         </Link>
 
         <Link
           to="/meal-plan"
-          className="card p-6 hover:shadow-md transition-shadow group"
+          className="card p-6 hover:shadow-md transition-shadow group text-center"
         >
-          <div className="text-4xl mb-3">📅</div>
+          <div className="text-5xl mb-3">📅</div>
           <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-            Meal Plan
+            Plan
           </h3>
           <p className="text-sm text-gray-500 mt-1">
             {totalRecipes > 0
               ? `${totalRecipes} meal${totalRecipes !== 1 ? 's' : ''} planned`
-              : 'Start planning your week'}
+              : 'Plan your meals'}
           </p>
         </Link>
 
         <Link
-          to="/grocery-list"
-          className="card p-6 hover:shadow-md transition-shadow group"
+          to="/community"
+          className="card p-6 hover:shadow-md transition-shadow group text-center"
         >
-          <div className="text-4xl mb-3">🛒</div>
+          <div className="text-5xl mb-3">👥</div>
           <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-            Grocery List
+            Community
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            {groceryList.length > 0
-              ? `${groceryList.length} item${groceryList.length !== 1 ? 's' : ''} to buy`
-              : 'Generate from your meal plan'}
+            See what others are cooking
           </p>
         </Link>
 
         <Link
           to="/profile"
-          className="card p-6 hover:shadow-md transition-shadow group"
+          className="card p-6 hover:shadow-md transition-shadow group text-center"
         >
-          <div className="text-4xl mb-3">👤</div>
+          <div className="text-5xl mb-3">👤</div>
           <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-            Profile
+            My Profile
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            {user ? 'My cooking, community & settings' : 'Log in to track your cooking'}
+            {user ? 'Cooking history & settings' : 'Log in to track cooking'}
           </p>
         </Link>
       </div>
