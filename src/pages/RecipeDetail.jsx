@@ -581,7 +581,7 @@ function RecipeDetail() {
               <p className="text-sm text-gray-500">Servings</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-primary-600">${totalCost.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-primary-600">${scaledTotalCost.toFixed(2)}</p>
               <p className="text-sm text-gray-500">Est. Cost</p>
             </div>
           </div>
