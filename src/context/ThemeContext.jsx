@@ -56,7 +56,7 @@ function TechnoPlayer({ playing, onClose }) {
           </div>
           <div className="aspect-video">
             <iframe
-              src={`https://www.youtube.com/embed/${TECHNO_VIDEO_ID}?autoplay=1&start=4&loop=1&list=RD${TECHNO_VIDEO_ID}`}
+              src={`https://www.youtube.com/embed/${TECHNO_VIDEO_ID}?autoplay=1&start=4&loop=1&playlist=${TECHNO_VIDEO_ID}`}
               title="Techno Mode Music"
               width="100%"
               height="100%"

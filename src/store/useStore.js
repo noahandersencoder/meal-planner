@@ -172,6 +172,9 @@ const useStore = create(
               const existing = ingredientMap.get(key)
               existing.amount += ing.amount
               existing.cost += ing.cost || 0
+              if (!existing.usedIn.includes(recipe.name)) {
+                existing.usedIn.push(recipe.name)
+              }
             } else {
               ingredientMap.set(key, {
                 id: key,
@@ -180,6 +183,7 @@ const useStore = create(
                 unit: ing.unit,
                 cost: ing.cost || 0,
                 category: ing.category,
+                usedIn: [recipe.name],
               })
             }
           })

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getConversionFactor, getUnitType, GRAMS_PER_CUP } from '../utils/unitConversions'
 
 // Available units grouped by type
@@ -9,6 +9,21 @@ const COUNTABLE_UNITS = ['whole', 'cloves', 'stalks', 'sprigs', 'slices', 'bunch
 function IngredientWithUnitSelect({ ingredient }) {
   const [selectedUnit, setSelectedUnit] = useState(ingredient.unit)
   const [convertedAmount, setConvertedAmount] = useState(ingredient.amount)
+
+  // Update when ingredient prop changes (e.g. serving size adjustment)
+  useEffect(() => {
+    if (selectedUnit === ingredient.unit) {
+      setConvertedAmount(ingredient.amount)
+    } else {
+      const factor = getConversionFactor(ingredient.unit, selectedUnit, ingredient.name)
+      if (factor !== null) {
+        setConvertedAmount(ingredient.amount * factor)
+      } else {
+        setConvertedAmount(ingredient.amount)
+        setSelectedUnit(ingredient.unit)
+      }
+    }
+  }, [ingredient.amount, ingredient.unit])
 
   // Check if ingredient has a known density for cross-type conversion
   const hasDensity = GRAMS_PER_CUP[ingredient.name] !== undefined
