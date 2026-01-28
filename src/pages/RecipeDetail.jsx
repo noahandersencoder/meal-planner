@@ -133,11 +133,21 @@ function RecipeDetail() {
   const totalTime = recipe.prepTime + recipe.cookTime
   const currentServings = adjustedServings || recipe.servings
   const servingMultiplier = currentServings / recipe.servings
+  const scaledIngredients = recipe.ingredients.map(ing => ({
+    ...ing,
+    amount: Math.round((ing.amount * servingMultiplier) * 100) / 100,
+    cost: Math.round((ing.cost * servingMultiplier) * 100) / 100
+  }))
   const baseTotalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
   const scaledTotalCost = baseTotalCost * servingMultiplier
 
   const handleAddToMealPlan = () => {
-    addRecipeToDay(0, recipe)
+    const scaledRecipe = {
+      ...recipe,
+      servings: currentServings,
+      ingredients: scaledIngredients
+    }
+    addRecipeToDay(0, scaledRecipe)
     navigate('/meal-plan')
   }
 
@@ -322,13 +332,6 @@ function RecipeDetail() {
     }
     setSavingHistory(false)
   }
-
-  // Scale ingredients based on serving adjustment
-  const scaledIngredients = recipe.ingredients.map(ing => ({
-    ...ing,
-    amount: Math.round((ing.amount * servingMultiplier) * 100) / 100,
-    cost: Math.round((ing.cost * servingMultiplier) * 100) / 100
-  }))
 
   const groupedIngredients = scaledIngredients.reduce((acc, ing) => {
     const category = ing.category || 'other'

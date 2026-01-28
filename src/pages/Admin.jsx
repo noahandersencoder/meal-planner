@@ -2,36 +2,35 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
-  getPendingUsers,
-  approveUser,
-  rejectUser,
   getPendingRecipes,
   approveRecipe,
   rejectRecipe,
-  manuallyApproveByEmail,
   isFirebaseEnabled,
   getApprovedRecipes,
   updatePendingRecipe,
   updateApprovedRecipe,
-  deleteApprovedRecipe
+  deleteApprovedRecipe,
+  getAllUsers,
+  banUser,
+  unbanUser,
+  checkUserBanned,
+  ADMIN_EMAIL
 } from '../firebase'
 import RecipeEditModal from '../components/RecipeEditModal'
 
 function Admin() {
   const navigate = useNavigate()
   const { user, loading, isAdmin } = useAuth()
-  const [pendingUsers, setPendingUsers] = useState([])
+  const [allUsers, setAllUsers] = useState([])
+  const [bannedUserIds, setBannedUserIds] = useState(new Set())
   const [pendingRecipes, setPendingRecipes] = useState([])
   const [approvedRecipes, setApprovedRecipes] = useState([])
   const [loadingData, setLoadingData] = useState(true)
   const [actionLoading, setActionLoading] = useState({})
   const [expandedRecipe, setExpandedRecipe] = useState(null)
-  const [manualEmail, setManualEmail] = useState('')
-  const [manualApproveStatus, setManualApproveStatus] = useState(null)
   const [editingRecipe, setEditingRecipe] = useState(null)
   const [editingType, setEditingType] = useState(null) // 'pending' or 'approved'
   const [savingEdit, setSavingEdit] = useState(false)
-  const [activeTab, setActiveTab] = useState('pending') // 'pending' or 'approved'
 
   useEffect(() => {
     if (loading) return
@@ -47,11 +46,22 @@ function Admin() {
     setLoadingData(true)
     try {
       const [users, pending, approved] = await Promise.all([
-        getPendingUsers(),
+        getAllUsers(),
         getPendingRecipes(),
         getApprovedRecipes()
       ])
-      setPendingUsers(users)
+      // Filter out admin from user list
+      setAllUsers(users.filter(u => u.email !== ADMIN_EMAIL))
+
+      // Check ban status for each user
+      const banChecks = await Promise.all(
+        users.map(async (u) => {
+          const banned = await checkUserBanned(u.oderId)
+          return banned ? u.oderId : null
+        })
+      )
+      setBannedUserIds(new Set(banChecks.filter(Boolean)))
+
       setPendingRecipes(pending)
       setApprovedRecipes(approved)
     } catch (err) {
@@ -60,26 +70,31 @@ function Admin() {
     setLoadingData(false)
   }
 
-  const handleApproveUser = async (pendingUser) => {
-    setActionLoading(prev => ({ ...prev, [`user-${pendingUser.uid}`]: 'approve' }))
+  const handleBanUser = async (userProfile) => {
+    if (!confirm(`Remove "${userProfile.displayName || userProfile.email}"? They will lose access to all features.`)) return
+    setActionLoading(prev => ({ ...prev, [`user-${userProfile.oderId}`]: 'ban' }))
     try {
-      await approveUser(pendingUser.uid, pendingUser.email)
-      setPendingUsers(prev => prev.filter(u => u.uid !== pendingUser.uid))
+      await banUser(userProfile.oderId, userProfile.email)
+      setBannedUserIds(prev => new Set([...prev, userProfile.oderId]))
     } catch (err) {
-      console.error('Error approving user:', err)
+      console.error('Error banning user:', err)
     }
-    setActionLoading(prev => ({ ...prev, [`user-${pendingUser.uid}`]: null }))
+    setActionLoading(prev => ({ ...prev, [`user-${userProfile.oderId}`]: null }))
   }
 
-  const handleRejectUser = async (pendingUser) => {
-    setActionLoading(prev => ({ ...prev, [`user-${pendingUser.uid}`]: 'reject' }))
+  const handleUnbanUser = async (userProfile) => {
+    setActionLoading(prev => ({ ...prev, [`user-${userProfile.oderId}`]: 'unban' }))
     try {
-      await rejectUser(pendingUser.uid)
-      setPendingUsers(prev => prev.filter(u => u.uid !== pendingUser.uid))
+      await unbanUser(userProfile.oderId)
+      setBannedUserIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(userProfile.oderId)
+        return newSet
+      })
     } catch (err) {
-      console.error('Error rejecting user:', err)
+      console.error('Error unbanning user:', err)
     }
-    setActionLoading(prev => ({ ...prev, [`user-${pendingUser.uid}`]: null }))
+    setActionLoading(prev => ({ ...prev, [`user-${userProfile.oderId}`]: null }))
   }
 
   const handleApproveRecipe = async (recipe) => {
@@ -104,22 +119,6 @@ function Admin() {
       console.error('Error rejecting recipe:', err)
     }
     setActionLoading(prev => ({ ...prev, [`recipe-${recipe.id}`]: null }))
-  }
-
-  const handleManualApprove = async (e) => {
-    e.preventDefault()
-    if (!manualEmail.trim()) return
-
-    setManualApproveStatus('loading')
-    try {
-      await manuallyApproveByEmail(manualEmail.trim())
-      setManualApproveStatus('success')
-      setManualEmail('')
-      setTimeout(() => setManualApproveStatus(null), 3000)
-    } catch (err) {
-      console.error('Error manually approving:', err)
-      setManualApproveStatus('error')
-    }
   }
 
   const handleEditRecipe = (recipe, type) => {
@@ -198,58 +197,86 @@ function Admin() {
         </button>
       </div>
 
-      {/* Pending Users */}
+      {/* Manage Users */}
       <div className="card p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <span>👤</span> Pending User Approvals
-          {pendingUsers.length > 0 && (
-            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-              {pendingUsers.length}
-            </span>
-          )}
+          <span>👤</span> Manage Users
+          <span className="bg-gray-500 text-white text-xs px-2 py-0.5 rounded-full">
+            {allUsers.length}
+          </span>
         </h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Remove users who violate guidelines. Removed users lose access to all features.
+        </p>
 
         {loadingData ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
             <p className="text-gray-500 mt-2">Loading...</p>
           </div>
-        ) : pendingUsers.length === 0 ? (
+        ) : allUsers.length === 0 ? (
           <div className="text-center py-6">
-            <div className="text-3xl mb-2">✓</div>
-            <p className="text-gray-500">No pending users</p>
+            <p className="text-gray-500">No users yet</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {pendingUsers.map((pendingUser) => (
-              <div
-                key={pendingUser.uid}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div>
-                  <p className="font-medium text-gray-900">{pendingUser.email}</p>
-                  <p className="text-sm text-gray-500">
-                    Requested: {new Date(pendingUser.requestedAt).toLocaleDateString()}
-                  </p>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {allUsers.map((userProfile) => {
+              const isBanned = bannedUserIds.has(userProfile.oderId)
+              return (
+                <div
+                  key={userProfile.oderId}
+                  className={`flex items-center justify-between p-3 rounded-lg ${
+                    isBanned ? 'bg-red-50' : 'bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {userProfile.photoURL ? (
+                      <img
+                        src={userProfile.photoURL}
+                        alt=""
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-500 text-sm font-medium">
+                          {(userProfile.displayName || userProfile.email)?.[0]?.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <p className={`font-medium ${isBanned ? 'text-red-700 line-through' : 'text-gray-900'}`}>
+                        {userProfile.displayName || userProfile.email}
+                      </p>
+                      {userProfile.displayName && (
+                        <p className="text-xs text-gray-500">{userProfile.email}</p>
+                      )}
+                      {isBanned && (
+                        <p className="text-xs text-red-600 font-medium">Removed</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    {isBanned ? (
+                      <button
+                        onClick={() => handleUnbanUser(userProfile)}
+                        disabled={actionLoading[`user-${userProfile.oderId}`]}
+                        className="btn btn-secondary text-sm px-3 py-1"
+                      >
+                        {actionLoading[`user-${userProfile.oderId}`] === 'unban' ? '...' : 'Restore'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleBanUser(userProfile)}
+                        disabled={actionLoading[`user-${userProfile.oderId}`]}
+                        className="btn btn-outline text-sm px-3 py-1 text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        {actionLoading[`user-${userProfile.oderId}`] === 'ban' ? '...' : 'Remove'}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleApproveUser(pendingUser)}
-                    disabled={actionLoading[`user-${pendingUser.uid}`]}
-                    className="btn btn-primary text-sm px-4 py-2"
-                  >
-                    {actionLoading[`user-${pendingUser.uid}`] === 'approve' ? '...' : 'Approve'}
-                  </button>
-                  <button
-                    onClick={() => handleRejectUser(pendingUser)}
-                    disabled={actionLoading[`user-${pendingUser.uid}`]}
-                    className="btn btn-outline text-sm px-4 py-2 text-red-600 border-red-300 hover:bg-red-50"
-                  >
-                    {actionLoading[`user-${pendingUser.uid}`] === 'reject' ? '...' : 'Reject'}
-                  </button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
@@ -442,44 +469,11 @@ function Admin() {
         )}
       </div>
 
-      {/* Manual User Approval */}
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <span>✉️</span> Manual User Approval
-        </h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Approve a user by email (for accounts created before the approval system).
-        </p>
-        <form onSubmit={handleManualApprove} className="flex gap-2">
-          <input
-            type="email"
-            value={manualEmail}
-            onChange={(e) => setManualEmail(e.target.value)}
-            placeholder="user@example.com"
-            className="input flex-1"
-            required
-          />
-          <button
-            type="submit"
-            disabled={manualApproveStatus === 'loading'}
-            className="btn btn-primary"
-          >
-            {manualApproveStatus === 'loading' ? '...' : 'Approve'}
-          </button>
-        </form>
-        {manualApproveStatus === 'success' && (
-          <p className="text-green-600 text-sm mt-2">User approved successfully!</p>
-        )}
-        {manualApproveStatus === 'error' && (
-          <p className="text-red-600 text-sm mt-2">Error approving user. Try again.</p>
-        )}
-      </div>
-
       <div className="card p-6 bg-blue-50 border-blue-200">
         <h3 className="text-lg font-semibold text-blue-900 mb-2">Admin Info</h3>
         <p className="text-blue-800 text-sm">
-          You are logged in as the admin ({user?.email}). New users and recipe submissions
-          will appear here for approval.
+          You are logged in as the admin ({user?.email}). Recipe submissions
+          will appear here for approval. You can remove users who violate guidelines.
         </p>
       </div>
 

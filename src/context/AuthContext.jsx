@@ -1,18 +1,16 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { onAuthChange, isFirebaseEnabled, checkUserApproved, checkUserApprovedByEmail, isAdmin, ADMIN_EMAIL } from '../firebase'
+import { onAuthChange, isFirebaseEnabled, isAdmin, ADMIN_EMAIL, checkUserBanned } from '../firebase'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [isApproved, setIsApproved] = useState(false)
-  const [checkingApproval, setCheckingApproval] = useState(true)
+  const [isBanned, setIsBanned] = useState(false)
 
   useEffect(() => {
     if (!isFirebaseEnabled()) {
       setLoading(false)
-      setCheckingApproval(false)
       return
     }
 
@@ -21,30 +19,16 @@ export function AuthProvider({ children }) {
       setLoading(false)
 
       if (user) {
-        // Admin is always approved
-        if (user.email === ADMIN_EMAIL) {
-          setIsApproved(true)
-          setCheckingApproval(false)
-          return
-        }
-
-        // Check if user is approved (by uid or by email for legacy users)
-        setCheckingApproval(true)
+        // Check if user has been removed/banned by admin
         try {
-          let approved = await checkUserApproved(user.uid)
-          if (!approved) {
-            // Check by email for legacy users
-            approved = await checkUserApprovedByEmail(user.email)
-          }
-          setIsApproved(approved)
+          const banned = await checkUserBanned(user.uid)
+          setIsBanned(banned)
         } catch (err) {
-          console.error('Error checking approval:', err)
-          setIsApproved(false)
+          console.error('Error checking ban status:', err)
+          setIsBanned(false)
         }
-        setCheckingApproval(false)
       } else {
-        setIsApproved(false)
-        setCheckingApproval(false)
+        setIsBanned(false)
       }
     })
 
@@ -54,7 +38,14 @@ export function AuthProvider({ children }) {
   const userIsAdmin = user ? isAdmin(user) : false
 
   return (
-    <AuthContext.Provider value={{ user, loading, isApproved, checkingApproval, isAdmin: userIsAdmin }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      isApproved: !!user && !isBanned,
+      checkingApproval: false,
+      isAdmin: userIsAdmin,
+      isBanned
+    }}>
       {children}
     </AuthContext.Provider>
   )

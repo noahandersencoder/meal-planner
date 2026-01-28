@@ -16,7 +16,7 @@ function Settings() {
   const [saveMessage, setSaveMessage] = useState('')
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [imageToCrop, setImageToCrop] = useState(null)
-  const [privacySetting, setPrivacySetting] = useState('open')
+  const [privacySetting, setPrivacySetting] = useState('followers')
   const [savingPrivacy, setSavingPrivacy] = useState(false)
   const fileInputRef = useRef(null)
 

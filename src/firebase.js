@@ -162,101 +162,55 @@ export function isAdmin(user) {
   return user?.email === ADMIN_EMAIL
 }
 
-// Save user to pending list on signup
+// Register user profile on signup (no approval needed)
 export async function registerPendingUser(user) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')
 
-  // Admin is auto-approved
-  if (user.email === ADMIN_EMAIL) {
-    const approvedRef = ref(database, `approvedUsers/${user.uid}`)
-    await set(approvedRef, {
+  // Create user profile
+  const profileRef = ref(database, `userProfiles/${user.uid}`)
+  const snapshot = await get(profileRef)
+  if (!snapshot.exists()) {
+    await set(profileRef, {
       email: user.email,
-      approvedAt: Date.now()
+      privacy: 'followers',
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     })
-    return
   }
-
-  const pendingRef = ref(database, `pendingUsers/${user.uid}`)
-  await set(pendingRef, {
-    email: user.email,
-    requestedAt: Date.now()
-  })
 }
 
-// Check if user is approved
-export async function checkUserApproved(userId) {
+// Check if user has been banned/removed by admin
+export async function checkUserBanned(userId) {
   if (!firebaseEnabled) return false
-  const approvedRef = ref(database, `approvedUsers/${userId}`)
-  const snapshot = await get(approvedRef)
+  const bannedRef = ref(database, `bannedUsers/${userId}`)
+  const snapshot = await get(bannedRef)
   return snapshot.exists()
 }
 
-// Get all pending users (admin only)
-export async function getPendingUsers() {
-  if (!firebaseEnabled) return []
-  const pendingRef = ref(database, 'pendingUsers')
-  const snapshot = await get(pendingRef)
-  if (!snapshot.exists()) return []
-
-  const users = []
-  snapshot.forEach((child) => {
-    users.push({ uid: child.key, ...child.val() })
-  })
-  return users
-}
-
-// Approve a user (admin only)
-export async function approveUser(userId, email) {
+// Ban/remove a user (admin only)
+export async function banUser(userId, email) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')
-
-  // Add to approved list
-  const approvedRef = ref(database, `approvedUsers/${userId}`)
-  await set(approvedRef, {
+  const bannedRef = ref(database, `bannedUsers/${userId}`)
+  await set(bannedRef, {
     email: email,
-    approvedAt: Date.now()
+    bannedAt: Date.now()
   })
-
-  // Remove from pending list
-  const pendingRef = ref(database, `pendingUsers/${userId}`)
-  await set(pendingRef, null)
 }
 
-// Manually approve a user by email (for legacy accounts)
-export async function manuallyApproveByEmail(email) {
+// Unban a user (admin only)
+export async function unbanUser(userId) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')
-
-  // Create a deterministic ID from the email for legacy users
-  const oderId = 'legacy-' + email.replace(/[^a-zA-Z0-9]/g, '-')
-  const approvedRef = ref(database, `approvedUsers/${oderId}`)
-  await set(approvedRef, {
-    email: email,
-    approvedAt: Date.now(),
-    manuallyApproved: true
-  })
+  const bannedRef = ref(database, `bannedUsers/${userId}`)
+  await set(bannedRef, null)
 }
 
-// Check if user is approved (updated to check by email too for legacy users)
-export async function checkUserApprovedByEmail(email) {
-  if (!firebaseEnabled) return false
-  const approvedRef = ref(database, 'approvedUsers')
-  const snapshot = await get(approvedRef)
-  if (!snapshot.exists()) return false
-
-  let found = false
-  snapshot.forEach((child) => {
-    if (child.val().email === email) {
-      found = true
-    }
-  })
-  return found
-}
-
-// Reject/remove a user (admin only)
-export async function rejectUser(userId) {
-  if (!firebaseEnabled) throw new Error('Firebase not configured')
-  const pendingRef = ref(database, `pendingUsers/${userId}`)
-  await set(pendingRef, null)
-}
+// Legacy stubs kept for backward compatibility
+export async function checkUserApproved() { return true }
+export async function checkUserApprovedByEmail() { return true }
+export async function getPendingUsers() { return [] }
+export async function approveUser() {}
+export async function rejectUser() {}
+export async function manuallyApproveByEmail() {}
 
 // Submit a recipe for approval
 export async function submitRecipe(userId, userEmail, recipe) {
@@ -770,10 +724,10 @@ export async function updatePrivacySettings(userId, privacyLevel) {
 }
 
 export async function getPrivacySettings(userId) {
-  if (!firebaseEnabled) return 'open'
+  if (!firebaseEnabled) return 'followers'
   const privacyRef = ref(database, `userProfiles/${userId}/privacy`)
   const snapshot = await get(privacyRef)
-  return snapshot.exists() ? snapshot.val() : 'open'
+  return snapshot.exists() ? snapshot.val() : 'followers'
 }
 
 // ============ SOCIAL CONNECTIONS ============
