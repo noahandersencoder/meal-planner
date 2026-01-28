@@ -204,9 +204,36 @@ const useStore = create(
         })
       },
 
-      addItemToGroceryList: (item) =>
+      addItemToGroceryList: (item) => {
+        // First ensure we have an active list (this must happen outside set())
+        const { activeListId, groceryLists } = get()
+        let listId = activeListId
+
+        // If no active list, create one
+        if (!listId || !groceryLists[listId]) {
+          const defaultId = 'default-list'
+          if (!groceryLists[defaultId]) {
+            set({
+              groceryLists: {
+                ...groceryLists,
+                [defaultId]: {
+                  id: defaultId,
+                  name: 'My Grocery List',
+                  items: [],
+                  checkedItems: {},
+                  createdAt: Date.now()
+                }
+              },
+              activeListId: defaultId
+            })
+          } else {
+            set({ activeListId: defaultId })
+          }
+          listId = defaultId
+        }
+
+        // Now add the item
         set((state) => {
-          const listId = state.activeListId || state.ensureActiveList()
           const list = state.groceryLists[listId]
           if (!list) return state
 
@@ -242,7 +269,8 @@ const useStore = create(
               [listId]: { ...list, items: newItems }
             }
           }
-        }),
+        })
+      },
 
       removeItemFromGroceryList: (itemId) =>
         set((state) => {

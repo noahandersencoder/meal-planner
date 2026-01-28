@@ -318,6 +318,8 @@ function GroceryList() {
     removeItemFromGroceryList,
   } = useStore()
 
+  const [servingMultiplier, setServingMultiplier] = useState(1)
+
   // Ensure we have at least one list
   useEffect(() => {
     if (!isLoading && Object.keys(groceryLists).length === 0) {
@@ -325,12 +327,19 @@ function GroceryList() {
     }
   }, [isLoading, groceryLists])
 
+  // Auto-refresh grocery list from meal plan on page load
+  useEffect(() => {
+    if (!isLoading && getAllMealPlanRecipes().length > 0) {
+      generateGroceryList()
+    }
+  }, [isLoading])
+
   const activeList = getActiveList()
   const groceryList = activeList.items || []
   const checkedItems = activeList.checkedItems || {}
   const sourceRecipes = activeList.sourceRecipes || []
 
-  const totalCost = getGroceryListTotal()
+  const totalCost = getGroceryListTotal() * servingMultiplier
   const checkedCount = Object.values(checkedItems).filter(Boolean).length
   const totalCount = groceryList.length
   const allChecked = totalCount > 0 && checkedCount === totalCount
@@ -586,6 +595,8 @@ function GroceryList() {
       removeItemFromGroceryList={removeItemFromGroceryList}
       listSelectorProps={listSelectorProps}
       sourceRecipes={sourceRecipes}
+      servingMultiplier={servingMultiplier}
+      setServingMultiplier={setServingMultiplier}
     />
   )
 }
@@ -618,6 +629,8 @@ function LocalGroceryList({
   removeItemFromGroceryList,
   listSelectorProps,
   sourceRecipes = [],
+  servingMultiplier = 1,
+  setServingMultiplier,
 }) {
   const [showAddItem, setShowAddItem] = useState(false)
   const [sortBy, setSortBy] = useState('aisle')
@@ -716,6 +729,33 @@ function LocalGroceryList({
             <span className="font-medium">Generated from:</span>{' '}
             {sourceRecipes.join(', ')}
           </p>
+        </div>
+      )}
+
+      {/* Serving Multiplier */}
+      {setServingMultiplier && (
+        <div className="card p-4 flex items-center justify-between">
+          <div>
+            <h4 className="font-medium text-gray-900 text-sm">Serving Multiplier</h4>
+            <p className="text-xs text-gray-500">Scale all quantities up or down</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setServingMultiplier(Math.max(0.5, servingMultiplier - 0.5))}
+              className="w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors text-sm"
+            >
+              -
+            </button>
+            <span className="text-lg font-bold text-gray-900 w-12 text-center">
+              {servingMultiplier}x
+            </span>
+            <button
+              onClick={() => setServingMultiplier(Math.min(5, servingMultiplier + 0.5))}
+              className="w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors text-sm"
+            >
+              +
+            </button>
+          </div>
         </div>
       )}
 
@@ -830,6 +870,7 @@ function LocalGroceryList({
                     checked={checkedItems[item.id] || false}
                     onToggle={() => toggleGroceryItem(item.id)}
                     onRemove={removeItemFromGroceryList ? () => removeItemFromGroceryList(item.id) : null}
+                    multiplier={servingMultiplier}
                   />
                 ))}
               </div>
@@ -865,6 +906,7 @@ function LocalGroceryList({
                   onToggle={() => toggleGroceryItem(item.id)}
                   onRemove={removeItemFromGroceryList ? () => removeItemFromGroceryList(item.id) : null}
                   showCategory={true}
+                  multiplier={servingMultiplier}
                 />
               ))}
           </div>

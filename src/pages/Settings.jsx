@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-import { updateUserProfile, getUserProfile, isFirebaseEnabled } from '../firebase'
+import { updateUserProfile, getUserProfile, isFirebaseEnabled, getPrivacySettings, updatePrivacySettings } from '../firebase'
 import ImageCropper from '../components/ImageCropper'
 import FilterPanel from '../components/FilterPanel'
 import useStore from '../store/useStore'
@@ -16,6 +16,8 @@ function Settings() {
   const [saveMessage, setSaveMessage] = useState('')
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [imageToCrop, setImageToCrop] = useState(null)
+  const [privacySetting, setPrivacySetting] = useState('open')
+  const [savingPrivacy, setSavingPrivacy] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -28,15 +30,30 @@ function Settings() {
 
   const loadProfile = async () => {
     try {
-      const profile = await getUserProfile(user.uid)
+      const [profile, privacy] = await Promise.all([
+        getUserProfile(user.uid),
+        getPrivacySettings(user.uid)
+      ])
       if (profile) {
         setDisplayName(profile.displayName || '')
         setPhotoURL(profile.photoURL || '')
       }
+      setPrivacySetting(privacy || 'open')
     } catch (err) {
       console.error('Error loading profile:', err)
     }
     setLoadingProfile(false)
+  }
+
+  const handlePrivacyChange = async (newSetting) => {
+    setPrivacySetting(newSetting)
+    setSavingPrivacy(true)
+    try {
+      await updatePrivacySettings(user.uid, newSetting)
+    } catch (err) {
+      console.error('Error saving privacy settings:', err)
+    }
+    setSavingPrivacy(false)
   }
 
   const handleSaveProfile = async () => {
@@ -223,6 +240,64 @@ function Settings() {
         </div>
       )}
 
+      {/* Privacy Settings */}
+      {user && isFirebaseEnabled() && (
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Privacy Settings</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Control who can see your profile and follow you
+          </p>
+
+          <div className="space-y-3">
+            {[
+              {
+                value: 'open',
+                label: 'Open to All',
+                description: 'Any verified user can see your profile and follow you'
+              },
+              {
+                value: 'verified',
+                label: 'Verified Users Only',
+                description: 'Only verified (approved) users can discover your profile'
+              },
+              {
+                value: 'followers',
+                label: 'Followers Only',
+                description: 'Only people who already follow you can see your profile. New followers must send a request.'
+              }
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handlePrivacyChange(option.value)}
+                disabled={savingPrivacy}
+                className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all text-left ${
+                  privacySetting === option.value
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  privacySetting === option.value
+                    ? 'border-primary-500 bg-primary-500'
+                    : 'border-gray-300'
+                }`}>
+                  {privacySetting === option.value && (
+                    <div className="w-2 h-2 rounded-full bg-white"></div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{option.label}</p>
+                  <p className="text-sm text-gray-500">{option.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-3">
+            All follow requests require acceptance regardless of privacy setting.
+          </p>
+        </div>
+      )}
+
       <div className="card p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Display Theme</h3>
         <div className="grid gap-4">
@@ -268,9 +343,9 @@ function Settings() {
           <p className="text-center text-cyan-400 font-mono">
             <span className="text-2xl">🎵</span> TECHNO MODE ACTIVATED <span className="text-2xl">🎵</span>
             <br />
-            <span className="text-sm">Playing: "I Want to be a Machine"</span>
+            <span className="text-sm">Now Playing: "I Want to be a Machine"</span>
             <br />
-            <span className="text-xs text-cyan-600 mt-2 block">Music opens in a new tab</span>
+            <span className="text-xs text-cyan-600 mt-2 block">Use the player in the bottom-right to control music</span>
           </p>
         </div>
       )}

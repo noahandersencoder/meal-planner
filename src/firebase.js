@@ -760,9 +760,77 @@ export async function getCookingHistory(userId) {
   return entries.sort((a, b) => b.createdAt - a.createdAt)
 }
 
+// ============ PRIVACY SETTINGS ============
+
+// Privacy levels: 'open' (anyone), 'verified' (verified/approved users only), 'followers' (followers only)
+export async function updatePrivacySettings(userId, privacyLevel) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const privacyRef = ref(database, `userProfiles/${userId}/privacy`)
+  await set(privacyRef, privacyLevel)
+}
+
+export async function getPrivacySettings(userId) {
+  if (!firebaseEnabled) return 'open'
+  const privacyRef = ref(database, `userProfiles/${userId}/privacy`)
+  const snapshot = await get(privacyRef)
+  return snapshot.exists() ? snapshot.val() : 'open'
+}
+
 // ============ SOCIAL CONNECTIONS ============
 
-// Follow a user
+// Send a follow request (instead of immediately following)
+export async function sendFollowRequest(userId, targetUserId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const requestRef = ref(database, `followRequests/${targetUserId}/${userId}`)
+  await set(requestRef, { requestedAt: Date.now(), status: 'pending' })
+}
+
+// Accept a follow request
+export async function acceptFollowRequest(userId, requesterId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+
+  // Add to following/followers
+  const followingRef = ref(database, `following/${requesterId}/${userId}`)
+  await set(followingRef, { followedAt: Date.now() })
+
+  const followerRef = ref(database, `followers/${userId}/${requesterId}`)
+  await set(followerRef, { followedAt: Date.now() })
+
+  // Remove the request
+  const requestRef = ref(database, `followRequests/${userId}/${requesterId}`)
+  await set(requestRef, null)
+}
+
+// Decline a follow request
+export async function declineFollowRequest(userId, requesterId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const requestRef = ref(database, `followRequests/${userId}/${requesterId}`)
+  await set(requestRef, null)
+}
+
+// Get pending follow requests for a user
+export async function getFollowRequests(userId) {
+  if (!firebaseEnabled) return []
+  const requestsRef = ref(database, `followRequests/${userId}`)
+  const snapshot = await get(requestsRef)
+  if (!snapshot.exists()) return []
+
+  const requests = []
+  snapshot.forEach((child) => {
+    requests.push({ requesterId: child.key, ...child.val() })
+  })
+  return requests
+}
+
+// Check if a follow request is pending
+export async function hasPendingFollowRequest(userId, targetUserId) {
+  if (!firebaseEnabled) return false
+  const requestRef = ref(database, `followRequests/${targetUserId}/${userId}`)
+  const snapshot = await get(requestRef)
+  return snapshot.exists()
+}
+
+// Follow a user (direct follow, used when no request needed)
 export async function followUser(userId, targetUserId) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')
 
@@ -786,6 +854,13 @@ export async function unfollowUser(userId, targetUserId) {
   // Remove from followers list
   const followerRef = ref(database, `followers/${targetUserId}/${userId}`)
   await set(followerRef, null)
+}
+
+// Cancel a pending follow request
+export async function cancelFollowRequest(userId, targetUserId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const requestRef = ref(database, `followRequests/${targetUserId}/${userId}`)
+  await set(requestRef, null)
 }
 
 // Check if user is following another user
@@ -854,7 +929,7 @@ export async function getFollowingActivity(userId, limit = 20) {
     .slice(0, limit)
 }
 
-// Get all users (for discovery) - returns basic profiles
+// Get all users (for discovery) - returns basic profiles with privacy settings
 export async function getAllUsers() {
   if (!firebaseEnabled) return []
   const profilesRef = ref(database, 'userProfiles')
@@ -868,7 +943,8 @@ export async function getAllUsers() {
       oderId: child.key,
       displayName: profile.displayName,
       email: profile.email,
-      photoURL: profile.photoURL
+      photoURL: profile.photoURL,
+      privacy: profile.privacy || 'open'
     })
   })
   return users

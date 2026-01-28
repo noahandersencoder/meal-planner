@@ -7,6 +7,12 @@ import {
   getFollowingActivity,
   followUser,
   unfollowUser,
+  sendFollowRequest,
+  cancelFollowRequest,
+  getFollowRequests,
+  acceptFollowRequest,
+  declineFollowRequest,
+  hasPendingFollowRequest,
   likeHistoryEntry,
   unlikeHistoryEntry,
   getHistoryEntryLikes,
@@ -273,14 +279,72 @@ function ActivityCard({ entry, currentUser }) {
   )
 }
 
+// Follow Request Card
+function FollowRequestCard({ requesterId, onAccept, onDecline }) {
+  const [profile, setProfile] = useState(null)
+
+  useEffect(() => {
+    getUserProfile(requesterId).then(setProfile).catch(console.error)
+  }, [requesterId])
+
+  if (!profile) return null
+
+  return (
+    <div className="card p-4">
+      <div className="flex items-center gap-3">
+        <Link to={`/user/${requesterId}`}>
+          {profile.photoURL ? (
+            <img
+              src={profile.photoURL}
+              alt={profile.displayName || profile.email}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+              <span className="text-primary-600 font-medium">
+                {(profile.displayName || profile.email)?.[0]?.toUpperCase()}
+              </span>
+            </div>
+          )}
+        </Link>
+        <div className="flex-1 min-w-0">
+          <Link
+            to={`/user/${requesterId}`}
+            className="font-medium text-gray-900 hover:text-primary-600 truncate block"
+          >
+            {profile.displayName || profile.email}
+          </Link>
+          <p className="text-xs text-gray-400">Wants to follow you</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onAccept}
+            className="text-sm px-3 py-1 rounded-full font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          >
+            Accept
+          </button>
+          <button
+            onClick={onDecline}
+            className="text-sm px-3 py-1 rounded-full font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+          >
+            Decline
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Community() {
-  const { user } = useAuth()
+  const { user, isApproved } = useAuth()
   const [activeTab, setActiveTab] = useState('activity')
   const [users, setUsers] = useState([])
   const [following, setFollowing] = useState([])
   const [activity, setActivity] = useState([])
   const [loading, setLoading] = useState(true)
   const [followingIds, setFollowingIds] = useState(new Set())
+  const [pendingRequestIds, setPendingRequestIds] = useState(new Set())
+  const [incomingRequests, setIncomingRequests] = useState([])
 
   useEffect(() => {
     if (isFirebaseEnabled()) {
@@ -292,16 +356,44 @@ function Community() {
 
   const loadData = async () => {
     try {
-      const [allUsers, followingList, activityFeed, userRecipes] = await Promise.all([
+      const [allUsers, followingList, activityFeed, userRecipes, requests] = await Promise.all([
         getAllUsers(),
         user ? getFollowing(user.uid) : [],
         user ? getFollowingActivity(user.uid, 30) : [],
-        getApprovedRecipes()
+        getApprovedRecipes(),
+        user ? getFollowRequests(user.uid) : []
       ])
 
-      setUsers(allUsers.filter(u => u.oderId !== user?.uid))
+      const followingIdSet = new Set(followingList.map(f => f.oderId))
+
+      // Filter users based on privacy settings:
+      // - Non-verified (not approved) users can't see the discover tab at all (handled in UI)
+      // - Filter based on each user's privacy setting
+      const filteredUsers = allUsers
+        .filter(u => u.oderId !== user?.uid)
+        .filter(u => {
+          if (!user || !isApproved) return false // must be verified
+          if (u.privacy === 'followers') return followingIdSet.has(u.oderId) // only visible to followers
+          if (u.privacy === 'verified') return isApproved // only visible to verified users
+          return true // 'open' = visible to all verified users
+        })
+
+      setUsers(filteredUsers)
       setFollowing(followingList)
-      setFollowingIds(new Set(followingList.map(f => f.oderId)))
+      setFollowingIds(followingIdSet)
+      setIncomingRequests(requests)
+
+      // Check which users we have pending requests to
+      if (user) {
+        const allOtherUsers = allUsers.filter(u => u.oderId !== user.uid)
+        const pendingChecks = await Promise.all(
+          allOtherUsers.map(async (u) => {
+            const pending = await hasPendingFollowRequest(user.uid, u.oderId)
+            return pending ? u.oderId : null
+          })
+        )
+        setPendingRequestIds(new Set(pendingChecks.filter(Boolean)))
+      }
 
       // Get own activity if logged in
       let ownActivity = []
@@ -351,21 +443,52 @@ function Community() {
     if (!user) return
 
     const isCurrentlyFollowing = followingIds.has(targetUserId)
+    const hasPending = pendingRequestIds.has(targetUserId)
 
     try {
       if (isCurrentlyFollowing) {
+        // Unfollow
         await unfollowUser(user.uid, targetUserId)
         setFollowingIds(prev => {
           const newSet = new Set(prev)
           newSet.delete(targetUserId)
           return newSet
         })
+      } else if (hasPending) {
+        // Cancel pending request
+        await cancelFollowRequest(user.uid, targetUserId)
+        setPendingRequestIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(targetUserId)
+          return newSet
+        })
       } else {
-        await followUser(user.uid, targetUserId)
-        setFollowingIds(prev => new Set([...prev, targetUserId]))
+        // Send follow request
+        await sendFollowRequest(user.uid, targetUserId)
+        setPendingRequestIds(prev => new Set([...prev, targetUserId]))
       }
     } catch (err) {
       console.error('Error updating follow status:', err)
+    }
+  }
+
+  const handleAcceptRequest = async (requesterId) => {
+    if (!user) return
+    try {
+      await acceptFollowRequest(user.uid, requesterId)
+      setIncomingRequests(prev => prev.filter(r => r.requesterId !== requesterId))
+    } catch (err) {
+      console.error('Error accepting follow request:', err)
+    }
+  }
+
+  const handleDeclineRequest = async (requesterId) => {
+    if (!user) return
+    try {
+      await declineFollowRequest(user.uid, requesterId)
+      setIncomingRequests(prev => prev.filter(r => r.requesterId !== requesterId))
+    } catch (err) {
+      console.error('Error declining follow request:', err)
     }
   }
 
@@ -447,56 +570,98 @@ function Community() {
       {/* Discover People Tab */}
       {activeTab === 'discover' && (
         <div>
-          {users.length === 0 ? (
+          {/* Non-verified users can't see discover tab */}
+          {!user || !isApproved ? (
             <div className="card p-8 text-center">
-              <p className="text-gray-500">No other users yet. Be the first to invite friends!</p>
+              <div className="text-5xl mb-4">🔒</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Verified Access Only</h3>
+              <p className="text-gray-500">
+                {!user ? 'Log in with a verified account to discover people.' : 'Your account needs to be verified to discover people.'}
+              </p>
+              {!user && (
+                <Link to="/login" className="btn btn-primary mt-4 inline-block">Log In</Link>
+              )}
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {users.map((profile) => (
-                <div key={profile.oderId} className="card p-4">
-                  <div className="flex items-center gap-3">
-                    <Link to={`/user/${profile.oderId}`}>
-                      {profile.photoURL ? (
-                        <img
-                          src={profile.photoURL}
-                          alt={profile.displayName || profile.email}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                          <span className="text-primary-600 font-medium">
-                            {(profile.displayName || profile.email)?.[0]?.toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                    </Link>
-
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        to={`/user/${profile.oderId}`}
-                        className="font-medium text-gray-900 hover:text-primary-600 truncate block"
-                      >
-                        {profile.displayName || profile.email}
-                      </Link>
-                    </div>
-
-                    {user && (
-                      <button
-                        onClick={() => handleFollow(profile.oderId)}
-                        className={`text-sm px-3 py-1 rounded-full font-medium transition-colors ${
-                          followingIds.has(profile.oderId)
-                            ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            : 'bg-primary-600 text-white hover:bg-primary-700'
-                        }`}
-                      >
-                        {followingIds.has(profile.oderId) ? 'Following' : 'Follow'}
-                      </button>
-                    )}
+            <>
+              {/* Incoming Follow Requests */}
+              {incomingRequests.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">Follow Requests ({incomingRequests.length})</h3>
+                  <div className="space-y-3">
+                    {incomingRequests.map((req) => (
+                      <FollowRequestCard
+                        key={req.requesterId}
+                        requesterId={req.requesterId}
+                        onAccept={() => handleAcceptRequest(req.requesterId)}
+                        onDecline={() => handleDeclineRequest(req.requesterId)}
+                      />
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+
+              {users.length === 0 ? (
+                <div className="card p-8 text-center">
+                  <p className="text-gray-500">No other users to discover right now.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {users.map((profile) => (
+                    <div key={profile.oderId} className="card p-4">
+                      <div className="flex items-center gap-3">
+                        <Link to={`/user/${profile.oderId}`}>
+                          {profile.photoURL ? (
+                            <img
+                              src={profile.photoURL}
+                              alt={profile.displayName || profile.email}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                              <span className="text-primary-600 font-medium">
+                                {(profile.displayName || profile.email)?.[0]?.toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </Link>
+
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            to={`/user/${profile.oderId}`}
+                            className="font-medium text-gray-900 hover:text-primary-600 truncate block"
+                          >
+                            {profile.displayName || profile.email}
+                          </Link>
+                          {profile.privacy === 'followers' && (
+                            <span className="text-xs text-gray-400">Private account</span>
+                          )}
+                        </div>
+
+                        {user && (
+                          <button
+                            onClick={() => handleFollow(profile.oderId)}
+                            className={`text-sm px-3 py-1 rounded-full font-medium transition-colors ${
+                              followingIds.has(profile.oderId)
+                                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                : pendingRequestIds.has(profile.oderId)
+                                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                                  : 'bg-primary-600 text-white hover:bg-primary-700'
+                            }`}
+                          >
+                            {followingIds.has(profile.oderId)
+                              ? 'Following'
+                              : pendingRequestIds.has(profile.oderId)
+                                ? 'Requested'
+                                : 'Follow'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
