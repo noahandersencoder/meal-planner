@@ -15,9 +15,7 @@ const categoryIcons = {
   other: '📦',
 }
 
-function GroceryItem({ item, checked, onToggle, onRemove, showCategory = false, multiplier = 1 }) {
-  const scaledAmount = Math.round(item.amount * multiplier * 100) / 100
-  const scaledCost = Math.round(item.cost * multiplier * 100) / 100
+function GroceryItem({ item, checked, onToggle, onRemove, showCategory = false }) {
   const [showTooltip, setShowTooltip] = useState(false)
 
   const handleRemove = (e) => {
@@ -63,12 +61,12 @@ function GroceryItem({ item, checked, onToggle, onRemove, showCategory = false, 
           {item.name}
         </span>
         <span className="text-gray-500 ml-2">
-          {scaledAmount} {item.unit}
+          {item.amount} {item.unit}
         </span>
       </div>
 
       <span className="text-sm text-gray-400 mr-2">
-        ${scaledCost.toFixed(2)}
+        ${(item.cost || 0).toFixed(2)}
       </span>
 
       {onRemove && (
