@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import recipes from '../data/recipes.json'
@@ -37,8 +37,12 @@ const categoryLabels = {
 function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, isAdmin, isApproved } = useAuth()
   const { addRecipeToDay, preferences } = useStore()
+
+  // Get servings from navigation state (when coming from meal plan)
+  const initialServings = location.state?.servings || null
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(true)
   const [creatorProfile, setCreatorProfile] = useState(null)
@@ -55,7 +59,7 @@ function RecipeDetail() {
   const [iMadeThisReview, setIMadeThisReview] = useState('')
   const [savingHistory, setSavingHistory] = useState(false)
   const [historyImageToCrop, setHistoryImageToCrop] = useState(null)
-  const [adjustedServings, setAdjustedServings] = useState(null) // null means use recipe default
+  const [adjustedServings, setAdjustedServings] = useState(initialServings) // null means use recipe default
   const photoInputRef = useRef(null)
   const historyPhotoInputRef = useRef(null)
 
@@ -596,6 +600,14 @@ function RecipeDetail() {
           <h2 className="text-xl font-bold text-gray-900">Ingredients</h2>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">Servings:</span>
+            {adjustedServings && adjustedServings !== recipe.servings && (
+              <button
+                onClick={() => setAdjustedServings(null)}
+                className="text-xs text-primary-600 hover:text-primary-700 mr-1"
+              >
+                Reset
+              </button>
+            )}
             <button
               onClick={() => setAdjustedServings(Math.max(1, currentServings - 1))}
               className="w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors flex items-center justify-center"
@@ -609,14 +621,6 @@ function RecipeDetail() {
             >
               +
             </button>
-            {adjustedServings && adjustedServings !== recipe.servings && (
-              <button
-                onClick={() => setAdjustedServings(null)}
-                className="text-xs text-primary-600 hover:text-primary-700 ml-1"
-              >
-                Reset
-              </button>
-            )}
           </div>
         </div>
         {adjustedServings && adjustedServings !== recipe.servings && (

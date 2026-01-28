@@ -45,11 +45,12 @@ function MealPlanDay({ dayIndex, recipes, onRemoveRecipe, onAddClick }) {
               >
                 <Link
                   to={`/recipe/${recipe.id}`}
+                  state={{ servings: recipe.servings }}
                   className="flex-1 hover:text-primary-600 transition-colors"
                 >
                   <span className="font-medium text-gray-800">{recipe.name}</span>
                   <span className="text-sm text-gray-500 ml-2">
-                    {recipe.prepTime + recipe.cookTime} min
+                    {recipe.prepTime + recipe.cookTime} min • {recipe.servings} servings
                   </span>
                 </Link>
                 <button
