@@ -131,6 +131,8 @@ function RecipeDetail() {
   }
 
   const totalTime = recipe.prepTime + recipe.cookTime
+  const currentServings = adjustedServings || recipe.servings
+  const servingMultiplier = currentServings / recipe.servings
   const baseTotalCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0)
   const scaledTotalCost = baseTotalCost * servingMultiplier
 
@@ -320,10 +322,6 @@ function RecipeDetail() {
     }
     setSavingHistory(false)
   }
-
-  // Calculate the serving multiplier
-  const currentServings = adjustedServings || recipe.servings
-  const servingMultiplier = currentServings / recipe.servings
 
   // Scale ingredients based on serving adjustment
   const scaledIngredients = recipe.ingredients.map(ing => ({
