@@ -1,16 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
-import { useAuth } from '../context/AuthContext'
 import MealPlanDay from '../components/MealPlanDay'
 import recipes from '../data/recipes.json'
-import {
-  getApprovedRecipes,
-  isFirebaseEnabled,
-  saveUserMealPlan,
-  loadUserMealPlan,
-  subscribeToUserMealPlan,
-} from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled } from '../firebase'
 
 const dayOptions = [
   { value: 3, label: '3 Days' },
@@ -199,7 +192,6 @@ function RandomPlanModal({ onClose, onGenerate, days }) {
 
 function MealPlan() {
   const navigate = useNavigate()
-  const { user, loading: authLoading } = useAuth()
   const {
     mealPlan,
     setMealPlanDays,
@@ -209,16 +201,10 @@ function MealPlan() {
     getMealPlanTotalCost,
     getAllMealPlanRecipes,
     addRecipeToDay,
-    setMealPlanFromCloud,
   } = useStore()
 
   const [showRandomModal, setShowRandomModal] = useState(false)
   const [userRecipes, setUserRecipes] = useState([])
-
-  // Meal plan sync refs
-  const isFromFirebase = useRef(false)
-  const saveTimeout = useRef(null)
-  const initialLoadDone = useRef(false)
 
   // Load user-submitted recipes
   useEffect(() => {
@@ -226,62 +212,6 @@ function MealPlan() {
       getApprovedRecipes().then(setUserRecipes).catch(console.error)
     }
   }, [])
-
-  // Load meal plan from cloud on login
-  useEffect(() => {
-    if (authLoading) return
-    if (!isFirebaseEnabled() || !user) {
-      initialLoadDone.current = true
-      return
-    }
-
-    isFromFirebase.current = true
-    loadUserMealPlan(user.uid)
-      .then((data) => {
-        if (data && data.mealPlan) {
-          setMealPlanFromCloud(data.mealPlan)
-        }
-        initialLoadDone.current = true
-        setTimeout(() => { isFromFirebase.current = false }, 100)
-      })
-      .catch((err) => {
-        console.error('Failed to load meal plan:', err)
-        initialLoadDone.current = true
-        isFromFirebase.current = false
-      })
-  }, [user, authLoading])
-
-  // Subscribe to real-time meal plan updates
-  useEffect(() => {
-    if (!isFirebaseEnabled() || !user) return
-
-    const unsubscribe = subscribeToUserMealPlan(user.uid, (data) => {
-      if (data && data.mealPlan && initialLoadDone.current) {
-        isFromFirebase.current = true
-        setMealPlanFromCloud(data.mealPlan)
-        setTimeout(() => { isFromFirebase.current = false }, 100)
-      }
-    })
-
-    return () => unsubscribe()
-  }, [user])
-
-  // Sync meal plan changes to cloud (debounced)
-  useEffect(() => {
-    if (!isFirebaseEnabled() || !user) return
-    if (!initialLoadDone.current) return
-    if (isFromFirebase.current) return
-
-    if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    saveTimeout.current = setTimeout(() => {
-      saveUserMealPlan(user.uid, { mealPlan })
-        .catch((err) => console.error('Meal plan sync error:', err))
-    }, 500)
-
-    return () => {
-      if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    }
-  }, [mealPlan, user])
 
   // All available recipes
   const allRecipes = useMemo(() => {

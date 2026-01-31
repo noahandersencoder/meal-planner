@@ -26,10 +26,12 @@ const useStore = create(
         days: 7,
         recipes: {},
       },
+      mealPlanUpdatedAt: 0,
 
       setMealPlanDays: (days) =>
         set((state) => ({
           mealPlan: { ...state.mealPlan, days },
+          mealPlanUpdatedAt: Date.now(),
         })),
 
       addRecipeToDay: (day, recipe) =>
@@ -41,6 +43,7 @@ const useStore = create(
               [day]: [...(state.mealPlan.recipes[day] || []), recipe],
             },
           },
+          mealPlanUpdatedAt: Date.now(),
         })),
 
       removeRecipeFromDay: (day, recipeId) =>
@@ -54,21 +57,24 @@ const useStore = create(
               ),
             },
           },
+          mealPlanUpdatedAt: Date.now(),
         })),
 
       clearMealPlan: () =>
         set((state) => ({
           mealPlan: { ...state.mealPlan, recipes: {} },
+          mealPlanUpdatedAt: Date.now(),
         })),
 
       getAllMealPlanRecipes: () => {
         const { mealPlan } = get()
-        return Object.values(mealPlan.recipes).flat()
+        return Object.values(mealPlan.recipes).flat().filter(Boolean)
       },
 
       getMealPlanTotalCost: () => {
         const recipes = get().getAllMealPlanRecipes()
         return recipes.reduce((total, recipe) => {
+          if (!recipe?.ingredients) return total
           const recipeCost = recipe.ingredients.reduce(
             (sum, ing) => sum + (ing.cost || 0),
             0
@@ -80,23 +86,28 @@ const useStore = create(
       // Set meal plan from cloud (for sync)
       // Firebase drops empty objects and converts numeric-keyed objects to arrays,
       // so we need to normalize the data back to the expected shape.
-      setMealPlanFromCloud: (cloudPlan) => {
+      setMealPlanFromCloud: (cloudPlan, cloudUpdatedAt) => {
+        const { mealPlanUpdatedAt } = get()
+        // Only apply cloud data if it's newer than local
+        if (cloudUpdatedAt && cloudUpdatedAt <= mealPlanUpdatedAt) return
+
         const recipes = {}
         if (cloudPlan.recipes) {
-          // Firebase may return an array (sparse) or object — normalize to object
           const src = cloudPlan.recipes
-          const keys = Array.isArray(src) ? src.keys() : Object.keys(src)
+          const keys = Array.isArray(src) ? [...src.keys()] : Object.keys(src)
           for (const key of keys) {
             const val = src[key]
             if (val && Array.isArray(val)) {
-              recipes[key] = val
+              recipes[key] = val.filter(Boolean)
             } else if (val) {
-              // Single recipe stored without array wrapper
               recipes[key] = [val]
             }
           }
         }
-        set({ mealPlan: { days: cloudPlan.days || 7, recipes } })
+        set({
+          mealPlan: { days: cloudPlan.days || 7, recipes },
+          mealPlanUpdatedAt: cloudUpdatedAt || Date.now(),
+        })
       },
 
       // Multiple Grocery Lists
@@ -402,6 +413,7 @@ const useStore = create(
       partialize: (state) => ({
         preferences: state.preferences,
         mealPlan: state.mealPlan,
+        mealPlanUpdatedAt: state.mealPlanUpdatedAt,
         groceryLists: state.groceryLists,
         activeListId: state.activeListId,
         sharedListId: state.sharedListId,

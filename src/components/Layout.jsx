@@ -3,9 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Navigation from './Navigation'
 import { useAuth } from '../context/AuthContext'
 import { logOut, isFirebaseEnabled, getUserProfile } from '../firebase'
+import useMealPlanSync from '../hooks/useMealPlanSync'
 
 function Layout({ children }) {
   const { user, loading, isAdmin, isApproved } = useAuth()
+  useMealPlanSync()
   const [userProfile, setUserProfile] = useState(null)
   const location = useLocation()
   const navigate = useNavigate()
