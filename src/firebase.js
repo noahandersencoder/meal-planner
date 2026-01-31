@@ -118,6 +118,33 @@ export function subscribeToUserList(userId, callback) {
   })
 }
 
+// Save meal plan for a user
+export async function saveUserMealPlan(userId, data) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const planRef = ref(database, `users/${userId}/mealPlan`)
+  await set(planRef, { ...data, updatedAt: Date.now() })
+}
+
+// Load meal plan for a user
+export async function loadUserMealPlan(userId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const planRef = ref(database, `users/${userId}/mealPlan`)
+  const snapshot = await get(planRef)
+  if (snapshot.exists()) return snapshot.val()
+  return null
+}
+
+// Subscribe to user's meal plan updates
+export function subscribeToUserMealPlan(userId, callback) {
+  if (!firebaseEnabled) return () => {}
+  const planRef = ref(database, `users/${userId}/mealPlan`)
+  return onValue(planRef, (snapshot) => {
+    if (snapshot.exists()) {
+      callback(snapshot.val())
+    }
+  })
+}
+
 // Legacy functions for shared lists (keeping for backwards compatibility)
 export async function saveGroceryList(listId, data) {
   if (!firebaseEnabled) {

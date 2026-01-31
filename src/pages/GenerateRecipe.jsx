@@ -287,7 +287,8 @@ function GenerateRecipe() {
                   <input
                     type="number"
                     value={generatedRecipe.prepTime}
-                    onChange={(e) => updateRecipeField('prepTime', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateRecipeField('prepTime', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                    onBlur={(e) => { if (e.target.value === '') updateRecipeField('prepTime', 0) }}
                     className="input"
                     min="0"
                   />
@@ -297,7 +298,8 @@ function GenerateRecipe() {
                   <input
                     type="number"
                     value={generatedRecipe.cookTime}
-                    onChange={(e) => updateRecipeField('cookTime', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateRecipeField('cookTime', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                    onBlur={(e) => { if (e.target.value === '') updateRecipeField('cookTime', 0) }}
                     className="input"
                     min="0"
                   />
@@ -307,7 +309,8 @@ function GenerateRecipe() {
                   <input
                     type="number"
                     value={generatedRecipe.servings}
-                    onChange={(e) => updateRecipeField('servings', parseInt(e.target.value) || 1)}
+                    onChange={(e) => updateRecipeField('servings', e.target.value === '' ? '' : parseInt(e.target.value) || 1)}
+                    onBlur={(e) => { if (e.target.value === '') updateRecipeField('servings', 1) }}
                     className="input"
                     min="1"
                   />
@@ -384,7 +387,8 @@ function GenerateRecipe() {
                     <input
                       type="number"
                       value={ing.amount}
-                      onChange={(e) => updateIngredientField(idx, 'amount', parseFloat(e.target.value) || 0)}
+                      onChange={(e) => updateIngredientField(idx, 'amount', e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                      onBlur={(e) => { if (e.target.value === '') updateIngredientField(idx, 'amount', 0) }}
                       className="input w-20"
                       min="0"
                       step="0.25"
@@ -417,7 +421,8 @@ function GenerateRecipe() {
                     <input
                       type="number"
                       value={ing.cost}
-                      onChange={(e) => updateIngredientField(idx, 'cost', parseFloat(e.target.value) || 0)}
+                      onChange={(e) => updateIngredientField(idx, 'cost', e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                      onBlur={(e) => { if (e.target.value === '') updateIngredientField(idx, 'cost', 0) }}
                       className="input w-20"
                       placeholder="$"
                       min="0"

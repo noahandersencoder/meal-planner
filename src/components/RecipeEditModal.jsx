@@ -214,7 +214,8 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
                 <input
                   type="number"
                   value={editedRecipe.prepTime}
-                  onChange={(e) => updateField('prepTime', parseInt(e.target.value) || 0)}
+                  onChange={(e) => updateField('prepTime', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                  onBlur={(e) => { if (e.target.value === '') updateField('prepTime', 0) }}
                   className="input"
                 />
               </div>
@@ -225,7 +226,8 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
                 <input
                   type="number"
                   value={editedRecipe.cookTime}
-                  onChange={(e) => updateField('cookTime', parseInt(e.target.value) || 0)}
+                  onChange={(e) => updateField('cookTime', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                  onBlur={(e) => { if (e.target.value === '') updateField('cookTime', 0) }}
                   className="input"
                 />
               </div>
@@ -239,7 +241,8 @@ function RecipeEditModal({ recipe, onSave, onClose, saving }) {
                 <input
                   type="number"
                   value={editedRecipe.servings}
-                  onChange={(e) => updateField('servings', parseInt(e.target.value) || 1)}
+                  onChange={(e) => updateField('servings', e.target.value === '' ? '' : parseInt(e.target.value) || 1)}
+                  onBlur={(e) => { if (e.target.value === '') updateField('servings', 1) }}
                   className="input"
                 />
               </div>

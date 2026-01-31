@@ -343,7 +343,8 @@ function RecipeSubmit() {
               <input
                 type="number"
                 value={recipe.prepTime}
-                onChange={(e) => updateRecipe('prepTime', parseInt(e.target.value) || 0)}
+                onChange={(e) => updateRecipe('prepTime', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                onBlur={(e) => { if (e.target.value === '') updateRecipe('prepTime', 0) }}
                 className="input"
                 min="0"
               />
@@ -355,7 +356,8 @@ function RecipeSubmit() {
               <input
                 type="number"
                 value={recipe.cookTime}
-                onChange={(e) => updateRecipe('cookTime', parseInt(e.target.value) || 0)}
+                onChange={(e) => updateRecipe('cookTime', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                onBlur={(e) => { if (e.target.value === '') updateRecipe('cookTime', 0) }}
                 className="input"
                 min="0"
               />
@@ -370,7 +372,8 @@ function RecipeSubmit() {
               <input
                 type="number"
                 value={recipe.servings}
-                onChange={(e) => updateRecipe('servings', parseInt(e.target.value) || 1)}
+                onChange={(e) => updateRecipe('servings', e.target.value === '' ? '' : parseInt(e.target.value) || 1)}
+                onBlur={(e) => { if (e.target.value === '') updateRecipe('servings', 1) }}
                 className="input"
                 min="1"
               />

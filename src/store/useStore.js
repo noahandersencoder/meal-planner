@@ -77,6 +77,9 @@ const useStore = create(
         }, 0)
       },
 
+      // Set meal plan from cloud (for sync)
+      setMealPlanFromCloud: (mealPlan) => set({ mealPlan }),
+
       // Multiple Grocery Lists
       groceryLists: {},
       activeListId: null,

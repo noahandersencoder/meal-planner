@@ -14,6 +14,12 @@ const TECHNO_VIDEO_ID = 'BOEm1ZmvTCs'
 
 function TechnoPlayer({ playing, onClose }) {
   const [minimized, setMinimized] = useState(false)
+  const [started, setStarted] = useState(false)
+
+  // Reset started state when player is closed and reopened
+  useEffect(() => {
+    if (!playing) setStarted(false)
+  }, [playing])
 
   if (!playing) return null
 
@@ -35,7 +41,7 @@ function TechnoPlayer({ playing, onClose }) {
         <div className="bg-black border-2 border-cyan-400 rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-3 py-2 bg-gray-900">
             <span className="text-cyan-400 text-xs font-mono truncate flex-1">
-              Now Playing: I Want to be a Machine
+              {started ? 'Now Playing' : 'Tap to Play'}: I Want to be a Machine
             </span>
             <div className="flex gap-1 ml-2">
               <button
@@ -54,17 +60,26 @@ function TechnoPlayer({ playing, onClose }) {
               </button>
             </div>
           </div>
-          <div className="aspect-video">
-            <iframe
-              src={`https://www.youtube.com/embed/${TECHNO_VIDEO_ID}?autoplay=1&start=4&loop=1&playlist=${TECHNO_VIDEO_ID}`}
-              title="Techno Mode Music"
-              width="100%"
-              height="100%"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-              className="border-0"
-            />
-          </div>
+          {!started ? (
+            <button
+              onClick={() => setStarted(true)}
+              className="w-full aspect-video flex items-center justify-center bg-gray-950 hover:bg-gray-900 transition-colors"
+            >
+              <span className="text-5xl">▶️</span>
+            </button>
+          ) : (
+            <div className="aspect-video">
+              <iframe
+                src={`https://www.youtube.com/embed/${TECHNO_VIDEO_ID}?autoplay=1&start=4&loop=1&playlist=${TECHNO_VIDEO_ID}`}
+                title="Techno Mode Music"
+                width="100%"
+                height="100%"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                className="border-0"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
