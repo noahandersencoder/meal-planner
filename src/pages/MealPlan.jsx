@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
+import { useAuth } from '../context/AuthContext'
 import MealPlanDay from '../components/MealPlanDay'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled } from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled, loadUserMealPlan } from '../firebase'
 
 const dayOptions = [
   { value: 3, label: '3 Days' },
@@ -192,6 +193,7 @@ function RandomPlanModal({ onClose, onGenerate, days }) {
 
 function MealPlan() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const {
     mealPlan,
     setMealPlanDays,
@@ -201,10 +203,26 @@ function MealPlan() {
     getMealPlanTotalCost,
     getAllMealPlanRecipes,
     addRecipeToDay,
+    setMealPlanFromCloud,
   } = useStore()
 
   const [showRandomModal, setShowRandomModal] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [userRecipes, setUserRecipes] = useState([])
+
+  const handleSync = async () => {
+    if (!isFirebaseEnabled() || !user) return
+    setSyncing(true)
+    try {
+      const data = await loadUserMealPlan(user.uid)
+      if (data && data.mealPlan) {
+        setMealPlanFromCloud(data.mealPlan, Infinity)
+      }
+    } catch (err) {
+      console.error('Sync failed:', err)
+    }
+    setSyncing(false)
+  }
 
   // Load user-submitted recipes
   useEffect(() => {
@@ -358,14 +376,25 @@ function MealPlan() {
               : 'Plan your meals for the week'}
           </p>
         </div>
-        {totalRecipes > 0 && (
-          <button
-            onClick={clearMealPlan}
-            className="text-sm text-red-600 hover:text-red-700"
-          >
-            Clear All
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {isFirebaseEnabled() && user && (
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="text-sm text-primary-600 hover:text-primary-700 disabled:opacity-50"
+            >
+              {syncing ? 'Syncing...' : 'Sync'}
+            </button>
+          )}
+          {totalRecipes > 0 && (
+            <button
+              onClick={clearMealPlan}
+              className="text-sm text-red-600 hover:text-red-700"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-2">

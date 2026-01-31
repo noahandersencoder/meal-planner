@@ -184,8 +184,10 @@ const useStore = create(
       setActiveList: (listId) => set({ activeListId: listId }),
 
       getActiveList: () => {
-        const { groceryLists, activeListId, ensureActiveList } = get()
+        const { activeListId, ensureActiveList } = get()
         const id = activeListId || ensureActiveList()
+        // Re-read groceryLists after ensureActiveList may have created one
+        const { groceryLists } = get()
         return groceryLists[id] || { items: [], checkedItems: {} }
       },
 
