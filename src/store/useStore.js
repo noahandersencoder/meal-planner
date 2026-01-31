@@ -78,7 +78,26 @@ const useStore = create(
       },
 
       // Set meal plan from cloud (for sync)
-      setMealPlanFromCloud: (mealPlan) => set({ mealPlan }),
+      // Firebase drops empty objects and converts numeric-keyed objects to arrays,
+      // so we need to normalize the data back to the expected shape.
+      setMealPlanFromCloud: (cloudPlan) => {
+        const recipes = {}
+        if (cloudPlan.recipes) {
+          // Firebase may return an array (sparse) or object — normalize to object
+          const src = cloudPlan.recipes
+          const keys = Array.isArray(src) ? src.keys() : Object.keys(src)
+          for (const key of keys) {
+            const val = src[key]
+            if (val && Array.isArray(val)) {
+              recipes[key] = val
+            } else if (val) {
+              // Single recipe stored without array wrapper
+              recipes[key] = [val]
+            }
+          }
+        }
+        set({ mealPlan: { days: cloudPlan.days || 7, recipes } })
+      },
 
       // Multiple Grocery Lists
       groceryLists: {},
