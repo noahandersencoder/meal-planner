@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 
 const categoryIcons = {
   produce: '🥬',
@@ -17,6 +17,14 @@ const categoryIcons = {
 
 function GroceryItem({ item, checked, onToggle, onRemove, showCategory = false }) {
   const [showTooltip, setShowTooltip] = useState(false)
+  const lastToggle = useRef(0)
+
+  const handleToggle = useCallback(() => {
+    const now = Date.now()
+    if (now - lastToggle.current < 400) return // Ignore rapid double-taps
+    lastToggle.current = now
+    onToggle()
+  }, [onToggle])
 
   const handleRemove = (e) => {
     e.stopPropagation()
@@ -27,7 +35,7 @@ function GroceryItem({ item, checked, onToggle, onRemove, showCategory = false }
 
   return (
     <div
-      onClick={onToggle}
+      onClick={handleToggle}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
       className={`relative flex items-center p-3 rounded-lg cursor-pointer transition-all group ${

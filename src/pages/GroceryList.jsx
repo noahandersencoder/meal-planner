@@ -326,10 +326,15 @@ function GroceryList() {
     }
   }, [isLoading, groceryLists])
 
-  // Auto-refresh grocery list from meal plan on page load
+  // Only auto-generate grocery list if the active list has no items yet
+  // (prevents wiping checked items when navigating back to the page)
   useEffect(() => {
-    if (!isLoading && getAllMealPlanRecipes().length > 0) {
-      generateGroceryList()
+    if (!isLoading) {
+      const list = getActiveList()
+      const hasItems = list.items && list.items.length > 0
+      if (!hasItems && getAllMealPlanRecipes().length > 0) {
+        generateGroceryList()
+      }
     }
   }, [isLoading])
 
