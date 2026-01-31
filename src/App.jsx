@@ -17,6 +17,7 @@ import CookingHistory from './pages/CookingHistory'
 import UserProfile from './pages/UserProfile'
 import Community from './pages/Community'
 import Profile from './pages/Profile'
+import InstallBanner from './components/InstallBanner'
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </Layout>
+        <InstallBanner />
       </AuthProvider>
     </ThemeProvider>
   )
