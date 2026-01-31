@@ -292,8 +292,9 @@ function GroceryList() {
   const [isLoading, setIsLoading] = useState(true)
   const [firebaseError, setFirebaseError] = useState(false)
 
-  // Track if update came from Firebase to prevent sync loops
+  // Track sync state to prevent loops
   const isFromFirebase = useRef(false)
+  const isSaving = useRef(false)
   const saveTimeout = useRef(null)
   const initialLoadDone = useRef(false)
 
@@ -382,12 +383,15 @@ function GroceryList() {
       })
   }, [user, authLoading])
 
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates from other devices
   useEffect(() => {
     if (!isFirebaseEnabled() || !user || firebaseError) return
 
     const unsubscribe = subscribeToUserList(user.uid, (data) => {
-      if (data && initialLoadDone.current) {
+      if (!initialLoadDone.current) return
+      // Skip echoes from our own saves
+      if (isSaving.current) return
+      if (data) {
         isFromFirebase.current = true
         if (data.groceryLists) {
           setGroceryListsFromCloud(data.groceryLists, data.activeListId)
@@ -409,10 +413,14 @@ function GroceryList() {
 
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
     saveTimeout.current = setTimeout(() => {
+      isSaving.current = true
       saveUserGroceryList(user.uid, { groceryLists, activeListId })
         .catch((err) => {
           console.error('Sync error:', err)
           setFirebaseError(true)
+        })
+        .finally(() => {
+          setTimeout(() => { isSaving.current = false }, 1000)
         })
     }, 500)
 

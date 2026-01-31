@@ -242,38 +242,28 @@ const useStore = create(
       },
 
       addItemToGroceryList: (item) => {
-        // First ensure we have an active list (this must happen outside set())
-        const { activeListId, groceryLists } = get()
-        let listId = activeListId
+        set((state) => {
+          let listId = state.activeListId
+          let lists = state.groceryLists
 
-        // If no active list, create one
-        if (!listId || !groceryLists[listId]) {
-          const defaultId = 'default-list'
-          if (!groceryLists[defaultId]) {
-            set({
-              groceryLists: {
-                ...groceryLists,
-                [defaultId]: {
-                  id: defaultId,
+          // Ensure we have an active list (create inline if needed)
+          if (!listId || !lists[listId]) {
+            listId = 'default-list'
+            if (!lists[listId]) {
+              lists = {
+                ...lists,
+                [listId]: {
+                  id: listId,
                   name: 'My Grocery List',
                   items: [],
                   checkedItems: {},
                   createdAt: Date.now()
                 }
-              },
-              activeListId: defaultId
-            })
-          } else {
-            set({ activeListId: defaultId })
+              }
+            }
           }
-          listId = defaultId
-        }
 
-        // Now add the item
-        set((state) => {
-          const list = state.groceryLists[listId]
-          if (!list) return state
-
+          const list = lists[listId]
           const key = `${item.name.toLowerCase()}-${item.unit}`
           const existingIndex = list.items.findIndex(i => i.id === key)
 
@@ -301,8 +291,9 @@ const useStore = create(
           }
 
           return {
+            activeListId: listId,
             groceryLists: {
-              ...state.groceryLists,
+              ...lists,
               [listId]: { ...list, items: newItems }
             }
           }
