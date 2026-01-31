@@ -12,13 +12,16 @@ const THEMES = {
 // Techno mode music - "I Want to be a Machine" YouTube embed
 const TECHNO_VIDEO_ID = 'BOEm1ZmvTCs'
 
+const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+
 function TechnoPlayer({ playing, onClose }) {
   const [minimized, setMinimized] = useState(false)
-  const [started, setStarted] = useState(false)
+  // iOS blocks iframe autoplay without a user gesture, so we gate it behind a tap
+  const [started, setStarted] = useState(!isIOS)
 
   // Reset started state when player is closed and reopened
   useEffect(() => {
-    if (!playing) setStarted(false)
+    if (!playing) setStarted(!isIOS)
   }, [playing])
 
   if (!playing) return null
