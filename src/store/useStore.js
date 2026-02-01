@@ -26,12 +26,10 @@ const useStore = create(
         days: 7,
         recipes: {},
       },
-      mealPlanUpdatedAt: 0,
 
       setMealPlanDays: (days) =>
         set((state) => ({
           mealPlan: { ...state.mealPlan, days },
-          mealPlanUpdatedAt: Date.now(),
         })),
 
       addRecipeToDay: (day, recipe) =>
@@ -43,7 +41,6 @@ const useStore = create(
               [day]: [...(state.mealPlan.recipes[day] || []), recipe],
             },
           },
-          mealPlanUpdatedAt: Date.now(),
         })),
 
       removeRecipeFromDay: (day, recipeId) =>
@@ -57,14 +54,14 @@ const useStore = create(
               ),
             },
           },
-          mealPlanUpdatedAt: Date.now(),
         })),
 
       clearMealPlan: () =>
         set((state) => ({
           mealPlan: { ...state.mealPlan, recipes: {} },
-          mealPlanUpdatedAt: Date.now(),
         })),
+
+      setMealPlan: (newMealPlan) => set({ mealPlan: newMealPlan }),
 
       getAllMealPlanRecipes: () => {
         const { mealPlan } = get()
@@ -85,28 +82,24 @@ const useStore = create(
 
       // Set meal plan from cloud (for sync)
       // Firebase drops empty objects and converts numeric-keyed objects to arrays,
-      // so we need to normalize the data back to the expected shape.
-      setMealPlanFromCloud: (cloudPlan, cloudUpdatedAt) => {
-        const { mealPlanUpdatedAt } = get()
-        // Only apply cloud data if it's newer than local
-        if (cloudUpdatedAt && cloudUpdatedAt <= mealPlanUpdatedAt) return
-
+      // so we normalize both old (array) and new (keyed object) formats.
+      setMealPlanFromCloud: (cloudData) => {
         const recipes = {}
-        if (cloudPlan.recipes) {
-          const src = cloudPlan.recipes
+        if (cloudData.recipes) {
+          const src = cloudData.recipes
           const keys = Array.isArray(src) ? [...src.keys()] : Object.keys(src)
           for (const key of keys) {
             const val = src[key]
-            if (val && Array.isArray(val)) {
+            if (!val) continue
+            if (Array.isArray(val)) {
               recipes[key] = val.filter(Boolean)
-            } else if (val) {
-              recipes[key] = [val]
+            } else if (typeof val === 'object') {
+              recipes[key] = Object.values(val).filter(Boolean)
             }
           }
         }
         set({
-          mealPlan: { days: cloudPlan.days || 7, recipes },
-          mealPlanUpdatedAt: cloudUpdatedAt || Date.now(),
+          mealPlan: { days: cloudData.days || 7, recipes },
         })
       },
 
@@ -406,7 +399,6 @@ const useStore = create(
       partialize: (state) => ({
         preferences: state.preferences,
         mealPlan: state.mealPlan,
-        mealPlanUpdatedAt: state.mealPlanUpdatedAt,
         groceryLists: state.groceryLists,
         activeListId: state.activeListId,
         sharedListId: state.sharedListId,

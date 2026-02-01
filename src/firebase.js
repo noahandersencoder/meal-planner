@@ -145,6 +145,50 @@ export function subscribeToUserMealPlan(userId, callback) {
   })
 }
 
+// Granular meal plan functions (per-recipe writes to avoid conflicts)
+export async function addRecipeToMealPlan(userId, day, recipe) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const recipeRef = ref(database, `users/${userId}/mealPlan/recipes/${day}/${recipe.id}`)
+  await set(recipeRef, recipe)
+}
+
+export async function removeRecipeFromMealPlan(userId, day, recipeId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const recipeRef = ref(database, `users/${userId}/mealPlan/recipes/${day}/${recipeId}`)
+  await set(recipeRef, null)
+}
+
+export async function clearUserMealPlanRecipes(userId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const recipesRef = ref(database, `users/${userId}/mealPlan/recipes`)
+  await set(recipesRef, null)
+}
+
+export async function setUserMealPlanDays(userId, days) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const daysRef = ref(database, `users/${userId}/mealPlan/days`)
+  await set(daysRef, days)
+}
+
+export async function setFullUserMealPlan(userId, mealPlan) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const recipes = {}
+  if (mealPlan.recipes) {
+    for (const [day, dayRecipes] of Object.entries(mealPlan.recipes)) {
+      if (Array.isArray(dayRecipes)) {
+        recipes[day] = {}
+        dayRecipes.forEach(r => {
+          if (r && r.id) recipes[day][r.id] = r
+        })
+      } else if (dayRecipes) {
+        recipes[day] = dayRecipes
+      }
+    }
+  }
+  const planRef = ref(database, `users/${userId}/mealPlan`)
+  await set(planRef, { days: mealPlan.days || 7, recipes })
+}
+
 // Legacy functions for shared lists (keeping for backwards compatibility)
 export async function saveGroceryList(listId, data) {
   if (!firebaseEnabled) {

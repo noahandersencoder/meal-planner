@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
+import useMealPlan from '../hooks/useMealPlan'
 import MealPlanDay from '../components/MealPlanDay'
 import recipes from '../data/recipes.json'
-import { getApprovedRecipes, isFirebaseEnabled, loadUserMealPlan } from '../firebase'
+import { getApprovedRecipes, isFirebaseEnabled } from '../firebase'
 
 const dayOptions = [
   { value: 3, label: '3 Days' },
@@ -196,33 +197,14 @@ function MealPlan() {
   const { user } = useAuth()
   const {
     mealPlan,
-    setMealPlanDays,
-    removeRecipeFromDay,
-    clearMealPlan,
     generateGroceryList,
     getMealPlanTotalCost,
     getAllMealPlanRecipes,
-    addRecipeToDay,
-    setMealPlanFromCloud,
   } = useStore()
+  const { addRecipe, removeRecipe, clearPlan, setDays, setFullPlan } = useMealPlan()
 
   const [showRandomModal, setShowRandomModal] = useState(false)
-  const [syncing, setSyncing] = useState(false)
   const [userRecipes, setUserRecipes] = useState([])
-
-  const handleSync = async () => {
-    if (!isFirebaseEnabled() || !user) return
-    setSyncing(true)
-    try {
-      const data = await loadUserMealPlan(user.uid)
-      if (data && data.mealPlan) {
-        setMealPlanFromCloud(data.mealPlan, Infinity)
-      }
-    } catch (err) {
-      console.error('Sync failed:', err)
-    }
-    setSyncing(false)
-  }
 
   // Load user-submitted recipes
   useEffect(() => {
@@ -244,7 +226,7 @@ function MealPlan() {
   }
 
   const handleRemoveRecipe = (dayIndex, recipeId) => {
-    removeRecipeFromDay(dayIndex, recipeId)
+    removeRecipe(dayIndex, recipeId)
   }
 
   const handleGenerateList = () => {
@@ -340,13 +322,15 @@ function MealPlan() {
     // Shuffle the final selection
     const shuffledSelected = shuffle(selected)
 
-    // Clear existing plan and add new recipes
-    clearMealPlan()
+    // Build the new plan and set it all at once
+    const newRecipes = {}
     shuffledSelected.forEach((recipe, idx) => {
       if (idx < mealPlan.days) {
-        addRecipeToDay(idx, recipe)
+        if (!newRecipes[idx]) newRecipes[idx] = []
+        newRecipes[idx].push(recipe)
       }
     })
+    setFullPlan({ days: mealPlan.days, recipes: newRecipes })
 
     setShowRandomModal(false)
   }
@@ -377,18 +361,9 @@ function MealPlan() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {isFirebaseEnabled() && user && (
-            <button
-              onClick={handleSync}
-              disabled={syncing}
-              className="text-sm text-primary-600 hover:text-primary-700 disabled:opacity-50"
-            >
-              {syncing ? 'Syncing...' : 'Sync'}
-            </button>
-          )}
           {totalRecipes > 0 && (
             <button
-              onClick={clearMealPlan}
+              onClick={clearPlan}
               className="text-sm text-red-600 hover:text-red-700"
             >
               Clear All
@@ -401,7 +376,7 @@ function MealPlan() {
         {dayOptions.map((opt) => (
           <button
             key={opt.value}
-            onClick={() => setMealPlanDays(opt.value)}
+            onClick={() => setDays(opt.value)}
             className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               mealPlan.days === opt.value
                 ? 'bg-primary-600 text-white'

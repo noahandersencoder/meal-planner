@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
+import useMealPlan from '../hooks/useMealPlan'
 import recipes from '../data/recipes.json'
 import { getApprovedRecipes, isFirebaseEnabled, getUserProfileByEmail, updateRecipePhoto, updateApprovedRecipe, getRecipeTagOverrides, setRecipeTagOverrides, getRecipePhotoOverride, setRecipePhotoOverride, addCookingHistoryEntry, addReview } from '../firebase'
 
@@ -39,7 +40,8 @@ function RecipeDetail() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, isAdmin, isApproved } = useAuth()
-  const { addRecipeToDay, preferences } = useStore()
+  const { preferences } = useStore()
+  const { addRecipe } = useMealPlan()
 
   // Get servings from navigation state (when coming from meal plan)
   const initialServings = location.state?.servings || null
@@ -151,7 +153,7 @@ function RecipeDetail() {
       servings: currentServings,
       ingredients: scaledIngredients
     }
-    addRecipeToDay(0, scaledRecipe)
+    addRecipe(0, scaledRecipe)
     navigate('/meal-plan')
   }
 

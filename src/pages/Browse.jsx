@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
+import useMealPlan from '../hooks/useMealPlan'
 import recipes from '../data/recipes.json'
 import { getApprovedRecipes, getAllRatings, getAllTagOverrides, getAllPhotoOverrides, isFirebaseEnabled } from '../firebase'
 import RecipeCard from '../components/RecipeCard'
@@ -33,7 +34,8 @@ function Browse() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user, isApproved } = useAuth()
-  const { preferences, addRecipeToDay, recipeViewMode, setRecipeViewMode } = useStore()
+  const { preferences, recipeViewMode, setRecipeViewMode } = useStore()
+  const { addRecipe } = useMealPlan()
   const [filters, setFilters] = useState(preferences)
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -128,10 +130,10 @@ function Browse() {
 
   const handleAddToMealPlan = (recipe) => {
     if (selectedDay !== null) {
-      addRecipeToDay(parseInt(selectedDay), recipe)
+      addRecipe(parseInt(selectedDay), recipe)
       navigate('/meal-plan')
     } else {
-      addRecipeToDay(0, recipe)
+      addRecipe(0, recipe)
       navigate('/meal-plan')
     }
   }
