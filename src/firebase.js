@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getDatabase, ref, set, get, onValue } from 'firebase/database'
+import { getDatabase, ref, set, get, onValue, remove } from 'firebase/database'
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -1052,6 +1052,136 @@ export async function deleteHistoryComment(oderId, entryId, commentId) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')
   const commentRef = ref(database, `historyComments/${oderId}/${entryId}/${commentId}`)
   await set(commentRef, null)
+}
+
+// ============ SHARED GROCERY LISTS ============
+
+// Create a shared grocery list
+export async function createSharedGroceryList(shareCode, ownerId, ownerEmail, name, items, checkedItems) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const listRef = ref(database, `sharedGroceryLists/${shareCode}`)
+  await set(listRef, {
+    name,
+    ownerId,
+    members: { [ownerId]: { email: ownerEmail, joinedAt: Date.now() } },
+    items: items || [],
+    checkedItems: checkedItems || {},
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  })
+}
+
+// Save shared grocery list data (items/checkedItems)
+export async function saveSharedGroceryList(shareCode, data) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const listRef = ref(database, `sharedGroceryLists/${shareCode}`)
+  const snapshot = await get(listRef)
+  if (!snapshot.exists()) return
+  const existing = snapshot.val()
+  await set(listRef, {
+    ...existing,
+    items: data.items || [],
+    checkedItems: data.checkedItems || {},
+    name: data.name !== undefined ? data.name : existing.name,
+    updatedAt: Date.now(),
+  })
+}
+
+// Load a shared grocery list (one-time)
+export async function loadSharedGroceryList(shareCode) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const listRef = ref(database, `sharedGroceryLists/${shareCode}`)
+  const snapshot = await get(listRef)
+  if (snapshot.exists()) return snapshot.val()
+  return null
+}
+
+// Subscribe to real-time updates on a shared grocery list
+export function subscribeToSharedGroceryList(shareCode, callback) {
+  if (!firebaseEnabled) return () => {}
+  const listRef = ref(database, `sharedGroceryLists/${shareCode}`)
+  return onValue(listRef, (snapshot) => {
+    if (snapshot.exists()) {
+      callback(snapshot.val())
+    } else {
+      callback(null) // list was deleted
+    }
+  })
+}
+
+// Join a shared grocery list (returns null if code not found)
+export async function joinSharedGroceryList(shareCode, userId, userEmail) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const listRef = ref(database, `sharedGroceryLists/${shareCode}`)
+  const snapshot = await get(listRef)
+  if (!snapshot.exists()) return null
+
+  // Add member
+  const memberRef = ref(database, `sharedGroceryLists/${shareCode}/members/${userId}`)
+  await set(memberRef, { email: userEmail, joinedAt: Date.now() })
+
+  // Save ref on user
+  await addUserSharedListRef(userId, shareCode, snapshot.val().name)
+
+  return snapshot.val()
+}
+
+// Leave a shared grocery list
+export async function leaveSharedGroceryList(shareCode, userId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  // Remove member from shared list
+  const memberRef = ref(database, `sharedGroceryLists/${shareCode}/members/${userId}`)
+  await set(memberRef, null)
+  // Remove user ref
+  const userRef = ref(database, `users/${userId}/sharedListRefs/${shareCode}`)
+  await set(userRef, null)
+}
+
+// Delete a shared grocery list (owner only)
+export async function deleteSharedGroceryList(shareCode, ownerId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const listRef = ref(database, `sharedGroceryLists/${shareCode}`)
+  const snapshot = await get(listRef)
+  if (!snapshot.exists()) return
+  const data = snapshot.val()
+  if (data.ownerId !== ownerId) return // only owner can delete
+
+  // Clean up all member refs
+  if (data.members) {
+    for (const memberId of Object.keys(data.members)) {
+      const userRef = ref(database, `users/${memberId}/sharedListRefs/${shareCode}`)
+      await set(userRef, null)
+    }
+  }
+
+  // Delete the shared list
+  await remove(listRef)
+}
+
+// Get all shared list refs for a user
+export async function getUserSharedListRefs(userId) {
+  if (!firebaseEnabled) return {}
+  const refsRef = ref(database, `users/${userId}/sharedListRefs`)
+  const snapshot = await get(refsRef)
+  if (snapshot.exists()) return snapshot.val()
+  return {}
+}
+
+// Save a shared list ref for a user
+export async function addUserSharedListRef(userId, shareCode, name) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const refPath = ref(database, `users/${userId}/sharedListRefs/${shareCode}`)
+  await set(refPath, { name, joinedAt: Date.now() })
+}
+
+// Rename a shared grocery list
+export async function renameSharedGroceryList(shareCode, newName) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const nameRef = ref(database, `sharedGroceryLists/${shareCode}/name`)
+  await set(nameRef, newName)
+  // Update updatedAt
+  const updRef = ref(database, `sharedGroceryLists/${shareCode}/updatedAt`)
+  await set(updRef, Date.now())
 }
 
 export { database, auth }

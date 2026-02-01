@@ -372,8 +372,79 @@ const useStore = create(
       setSharedListId: (id) => set({ sharedListId: id }),
 
       // Set grocery lists from cloud (for sync)
-      setGroceryListsFromCloud: (groceryLists, activeListId) =>
-        set({ groceryLists: groceryLists || {}, activeListId }),
+      // Does NOT sync activeListId — each device keeps its own selection
+      setGroceryListsFromCloud: (cloudLists) =>
+        set((state) => {
+          const incoming = cloudLists || {}
+          // Preserve any shared lists already in the store
+          const shared = {}
+          for (const [id, list] of Object.entries(state.groceryLists)) {
+            if (list.shared) shared[id] = list
+          }
+          const merged = { ...incoming, ...shared }
+          // Keep current activeListId if that list still exists; else fall back
+          const ids = Object.keys(merged)
+          const activeListId =
+            state.activeListId && merged[state.activeListId]
+              ? state.activeListId
+              : ids.length > 0
+                ? ids[0]
+                : null
+          return { groceryLists: merged, activeListId }
+        }),
+
+      // Merge a shared list from cloud into groceryLists
+      setSharedListFromCloud: (shareCode, cloudData) =>
+        set((state) => {
+          const key = `shared-${shareCode}`
+          if (!cloudData) {
+            // List was deleted remotely — remove it
+            const { [key]: _removed, ...remaining } = state.groceryLists
+            const ids = Object.keys(remaining)
+            return {
+              groceryLists: remaining,
+              activeListId:
+                state.activeListId === key
+                  ? ids.length > 0
+                    ? ids[0]
+                    : null
+                  : state.activeListId,
+            }
+          }
+          return {
+            groceryLists: {
+              ...state.groceryLists,
+              [key]: {
+                id: key,
+                name: cloudData.name || 'Shared List',
+                items: cloudData.items || [],
+                checkedItems: cloudData.checkedItems || {},
+                shared: true,
+                shareCode,
+                ownerId: cloudData.ownerId,
+                members: cloudData.members || {},
+                createdAt: cloudData.createdAt || Date.now(),
+              },
+            },
+          }
+        }),
+
+      // Remove a shared list locally (after leaving/deleting)
+      removeSharedListLocally: (shareCode) =>
+        set((state) => {
+          const key = `shared-${shareCode}`
+          const { [key]: _removed, ...remaining } = state.groceryLists
+          const ids = Object.keys(remaining)
+          return {
+            groceryLists: remaining,
+            activeListId:
+              state.activeListId === key
+                ? ids.length > 0
+                  ? ids[0]
+                  : null
+                : state.activeListId,
+          }
+        }),
 
       // Legacy: Set single list from cloud (backwards compatible)
       setGroceryListFromCloud: (groceryList, checkedItems) =>

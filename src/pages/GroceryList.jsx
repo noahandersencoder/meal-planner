@@ -8,8 +8,10 @@ import {
   saveUserGroceryList,
   loadUserGroceryList,
   subscribeToUserList,
-  isFirebaseEnabled
+  isFirebaseEnabled,
+  renameSharedGroceryList,
 } from '../firebase'
+import useSharedGroceryLists from '../hooks/useSharedGroceryLists'
 
 const categoryLabels = {
   produce: { label: 'Produce', icon: '🥬' },
@@ -115,11 +117,16 @@ function QuickAddItem({ addItemToGroceryList }) {
 }
 
 // List selector component
-function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDelete }) {
+function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDelete, onShare, onJoin, onLeave, onDeleteShared, user }) {
   const [showMenu, setShowMenu] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [isRenaming, setIsRenaming] = useState(null)
   const [newName, setNewName] = useState('')
+  const [isJoining, setIsJoining] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+  const [joinError, setJoinError] = useState('')
+  const [shareCodeDisplay, setShareCodeDisplay] = useState(null)
+  const [copyFeedback, setCopyFeedback] = useState(false)
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -128,13 +135,17 @@ function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDel
         setShowMenu(false)
         setIsCreating(false)
         setIsRenaming(null)
+        setIsJoining(false)
+        setShareCodeDisplay(null)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const listArray = Object.values(lists).sort((a, b) => a.createdAt - b.createdAt)
+  const allLists = Object.values(lists).sort((a, b) => a.createdAt - b.createdAt)
+  const personalLists = allLists.filter((l) => !l.shared)
+  const sharedLists = allLists.filter((l) => l.shared)
   const activeList = lists[activeListId]
 
   const handleCreate = () => {
@@ -154,13 +165,41 @@ function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDel
     }
   }
 
+  const handleShare = async (listId) => {
+    if (!onShare) return
+    const code = await onShare(listId)
+    if (code) {
+      setShareCodeDisplay(code)
+    }
+  }
+
+  const handleJoin = async () => {
+    if (!joinCode.trim()) return
+    setJoinError('')
+    const result = await onJoin(joinCode.trim().toLowerCase())
+    if (!result) {
+      setJoinError('Code not found')
+    } else {
+      setJoinCode('')
+      setIsJoining(false)
+      setShowMenu(false)
+    }
+  }
+
+  const handleCopyCode = (code) => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopyFeedback(true)
+      setTimeout(() => setCopyFeedback(false), 2000)
+    })
+  }
+
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setShowMenu(!showMenu)}
         className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
       >
-        <span className="text-lg">📋</span>
+        <span className="text-lg">{activeList?.shared ? '👥' : '📋'}</span>
         <span className="font-medium text-gray-900 max-w-[150px] truncate">
           {activeList?.name || 'Select List'}
         </span>
@@ -170,13 +209,38 @@ function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDel
       </button>
 
       {showMenu && (
-        <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          {/* Share code display */}
+          {shareCodeDisplay && (
+            <div className="p-3 bg-green-50 border-b border-green-200">
+              <p className="text-sm font-medium text-green-800 mb-1">Share this code:</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 px-3 py-2 bg-white border border-green-300 rounded text-lg font-mono text-center tracking-widest">
+                  {shareCodeDisplay}
+                </code>
+                <button
+                  onClick={() => handleCopyCode(shareCodeDisplay)}
+                  className="px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  {copyFeedback ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+              <button
+                onClick={() => setShareCodeDisplay(null)}
+                className="mt-2 text-xs text-green-600 hover:text-green-800"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {/* Your Lists */}
           <div className="p-2 border-b border-gray-100">
             <p className="text-xs font-semibold text-gray-500 uppercase px-2">Your Lists</p>
           </div>
 
-          <div className="max-h-60 overflow-y-auto">
-            {listArray.map((list) => (
+          <div className="max-h-48 overflow-y-auto">
+            {personalLists.map((list) => (
               <div
                 key={list.id}
                 className={`flex items-center justify-between px-3 py-2 hover:bg-gray-50 ${
@@ -218,6 +282,17 @@ function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDel
                       </span>
                     </button>
                     <div className="flex gap-1">
+                      {onShare && user && (
+                        <button
+                          onClick={() => handleShare(list.id)}
+                          className="p-1 text-gray-400 hover:text-blue-600"
+                          title="Share list"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                          </svg>
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           setNewName(list.name)
@@ -230,7 +305,7 @@ function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDel
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      {listArray.length > 1 && (
+                      {personalLists.length > 1 && (
                         <button
                           onClick={() => {
                             if (confirm(`Delete "${list.name}"?`)) {
@@ -252,7 +327,111 @@ function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDel
             ))}
           </div>
 
-          <div className="p-2 border-t border-gray-100">
+          {/* Shared Lists */}
+          {sharedLists.length > 0 && (
+            <>
+              <div className="p-2 border-t border-b border-gray-100">
+                <p className="text-xs font-semibold text-gray-500 uppercase px-2">Shared Lists</p>
+              </div>
+              <div className="max-h-40 overflow-y-auto">
+                {sharedLists.map((list) => {
+                  const isOwner = user && list.ownerId === user.uid
+                  return (
+                    <div
+                      key={list.id}
+                      className={`flex items-center justify-between px-3 py-2 hover:bg-gray-50 ${
+                        list.id === activeListId ? 'bg-primary-50' : ''
+                      }`}
+                    >
+                      {isRenaming === list.id ? (
+                        <div className="flex-1 flex gap-1">
+                          <input
+                            type="text"
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleRename(list.id)}
+                            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                            placeholder="List name"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleRename(list.id)}
+                            className="px-2 py-1 text-xs bg-primary-500 text-white rounded"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              onSelect(list.id)
+                              setShowMenu(false)
+                            }}
+                            className="flex-1 text-left"
+                          >
+                            <span className={`font-medium ${list.id === activeListId ? 'text-primary-700' : 'text-gray-900'}`}>
+                              <span className="mr-1">👥</span>
+                              {list.name}
+                            </span>
+                            <span className="text-xs text-gray-400 ml-2">
+                              ({list.items?.length || 0} items)
+                            </span>
+                          </button>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => {
+                                setNewName(list.name)
+                                setIsRenaming(list.id)
+                              }}
+                              className="p-1 text-gray-400 hover:text-gray-600"
+                              title="Rename"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                            {isOwner ? (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete shared list "${list.name}"? This removes it for all members.`)) {
+                                    onDeleteShared(list.shareCode)
+                                  }
+                                }}
+                                className="p-1 text-gray-400 hover:text-red-600"
+                                title="Delete shared list"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Leave shared list "${list.name}"?`)) {
+                                    onLeave(list.shareCode)
+                                  }
+                                }}
+                                className="p-1 text-gray-400 hover:text-orange-600"
+                                title="Leave shared list"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Create / Join */}
+          <div className="p-2 border-t border-gray-100 space-y-1">
             {isCreating ? (
               <div className="flex gap-1">
                 <input
@@ -271,13 +450,47 @@ function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDel
                   Create
                 </button>
               </div>
+            ) : isJoining ? (
+              <div>
+                <div className="flex gap-1">
+                  <input
+                    type="text"
+                    value={joinCode}
+                    onChange={(e) => { setJoinCode(e.target.value); setJoinError('') }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded font-mono tracking-wider"
+                    placeholder="Enter 6-char code"
+                    maxLength={6}
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleJoin}
+                    className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Join
+                  </button>
+                </div>
+                {joinError && (
+                  <p className="text-xs text-red-500 mt-1 px-1">{joinError}</p>
+                )}
+              </div>
             ) : (
-              <button
-                onClick={() => setIsCreating(true)}
-                className="w-full px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded flex items-center gap-2"
-              >
-                <span>+</span> New List
-              </button>
+              <>
+                <button
+                  onClick={() => setIsCreating(true)}
+                  className="w-full px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded flex items-center gap-2"
+                >
+                  <span>+</span> New List
+                </button>
+                {onJoin && user && (
+                  <button
+                    onClick={() => setIsJoining(true)}
+                    className="w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded flex items-center gap-2"
+                  >
+                    <span>👥</span> Join Shared List
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -318,6 +531,15 @@ function GroceryList() {
     addItemToGroceryList,
     removeItemFromGroceryList,
   } = useStore()
+
+  const {
+    shareList,
+    joinList,
+    leaveList,
+    deleteList: deleteSharedList,
+    saveSharedList,
+    renameShared,
+  } = useSharedGroceryLists(user)
 
   
   // Ensure we have at least one list
@@ -365,7 +587,12 @@ function GroceryList() {
         if (data) {
           // Support both old format (groceryList) and new format (groceryLists)
           if (data.groceryLists) {
-            setGroceryListsFromCloud(data.groceryLists, data.activeListId)
+            // Filter out any shared entries (they have their own subscriptions)
+            const personal = {}
+            for (const [id, list] of Object.entries(data.groceryLists)) {
+              if (!list.shared) personal[id] = list
+            }
+            setGroceryListsFromCloud(personal)
           } else if (data.groceryList) {
             // Migrate old format to new
             setGroceryListFromCloud(data.groceryList, data.checkedItems || {})
@@ -394,7 +621,12 @@ function GroceryList() {
       if (data) {
         isFromFirebase.current = true
         if (data.groceryLists) {
-          setGroceryListsFromCloud(data.groceryLists, data.activeListId)
+          // Filter out shared entries
+          const personal = {}
+          for (const [id, list] of Object.entries(data.groceryLists)) {
+            if (!list.shared) personal[id] = list
+          }
+          setGroceryListsFromCloud(personal)
         } else if (data.groceryList) {
           setGroceryListFromCloud(data.groceryList || [], data.checkedItems || {})
         }
@@ -411,10 +643,33 @@ function GroceryList() {
     if (!initialLoadDone.current) return
     if (isFromFirebase.current) return
 
+    // Split personal vs shared lists
+    const personalLists = {}
+    const sharedEntries = []
+    for (const [id, list] of Object.entries(groceryLists)) {
+      if (list.shared) {
+        sharedEntries.push(list)
+      } else {
+        personalLists[id] = list
+      }
+    }
+
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
     saveTimeout.current = setTimeout(() => {
       isSaving.current = true
-      saveUserGroceryList(user.uid, { groceryLists, activeListId })
+
+      const promises = [
+        saveUserGroceryList(user.uid, { groceryLists: personalLists }),
+      ]
+
+      // Save each shared list to its own Firebase path
+      for (const list of sharedEntries) {
+        if (list.shareCode) {
+          promises.push(saveSharedList(list.shareCode))
+        }
+      }
+
+      Promise.all(promises)
         .catch((err) => {
           console.error('Sync error:', err)
           setFirebaseError(true)
@@ -427,7 +682,7 @@ function GroceryList() {
     return () => {
       if (saveTimeout.current) clearTimeout(saveTimeout.current)
     }
-  }, [groceryLists, activeListId, user, firebaseError])
+  }, [groceryLists, user, firebaseError, saveSharedList])
 
   const groupedItems = groceryList.reduce((acc, item) => {
     const category = item.category || 'other'
@@ -526,14 +781,28 @@ function GroceryList() {
     )
   }
 
+  // Handle rename: shared lists go through Firebase, personal lists are local
+  const handleRename = (listId, newName) => {
+    const list = groceryLists[listId]
+    if (list?.shared && list.shareCode) {
+      renameShared(list.shareCode, newName)
+    }
+    renameGroceryList(listId, newName) // always update local store
+  }
+
   // List selector props
   const listSelectorProps = {
     lists: groceryLists,
     activeListId,
     onSelect: setActiveList,
     onCreate: createGroceryList,
-    onRename: renameGroceryList,
+    onRename: handleRename,
     onDelete: deleteGroceryList,
+    onShare: shareList,
+    onJoin: joinList,
+    onLeave: leaveList,
+    onDeleteShared: deleteSharedList,
+    user,
   }
 
   // Empty state
