@@ -527,21 +527,15 @@ function GroceryList() {
     deleteList: deleteSharedList,
   } = useSharedGroceryLists(user)
 
-  // Ensure we have at least one list
+  // Ensure we have at least one list (local-only — no Firebase write)
   useEffect(() => {
     if (Object.keys(groceryLists).length === 0) {
-      ensureActiveList()
+      // Use the store's ensureActiveList directly (not the hook version)
+      // to avoid writing a default list to Firebase before sync data arrives
+      const storeEnsure = useStore.getState().ensureActiveList
+      storeEnsure()
     }
   }, [groceryLists])
-
-  // Only auto-generate grocery list if the active list has no items yet
-  useEffect(() => {
-    const list = getActiveList()
-    const hasItems = list.items && list.items.length > 0
-    if (!hasItems && getAllMealPlanRecipes().length > 0) {
-      generateGroceryList()
-    }
-  }, [])
 
   const activeList = getActiveList()
   const groceryList = activeList.items || []
