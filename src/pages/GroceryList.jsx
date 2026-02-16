@@ -1,17 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { useAuth } from '../context/AuthContext'
 import GroceryItem from '../components/GroceryItem'
 import IngredientAutocomplete from '../components/IngredientAutocomplete'
-import {
-  saveUserGroceryList,
-  loadUserGroceryList,
-  subscribeToUserList,
-  isFirebaseEnabled,
-  renameSharedGroceryList,
-} from '../firebase'
+import { isFirebaseEnabled } from '../firebase'
 import useSharedGroceryLists from '../hooks/useSharedGroceryLists'
+import useGroceryList from '../hooks/useGroceryList'
 
 const categoryLabels = {
   produce: { label: 'Produce', icon: '🥬' },
@@ -502,64 +497,51 @@ function ListSelector({ lists, activeListId, onSelect, onCreate, onRename, onDel
 function GroceryList() {
   const navigate = useNavigate()
   const { user, loading: authLoading, isApproved, checkingApproval } = useAuth()
-  const [isLoading, setIsLoading] = useState(true)
-  const [firebaseError, setFirebaseError] = useState(false)
-
-  // Track sync state to prevent loops
-  const isFromFirebase = useRef(false)
-  const isSaving = useRef(false)
-  const saveTimeout = useRef(null)
-  const initialLoadDone = useRef(false)
 
   const {
     groceryLists,
     activeListId,
     getActiveList,
     setActiveList,
-    createGroceryList,
-    deleteGroceryList,
-    renameGroceryList,
-    ensureActiveList,
-    toggleGroceryItem,
-    clearCheckedItems,
-    clearGroceryList,
     getGroceryListTotal,
-    generateGroceryList,
     getAllMealPlanRecipes,
-    setGroceryListsFromCloud,
-    setGroceryListFromCloud,
-    addItemToGroceryList,
-    removeItemFromGroceryList,
   } = useStore()
+
+  const {
+    addItem: addItemToGroceryList,
+    removeItem: removeItemFromGroceryList,
+    toggleItem: toggleGroceryItem,
+    clearChecked: clearCheckedItems,
+    clearList: clearGroceryList,
+    generateList: generateGroceryList,
+    createList: createGroceryList,
+    deleteList: deleteGroceryList,
+    renameList: renameGroceryList,
+    ensureActiveList,
+  } = useGroceryList()
 
   const {
     shareList,
     joinList,
     leaveList,
     deleteList: deleteSharedList,
-    saveSharedList,
-    renameShared,
   } = useSharedGroceryLists(user)
 
-  
   // Ensure we have at least one list
   useEffect(() => {
-    if (!isLoading && Object.keys(groceryLists).length === 0) {
+    if (Object.keys(groceryLists).length === 0) {
       ensureActiveList()
     }
-  }, [isLoading, groceryLists])
+  }, [groceryLists])
 
   // Only auto-generate grocery list if the active list has no items yet
-  // (prevents wiping checked items when navigating back to the page)
   useEffect(() => {
-    if (!isLoading) {
-      const list = getActiveList()
-      const hasItems = list.items && list.items.length > 0
-      if (!hasItems && getAllMealPlanRecipes().length > 0) {
-        generateGroceryList()
-      }
+    const list = getActiveList()
+    const hasItems = list.items && list.items.length > 0
+    if (!hasItems && getAllMealPlanRecipes().length > 0) {
+      generateGroceryList()
     }
-  }, [isLoading])
+  }, [])
 
   const activeList = getActiveList()
   const groceryList = activeList.items || []
@@ -570,119 +552,6 @@ function GroceryList() {
   const checkedCount = Object.values(checkedItems).filter(Boolean).length
   const totalCount = groceryList.length
   const allChecked = totalCount > 0 && checkedCount === totalCount
-
-  // Load user's grocery lists on login
-  useEffect(() => {
-    if (authLoading) return
-    if (!isFirebaseEnabled() || !user) {
-      setIsLoading(false)
-      return
-    }
-
-    setIsLoading(true)
-    isFromFirebase.current = true
-
-    loadUserGroceryList(user.uid)
-      .then((data) => {
-        if (data) {
-          // Support both old format (groceryList) and new format (groceryLists)
-          if (data.groceryLists) {
-            // Filter out any shared entries (they have their own subscriptions)
-            const personal = {}
-            for (const [id, list] of Object.entries(data.groceryLists)) {
-              if (!list.shared) personal[id] = list
-            }
-            setGroceryListsFromCloud(personal)
-          } else if (data.groceryList) {
-            // Migrate old format to new
-            setGroceryListFromCloud(data.groceryList, data.checkedItems || {})
-          }
-        }
-        setIsLoading(false)
-        initialLoadDone.current = true
-        setTimeout(() => { isFromFirebase.current = false }, 100)
-      })
-      .catch((err) => {
-        console.error('Failed to load list:', err)
-        setFirebaseError(true)
-        setIsLoading(false)
-        isFromFirebase.current = false
-      })
-  }, [user, authLoading])
-
-  // Subscribe to real-time updates from other devices
-  useEffect(() => {
-    if (!isFirebaseEnabled() || !user || firebaseError) return
-
-    const unsubscribe = subscribeToUserList(user.uid, (data) => {
-      if (!initialLoadDone.current) return
-      // Skip echoes from our own saves
-      if (isSaving.current) return
-      if (data) {
-        isFromFirebase.current = true
-        if (data.groceryLists) {
-          // Filter out shared entries
-          const personal = {}
-          for (const [id, list] of Object.entries(data.groceryLists)) {
-            if (!list.shared) personal[id] = list
-          }
-          setGroceryListsFromCloud(personal)
-        } else if (data.groceryList) {
-          setGroceryListFromCloud(data.groceryList || [], data.checkedItems || {})
-        }
-        setTimeout(() => { isFromFirebase.current = false }, 100)
-      }
-    })
-
-    return () => unsubscribe()
-  }, [user, firebaseError])
-
-  // Sync changes to cloud when lists change (debounced)
-  useEffect(() => {
-    if (!isFirebaseEnabled() || !user || firebaseError) return
-    if (!initialLoadDone.current) return
-    if (isFromFirebase.current) return
-
-    // Split personal vs shared lists
-    const personalLists = {}
-    const sharedEntries = []
-    for (const [id, list] of Object.entries(groceryLists)) {
-      if (list.shared) {
-        sharedEntries.push(list)
-      } else {
-        personalLists[id] = list
-      }
-    }
-
-    if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    saveTimeout.current = setTimeout(() => {
-      isSaving.current = true
-
-      const promises = [
-        saveUserGroceryList(user.uid, { groceryLists: personalLists }),
-      ]
-
-      // Save each shared list to its own Firebase path
-      for (const list of sharedEntries) {
-        if (list.shareCode) {
-          promises.push(saveSharedList(list.shareCode))
-        }
-      }
-
-      Promise.all(promises)
-        .catch((err) => {
-          console.error('Sync error:', err)
-          setFirebaseError(true)
-        })
-        .finally(() => {
-          setTimeout(() => { isSaving.current = false }, 1000)
-        })
-    }, 500)
-
-    return () => {
-      if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    }
-  }, [groceryLists, user, firebaseError, saveSharedList])
 
   const groupedItems = groceryList.reduce((acc, item) => {
     const category = item.category || 'other'
@@ -698,7 +567,7 @@ function GroceryList() {
   }
 
   // Show loading state
-  if (authLoading || isLoading || checkingApproval) {
+  if (authLoading || checkingApproval) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
@@ -781,13 +650,9 @@ function GroceryList() {
     )
   }
 
-  // Handle rename: shared lists go through Firebase, personal lists are local
+  // Handle rename: useGroceryList.renameList handles shared vs personal routing
   const handleRename = (listId, newName) => {
-    const list = groceryLists[listId]
-    if (list?.shared && list.shareCode) {
-      renameShared(list.shareCode, newName)
-    }
-    renameGroceryList(listId, newName) // always update local store
+    renameGroceryList(listId, newName)
   }
 
   // List selector props

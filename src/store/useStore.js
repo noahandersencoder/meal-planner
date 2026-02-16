@@ -394,6 +394,7 @@ const useStore = create(
         }),
 
       // Merge a shared list from cloud into groceryLists
+      // Handles both old array and new keyed-object formats for items
       setSharedListFromCloud: (shareCode, cloudData) =>
         set((state) => {
           const key = `shared-${shareCode}`
@@ -411,18 +412,30 @@ const useStore = create(
                   : state.activeListId,
             }
           }
+          // Convert keyed-object items to array if needed
+          const categoryOrder = ['produce', 'meat', 'seafood', 'dairy', 'pantry', 'spices', 'baking', 'frozen', 'snacks', 'breakfast', 'drinks', 'other']
+          let items = cloudData.items || []
+          if (items && !Array.isArray(items) && typeof items === 'object') {
+            items = Object.values(items).filter(Boolean).sort(
+              (a, b) => categoryOrder.indexOf(a.category || 'other') - categoryOrder.indexOf(b.category || 'other')
+            )
+          }
           return {
             groceryLists: {
               ...state.groceryLists,
               [key]: {
                 id: key,
                 name: cloudData.name || 'Shared List',
-                items: cloudData.items || [],
+                items,
                 checkedItems: cloudData.checkedItems || {},
                 shared: true,
                 shareCode,
                 ownerId: cloudData.ownerId,
                 members: cloudData.members || {},
+                sourceRecipes: cloudData.sourceRecipes
+                  ? Array.isArray(cloudData.sourceRecipes) ? cloudData.sourceRecipes : Object.values(cloudData.sourceRecipes)
+                  : [],
+                generatedAt: cloudData.generatedAt || null,
                 createdAt: cloudData.createdAt || Date.now(),
               },
             },

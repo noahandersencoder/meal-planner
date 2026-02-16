@@ -4,10 +4,12 @@ import Navigation from './Navigation'
 import { useAuth } from '../context/AuthContext'
 import { logOut, isFirebaseEnabled, getUserProfile } from '../firebase'
 import useMealPlanSync from '../hooks/useMealPlanSync'
+import useGroceryListSync from '../hooks/useGroceryListSync'
 
 function Layout({ children }) {
   const { user, loading, isAdmin, isApproved } = useAuth()
   useMealPlanSync()
+  useGroceryListSync()
   const [userProfile, setUserProfile] = useState(null)
   const location = useLocation()
   const navigate = useNavigate()

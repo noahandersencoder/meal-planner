@@ -3,7 +3,6 @@ import useStore from '../store/useStore'
 import {
   generateListId,
   createSharedGroceryList,
-  saveSharedGroceryList,
   subscribeToSharedGroceryList,
   joinSharedGroceryList,
   leaveSharedGroceryList,
@@ -15,7 +14,6 @@ import {
 
 export default function useSharedGroceryLists(user) {
   const subscriptionsRef = useRef({}) // shareCode → unsubscribe fn
-  const savingRef = useRef(new Set()) // codes currently being saved (echo guard)
 
   const setSharedListFromCloud = useStore((s) => s.setSharedListFromCloud)
   const removeSharedListLocally = useStore((s) => s.removeSharedListLocally)
@@ -26,8 +24,8 @@ export default function useSharedGroceryLists(user) {
     (shareCode) => {
       if (subscriptionsRef.current[shareCode]) return // already subscribed
       const unsub = subscribeToSharedGroceryList(shareCode, (data) => {
-        // Skip echo from our own saves
-        if (savingRef.current.has(shareCode)) return
+        // No echo guard needed — granular writes from useGroceryList don't
+        // trigger a blob save, so there's no echo to suppress.
         setSharedListFromCloud(shareCode, data)
       })
       subscriptionsRef.current[shareCode] = unsub
@@ -131,28 +129,6 @@ export default function useSharedGroceryLists(user) {
     [user, removeSharedListLocally]
   )
 
-  // Save a shared list's current data to Firebase (called from the save effect)
-  const saveSharedList = useCallback(
-    async (shareCode) => {
-      const key = `shared-${shareCode}`
-      const list = groceryLists[key]
-      if (!list) return
-      savingRef.current.add(shareCode)
-      try {
-        await saveSharedGroceryList(shareCode, {
-          items: list.items || [],
-          checkedItems: list.checkedItems || {},
-          name: list.name,
-        })
-      } finally {
-        setTimeout(() => {
-          savingRef.current.delete(shareCode)
-        }, 1000)
-      }
-    },
-    [groceryLists]
-  )
-
   // Rename a shared list
   const renameShared = useCallback(async (shareCode, newName) => {
     await renameSharedGroceryList(shareCode, newName)
@@ -163,7 +139,6 @@ export default function useSharedGroceryLists(user) {
     joinList,
     leaveList,
     deleteList,
-    saveSharedList,
     renameShared,
   }
 }

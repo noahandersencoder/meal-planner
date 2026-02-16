@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getDatabase, ref, set, get, onValue, remove } from 'firebase/database'
+import { getDatabase, ref, set, get, onValue, remove, update } from 'firebase/database'
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -1056,16 +1056,25 @@ export async function deleteHistoryComment(oderId, entryId, commentId) {
 
 // ============ SHARED GROCERY LISTS ============
 
-// Create a shared grocery list
+// Create a shared grocery list (items stored as keyed objects)
 export async function createSharedGroceryList(shareCode, ownerId, ownerEmail, name, items, checkedItems) {
   if (!firebaseEnabled) throw new Error('Firebase not configured')
+  // Convert items array to keyed objects for granular writes
+  const itemsObj = {}
+  if (Array.isArray(items)) {
+    items.forEach(item => {
+      if (item && item.id) itemsObj[item.id] = item
+    })
+  } else if (items && typeof items === 'object') {
+    Object.assign(itemsObj, items)
+  }
   const listRef = ref(database, `sharedGroceryLists/${shareCode}`)
   await set(listRef, {
     name,
     ownerId,
     members: { [ownerId]: { email: ownerEmail, joinedAt: Date.now() } },
-    items: items || [],
-    checkedItems: checkedItems || {},
+    items: Object.keys(itemsObj).length > 0 ? itemsObj : null,
+    checkedItems: checkedItems && Object.keys(checkedItems).length > 0 ? checkedItems : null,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   })
@@ -1182,6 +1191,180 @@ export async function renameSharedGroceryList(shareCode, newName) {
   // Update updatedAt
   const updRef = ref(database, `sharedGroceryLists/${shareCode}/updatedAt`)
   await set(updRef, Date.now())
+}
+
+// ============ GRANULAR GROCERY LIST FUNCTIONS ============
+
+// --- Personal grocery lists ---
+
+// Set a single item in a personal grocery list
+export async function setGroceryListItem(userId, listId, item) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const itemRef = ref(database, `users/${userId}/groceryLists/${listId}/items/${item.id}`)
+  await set(itemRef, item)
+}
+
+// Remove a single item from a personal grocery list (also removes from checkedItems)
+export async function removeGroceryListItem(userId, listId, itemId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const updates = {}
+  updates[`users/${userId}/groceryLists/${listId}/items/${itemId}`] = null
+  updates[`users/${userId}/groceryLists/${listId}/checkedItems/${itemId}`] = null
+  await update(ref(database), updates)
+}
+
+// Set checked state for a single item
+export async function setGroceryListCheckedItem(userId, listId, itemId, checked) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const checkedRef = ref(database, `users/${userId}/groceryLists/${listId}/checkedItems/${itemId}`)
+  await set(checkedRef, checked || null)
+}
+
+// Clear all checked items for a list
+export async function clearGroceryListCheckedItems(userId, listId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const checkedRef = ref(database, `users/${userId}/groceryLists/${listId}/checkedItems`)
+  await set(checkedRef, null)
+}
+
+// Clear all items (and checked) for a list
+export async function clearGroceryListItems(userId, listId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const updates = {}
+  updates[`users/${userId}/groceryLists/${listId}/items`] = null
+  updates[`users/${userId}/groceryLists/${listId}/checkedItems`] = null
+  await update(ref(database), updates)
+}
+
+// Set a full grocery list (items as keyed objects) — used for generateGroceryList
+export async function setFullGroceryList(userId, listId, listData) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  // Convert items array to keyed object if needed
+  let itemsObj = null
+  if (Array.isArray(listData.items)) {
+    itemsObj = {}
+    listData.items.forEach(item => {
+      if (item && item.id) itemsObj[item.id] = item
+    })
+  } else if (listData.items && typeof listData.items === 'object') {
+    itemsObj = listData.items
+  }
+  const listRef = ref(database, `users/${userId}/groceryLists/${listId}`)
+  await set(listRef, {
+    name: listData.name || 'My Grocery List',
+    items: itemsObj && Object.keys(itemsObj).length > 0 ? itemsObj : null,
+    checkedItems: listData.checkedItems && Object.keys(listData.checkedItems).length > 0 ? listData.checkedItems : null,
+    sourceRecipes: listData.sourceRecipes || null,
+    generatedAt: listData.generatedAt || null,
+    createdAt: listData.createdAt || Date.now(),
+  })
+}
+
+// Create grocery list metadata (name, createdAt) without items
+export async function createGroceryListMeta(userId, listId, name) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const listRef = ref(database, `users/${userId}/groceryLists/${listId}`)
+  await set(listRef, {
+    name: name || 'New List',
+    createdAt: Date.now(),
+  })
+}
+
+// Delete an entire grocery list node
+export async function deleteGroceryListNode(userId, listId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const listRef = ref(database, `users/${userId}/groceryLists/${listId}`)
+  await set(listRef, null)
+}
+
+// Rename a grocery list
+export async function renameGroceryListNode(userId, listId, newName) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const nameRef = ref(database, `users/${userId}/groceryLists/${listId}/name`)
+  await set(nameRef, newName)
+}
+
+// Subscribe to all grocery lists for a user
+export function subscribeToUserGroceryLists(userId, callback) {
+  if (!firebaseEnabled) return () => {}
+  const listsRef = ref(database, `users/${userId}/groceryLists`)
+  return onValue(listsRef, (snapshot) => {
+    callback(snapshot.exists() ? snapshot.val() : null)
+  })
+}
+
+// --- Shared grocery lists (granular) ---
+
+// Set a single item in a shared grocery list
+export async function setSharedGroceryListItem(shareCode, item) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const itemRef = ref(database, `sharedGroceryLists/${shareCode}/items/${item.id}`)
+  await set(itemRef, item)
+  const updRef = ref(database, `sharedGroceryLists/${shareCode}/updatedAt`)
+  await set(updRef, Date.now())
+}
+
+// Remove a single item from a shared grocery list
+export async function removeSharedGroceryListItem(shareCode, itemId) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const updates = {}
+  updates[`sharedGroceryLists/${shareCode}/items/${itemId}`] = null
+  updates[`sharedGroceryLists/${shareCode}/checkedItems/${itemId}`] = null
+  updates[`sharedGroceryLists/${shareCode}/updatedAt`] = Date.now()
+  await update(ref(database), updates)
+}
+
+// Set checked state for a single item in a shared list
+export async function setSharedGroceryListCheckedItem(shareCode, itemId, checked) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const checkedRef = ref(database, `sharedGroceryLists/${shareCode}/checkedItems/${itemId}`)
+  await set(checkedRef, checked || null)
+  const updRef = ref(database, `sharedGroceryLists/${shareCode}/updatedAt`)
+  await set(updRef, Date.now())
+}
+
+// Clear all checked items for a shared list
+export async function clearSharedGroceryListCheckedItems(shareCode) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const checkedRef = ref(database, `sharedGroceryLists/${shareCode}/checkedItems`)
+  await set(checkedRef, null)
+  const updRef = ref(database, `sharedGroceryLists/${shareCode}/updatedAt`)
+  await set(updRef, Date.now())
+}
+
+// Clear all items and checked for a shared list
+export async function clearSharedGroceryListItems(shareCode) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  const updates = {}
+  updates[`sharedGroceryLists/${shareCode}/items`] = null
+  updates[`sharedGroceryLists/${shareCode}/checkedItems`] = null
+  updates[`sharedGroceryLists/${shareCode}/updatedAt`] = Date.now()
+  await update(ref(database), updates)
+}
+
+// Set full shared grocery list (replace all items as keyed objects)
+export async function setFullSharedGroceryList(shareCode, listData) {
+  if (!firebaseEnabled) throw new Error('Firebase not configured')
+  let itemsObj = null
+  if (Array.isArray(listData.items)) {
+    itemsObj = {}
+    listData.items.forEach(item => {
+      if (item && item.id) itemsObj[item.id] = item
+    })
+  } else if (listData.items && typeof listData.items === 'object') {
+    itemsObj = listData.items
+  }
+  const updates = {}
+  updates[`sharedGroceryLists/${shareCode}/items`] = itemsObj && Object.keys(itemsObj).length > 0 ? itemsObj : null
+  updates[`sharedGroceryLists/${shareCode}/checkedItems`] = listData.checkedItems && Object.keys(listData.checkedItems).length > 0 ? listData.checkedItems : null
+  updates[`sharedGroceryLists/${shareCode}/updatedAt`] = Date.now()
+  if (listData.sourceRecipes) {
+    updates[`sharedGroceryLists/${shareCode}/sourceRecipes`] = listData.sourceRecipes
+  }
+  if (listData.generatedAt) {
+    updates[`sharedGroceryLists/${shareCode}/generatedAt`] = listData.generatedAt
+  }
+  await update(ref(database), updates)
 }
 
 export { database, auth }
